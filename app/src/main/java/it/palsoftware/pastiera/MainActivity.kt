@@ -658,6 +658,15 @@ fun KeyboardSetupScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             placeholder = { Text(stringResource(R.string.test_field_placeholder)) },
+            // The same pill as the settings search above it
+            shape = MaterialTheme.shapes.extraLarge,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Keyboard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             minLines = 1,
             maxLines = 2,
             keyboardOptions = KeyboardOptions(
