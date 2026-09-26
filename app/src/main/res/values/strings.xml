@@ -1759,7 +1759,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="emoji_layer_recents_key_title">Recents key on the emoji layer</string>
     <string name="emoji_layer_recents_key_description">Press the emoji layer key that shows your recent emoji (Q unless you change it). On the layer, pressing it puts your recent picker emoji on the other keys; press it again to go back.</string>
     <string name="emoji_layer_recents_key_press_prompt">Press a letter key now…</string>
-    <string name="emoji_layer_recents_key_rejected">That key isn’t on the emoji layer. Press a letter key.</string>
     <string name="emoji_layer_recents_key_off">Off</string>
     <string name="emoji_layer_recents_key_current">Key %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Turn off</string>
@@ -1769,7 +1768,6 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_attribution">Powered by KLIPY</string>
     <string name="gif_search_placeholder">Search KLIPY</string>
     <string name="gif_no_api_key">Add your KLIPY API key under Settings → Modifiers → Customize SYM Keyboard → GIF search.</string>
-    <string name="gif_error">Couldn’t reach KLIPY. Check the connection and your API key.</string>
     <string name="gif_sent_as_link">This app doesn’t take GIFs here, so its link was typed instead.</string>
     <string name="gif_settings_title">GIF search</string>
     <string name="gif_settings_description">Adds a GIF key to the emoji layer and a GIF tab to the emoji picker, with GIFs from KLIPY. Searches and GIFs are only fetched from KLIPY while GIF search is open.</string>
@@ -1778,4 +1776,13 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_api_key_help">Sign up at partner.klipy.com and create a key under API Keys → Add Platform. The key stays on this phone and isn’t included in backups.</string>
     <string name="gif_get_key">Get a free key</string>
     <string name="symbol_search_placeholder">Search symbols…</string>
+    <string name="gif_loading">Loading GIFs…</string>
+    <string name="gif_error_detail">Couldn’t load GIFs (%1$s). Check the connection and the KLIPY key.</string>
+    <string name="gif_no_results">No GIFs found</string>
+    <string name="symbol_no_results">No symbols found</string>
+    <string name="symbol_loading">Loading symbols…</string>
+    <string name="emoji_layer_gif_key_title">GIF key on the emoji layer</string>
+    <string name="emoji_layer_gif_key_description">Press the emoji layer key that opens GIF search (P unless you change it). It works while GIF search is on.</string>
+    <string name="emoji_layer_key_rejected">Press a letter key that isn’t already the Recents or GIF key.</string>
+    <string name="symbol_error_detail">Symbol search failed (%1$s).</string>
 </resources>

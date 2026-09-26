@@ -1,5 +1,7 @@
 package it.palsoftware.pastiera.inputmethod.ui
 
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.os.Bundle
 import android.view.KeyEvent
 import it.palsoftware.pastiera.SettingsManager
@@ -110,6 +112,39 @@ class EmojiPickerOnScreenSearchTest {
 
         // Typed, and the picker stays open for the next emoji (SYM auto-close doesn't apply)
         assertEquals(listOf("commit"), events)
+    }
+
+    @Test
+    fun symbolSearchShowsItsResultsInTheEmojiGridItself() {
+        val view = EmojiPickerView(RuntimeEnvironment.getApplication())
+        val grid = view.privateField("recyclerView").get(view) as RecyclerView
+
+        view.openSymbols()
+
+        // No separate grid that might stay hidden: the visible grid switches content
+        assertEquals("SymbolAdapter", grid.adapter!!::class.java.simpleName)
+        assertEquals(8, (grid.layoutManager as GridLayoutManager).spanCount)
+        assertEquals(View.VISIBLE, grid.visibility)
+
+        view.refresh()
+
+        assertTrue(grid.adapter!!::class.java.simpleName in setOf("SectionAdapter", "SearchAdapter"))
+    }
+
+    @Test
+    fun dataRefreshKeepsSymbolSearchButAFreshOpeningLeavesIt() {
+        val view = EmojiPickerView(RuntimeEnvironment.getApplication())
+        fun symbolMode() = view.privateField("symbolMode")?.get(view) as Boolean
+
+        view.openSymbols()
+        assertTrue(symbolMode())
+
+        // e.g. the downloadable emoji font finished loading while symbol search was open
+        view.refresh(resetModes = false)
+        assertTrue(symbolMode())
+
+        view.refresh()
+        assertFalse(symbolMode())
     }
 
     @Test

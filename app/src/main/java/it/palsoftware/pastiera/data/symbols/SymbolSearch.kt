@@ -1,59 +1,193 @@
 package it.palsoftware.pastiera.data.symbols
 
+import android.content.Context
 import android.graphics.Paint
+import android.os.Build
+import java.io.File
 import java.util.Locale
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Finds symbols by their Unicode names ("degree", "euro", "right arrow", "check mark"), for
- * anything not already on the SYM pages. Built from the symbol and punctuation blocks, keeping
- * only characters the phone's fonts can draw. Nothing is downloaded.
+ * Finds symbols by their Unicode names ("degree", "euro", "right arrow", "check mark"). Every
+ * Unicode symbol ships with the app ([ASSET], generated from the Unicode data: Android doesn't
+ * reliably offer character names to apps), so loading is just reading that list.
+ *
+ * Nothing checks the fonts up front. A symbol is checked the first time it's about to be shown
+ * ([renderable], [canRender]); one the phone can't draw is dropped and never shown again. The
+ * answers are kept per Android build (fonts only change with the system). Nothing is downloaded.
  */
 object SymbolSearch {
-    data class Entry(val symbol: String, val name: String)
+    data class Entry(val symbol: String, val name: String) {
+        /** The name's words, split once. */
+        val words: List<String> by lazy { name.split(' ', '-').filter { it.isNotEmpty() } }
+    }
 
-    // Unicode blocks with symbols worth typing (letters and scripts are left to the keyboard)
-    private val BLOCKS = listOf(
-        0x00A1..0x00BF, // Latin-1 punctuation and symbols
-        0x00D7..0x00D7, 0x00F7..0x00F7, // × ÷
-        0x0391..0x03C9, // Greek letters
-        0x2010..0x205E, // General punctuation
-        0x2070..0x209C, // Superscripts and subscripts
-        0x20A0..0x20C0, // Currency
-        0x2100..0x214F, // Letterlike
-        0x2150..0x218B, // Number forms
-        0x2190..0x21FF, // Arrows
-        0x2200..0x22FF, // Mathematical operators
-        0x2300..0x23FF, // Miscellaneous technical
-        0x2460..0x24FF, // Enclosed alphanumerics
-        0x2500..0x259F, // Box drawing, block elements
-        0x25A0..0x25FF, // Geometric shapes
-        0x2600..0x26FF, // Miscellaneous symbols
-        0x2700..0x27BF, // Dingbats
-        0x27C0..0x27EF, // Miscellaneous mathematical symbols A
-        0x27F0..0x27FF, // Supplemental arrows A
-        0x2900..0x297F, // Supplemental arrows B
-        0x2980..0x29FF, // Miscellaneous mathematical symbols B
-        0x2A00..0x2AFF, // Supplemental mathematical operators
-        0x2B00..0x2BFF  // Miscellaneous symbols and arrows
-    )
+    private const val ASSET = "symbols/symbols.tsv"
+    private const val VERDICTS_FILE = "symbol-glyphs-v1.tsv"
+    private val OLD_FILES = listOf("symbol-search-v1.tsv", "symbol-search-v2.tsv")
+
+    // Symbol search's own thread (reading the list and every search): its work never waits
+    // behind GIF downloads, GIF decoding or the emoji data loading on the shared pools
+    private val executor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "symbol-search").apply { isDaemon = true }
+    }
+
+    /** Where symbol searches run. */
+    val dispatcher: CoroutineDispatcher = executor.asCoroutineDispatcher()
+
+    /** How many results are checked before a search shows them: about a screenful. */
+    const val CHECK_BEFORE_SHOWING = 96
 
     @Volatile
     private var index: List<Entry>? = null
+    private val loading = AtomicBoolean(false)
 
-    /** Every searchable symbol the phone's fonts can draw, built once. */
-    fun entries(): List<Entry> = index ?: buildEntries(::fontHasGlyph).also { index = it }
+    // Code point -> whether the fonts can draw it; persisted per Android build
+    private val verdicts = ConcurrentHashMap<Int, Boolean>()
+    @Volatile
+    private var verdictsLoaded = false
+    private val verdictsDirty = AtomicBoolean(false)
+    private val saveScheduled = AtomicBoolean(false)
 
-    /** Builds the list; [hasGlyph] decides which characters can be drawn. */
-    fun buildEntries(hasGlyph: (String) -> Boolean): List<Entry> =
-        BLOCKS.asSequence()
-            .flatMap { it.asSequence() }
-            .filter { Character.isDefined(it) && !Character.isISOControl(it) && !Character.isWhitespace(it) }
-            .mapNotNull { codePoint ->
-                val name = Character.getName(codePoint) ?: return@mapNotNull null
-                val symbol = String(Character.toChars(codePoint))
-                if (hasGlyph(symbol)) Entry(symbol, name.lowercase(Locale.ROOT)) else null
+    /** True once the list is in memory. */
+    fun isReady(): Boolean = index != null
+
+    /** Every bundled symbol (read once; a few tens of milliseconds). */
+    @Synchronized
+    fun entries(context: Context): List<Entry> {
+        index?.let { return it }
+        val appContext = context.applicationContext
+        OLD_FILES.forEach { File(appContext.filesDir, it).delete() }
+        loadVerdicts(appContext)
+        val list = readAsset(appContext)
+        index = list
+        return list
+    }
+
+    /** Reads the list on symbol search's thread, once; call when a symbols page opens. */
+    fun prewarm(context: Context) {
+        if (index != null || !loading.compareAndSet(false, true)) return
+        val appContext = context.applicationContext
+        executor.execute {
+            try {
+                entries(appContext)
+            } finally {
+                loading.set(false)
             }
-            .toList()
+        }
+    }
+
+    /** The bundled symbols with their names. */
+    fun readAsset(context: Context): List<Entry> =
+        context.assets.open(ASSET).bufferedReader(Charsets.UTF_8).use { parseList(it.readText()) }
+
+    /** "code point (hex) TAB name" lines; # starts a comment. */
+    fun parseList(text: String): List<Entry> = text.lineSequence()
+        .filter { it.isNotBlank() && !it.startsWith("#") }
+        .mapNotNull { line ->
+            val tab = line.indexOf('\t')
+            if (tab <= 0) return@mapNotNull null
+            val codePoint = line.substring(0, tab).toIntOrNull(16) ?: return@mapNotNull null
+            Entry(String(Character.toChars(codePoint)), line.substring(tab + 1).lowercase(Locale.ROOT))
+        }
+        .toList()
+
+    /**
+     * [found] ready to show: symbols known not to render are dropped; the first [checkFirst]
+     * that haven't been checked yet are checked now (the rest when they're about to be shown).
+     */
+    fun renderable(
+        found: List<Entry>,
+        checkFirst: Int = CHECK_BEFORE_SHOWING,
+        hasGlyph: (String) -> Boolean = ::fontHasGlyph
+    ): List<Entry> {
+        var checked = 0
+        return found.filter { entry ->
+            val known = verdicts[entry.symbol.codePointAt(0)]
+            when {
+                known != null -> known
+                checked < checkFirst -> {
+                    checked++
+                    canRender(entry.symbol, hasGlyph)
+                }
+                else -> true // checked when it's about to be shown
+            }
+        }
+    }
+
+    /** Whether the phone's fonts can draw [symbol]; checked once, then remembered. */
+    fun canRender(symbol: String, hasGlyph: (String) -> Boolean = ::fontHasGlyph): Boolean {
+        val codePoint = symbol.codePointAt(0)
+        verdicts[codePoint]?.let { return it }
+        val drawable = runCatching { hasGlyph(symbol) }.getOrDefault(false)
+        verdicts[codePoint] = drawable
+        verdictsDirty.set(true)
+        return drawable
+    }
+
+    /** Whether [symbol] has been checked already. */
+    fun isChecked(symbol: String): Boolean = verdicts.containsKey(symbol.codePointAt(0))
+
+    /** Saves new answers a moment later on a background thread (batching several checks). */
+    fun saveVerdictsSoon(context: Context) {
+        if (!verdictsDirty.get() || !saveScheduled.compareAndSet(false, true)) return
+        val appContext = context.applicationContext
+        Thread({
+            try {
+                Thread.sleep(1500)
+                if (verdictsDirty.getAndSet(false)) {
+                    saveVerdicts(File(appContext.filesDir, VERDICTS_FILE), Build.FINGERPRINT, verdicts)
+                }
+            } finally {
+                saveScheduled.set(false)
+            }
+        }, "symbol-search-save").start()
+    }
+
+    private fun loadVerdicts(context: Context) {
+        if (verdictsLoaded) return
+        verdictsLoaded = true
+        loadVerdicts(File(context.filesDir, VERDICTS_FILE), Build.FINGERPRINT)?.let { verdicts.putAll(it) }
+    }
+
+    /** Saved answers, if they were made on this Android build ([fingerprint]). */
+    fun loadVerdicts(file: File, fingerprint: String): Map<Int, Boolean>? {
+        if (!file.isFile) return null
+        return runCatching {
+            val lines = file.readLines()
+            if (lines.firstOrNull() != fingerprint) return null
+            lines.drop(1).mapNotNull { line ->
+                val tab = line.indexOf('\t')
+                if (tab <= 0) return@mapNotNull null
+                val codePoint = line.substring(0, tab).toIntOrNull(16) ?: return@mapNotNull null
+                codePoint to (line.substring(tab + 1) == "1")
+            }.toMap()
+        }.getOrNull()
+    }
+
+    fun saveVerdicts(file: File, fingerprint: String, answers: Map<Int, Boolean>) {
+        runCatching {
+            val text = buildString {
+                append(fingerprint).append('\n')
+                answers.forEach { (codePoint, drawable) ->
+                    append(Integer.toHexString(codePoint)).append('\t').append(if (drawable) '1' else '0').append('\n')
+                }
+            }
+            val temp = File(file.parentFile, file.name + ".tmp")
+            temp.writeText(text)
+            temp.renameTo(file)
+        }
+    }
+
+    /** Forgets every answer (tests). */
+    fun clearVerdicts() {
+        verdicts.clear()
+        verdictsDirty.set(false)
+    }
 
     // Words that pad Unicode names without saying what a symbol is ("greek small letter pi")
     private val FILLER = setOf("sign", "greek", "small", "capital", "letter", "with", "symbol", "mark", "of", "the", "and")
@@ -71,7 +205,7 @@ object SymbolSearch {
      * query itself. Best matches first: whole words over word starts, relative to how long the
      * name is (filler words aside). A blank query returns everything.
      */
-    fun search(query: String, entries: List<Entry> = entries(), limit: Int = 400): List<Entry> {
+    fun search(query: String, entries: List<Entry>, limit: Int = 400): List<Entry> {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return entries
         val lower = trimmed.lowercase(Locale.ROOT)
@@ -81,7 +215,7 @@ object SymbolSearch {
                 if (entry.symbol == trimmed) return@mapNotNull entry to Double.MAX_VALUE
                 val best = queries
                     .filter { words -> words.all { entry.name.contains(it) } }
-                    .maxOfOrNull { words -> score(entry.name, words) }
+                    .maxOfOrNull { words -> score(entry.words, words) }
                     ?: return@mapNotNull null
                 entry to best
             }
@@ -91,8 +225,7 @@ object SymbolSearch {
             .toList()
     }
 
-    private fun score(name: String, words: List<String>): Double {
-        val nameWords = name.split(' ', '-').filter { it.isNotEmpty() }
+    private fun score(nameWords: List<String>, words: List<String>): Double {
         val points = words.sumOf { word ->
             when {
                 word in nameWords -> 2
@@ -103,7 +236,9 @@ object SymbolSearch {
         return points.toDouble() / maxOf(1, nameWords.count { it !in FILLER })
     }
 
-    private val glyphPaint by lazy { Paint() }
+    // Paint isn't thread-safe: one per thread (searches check in the background, scrolling on
+    // the main thread)
+    private val glyphPaint = ThreadLocal.withInitial { Paint() }
 
-    private fun fontHasGlyph(symbol: String): Boolean = glyphPaint.hasGlyph(symbol)
+    private fun fontHasGlyph(symbol: String): Boolean = glyphPaint.get()!!.hasGlyph(symbol)
 }

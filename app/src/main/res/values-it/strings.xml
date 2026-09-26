@@ -1076,7 +1076,6 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="emoji_layer_recents_key_title">Tasto recenti nel livello emoji</string>
     <string name="emoji_layer_recents_key_description">Premi il tasto del livello emoji che mostra le emoji recenti (Q se non lo cambi). Nel livello, premendolo le emoji recenti del selettore compaiono sugli altri tasti; premilo di nuovo per tornare indietro.</string>
     <string name="emoji_layer_recents_key_press_prompt">Premi ora un tasto lettera…</string>
-    <string name="emoji_layer_recents_key_rejected">Quel tasto non è nel livello emoji. Premi un tasto lettera.</string>
     <string name="emoji_layer_recents_key_off">Disattivato</string>
     <string name="emoji_layer_recents_key_current">Tasto %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Disattiva</string>
@@ -1086,7 +1085,6 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_attribution">Fornito da KLIPY</string>
     <string name="gif_search_placeholder">Cerca su KLIPY</string>
     <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Modificatori → Personalizza tastiera SYM → Cerca GIF.</string>
-    <string name="gif_error">Impossibile raggiungere KLIPY. Controlla la connessione e la chiave API.</string>
     <string name="gif_sent_as_link">Questa app non accetta GIF qui, quindi è stato scritto il link.</string>
     <string name="gif_settings_title">Cerca GIF</string>
     <string name="gif_settings_description">Aggiunge un tasto GIF al livello emoji e una scheda GIF al selettore emoji, con GIF da KLIPY. Ricerche e GIF vengono scaricate da KLIPY solo mentre la ricerca GIF è aperta.</string>
@@ -1095,4 +1093,13 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_api_key_help">Registrati su partner.klipy.com e crea una chiave in API Keys → Add Platform. La chiave resta su questo telefono e non è inclusa nei backup.</string>
     <string name="gif_get_key">Ottieni una chiave gratuita</string>
     <string name="symbol_search_placeholder">Cerca simboli…</string>
+    <string name="gif_loading">Caricamento GIF…</string>
+    <string name="gif_error_detail">Impossibile caricare le GIF (%1$s). Controlla la connessione e la chiave KLIPY.</string>
+    <string name="gif_no_results">Nessuna GIF trovata</string>
+    <string name="symbol_no_results">Nessun simbolo trovato</string>
+    <string name="symbol_loading">Caricamento simboli…</string>
+    <string name="emoji_layer_gif_key_title">Tasto GIF nel livello emoji</string>
+    <string name="emoji_layer_gif_key_description">Premi il tasto del livello emoji che apre la ricerca GIF (P se non lo cambi). Funziona mentre la ricerca GIF è attiva.</string>
+    <string name="emoji_layer_key_rejected">Premi un tasto lettera che non sia già il tasto Recenti o GIF.</string>
+    <string name="symbol_error_detail">Ricerca simboli non riuscita (%1$s).</string>
 </resources>

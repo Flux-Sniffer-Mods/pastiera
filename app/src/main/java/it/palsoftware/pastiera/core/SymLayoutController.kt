@@ -25,6 +25,8 @@ class SymLayoutController(
          */
         const val RECENTS_KEY_LABEL = "\u21BA"         // ↺
         const val RECENTS_BACK_LABEL = "\u21A9\uFE0E"  // ↩ (text presentation)
+        /** Label of the emoji layer's GIF key. */
+        const val GIF_KEY_LABEL = "GIF"
     }
 
     private enum class SymPage {
@@ -49,6 +51,9 @@ class SymLayoutController(
      */
     var openedByEmojiKey: Boolean = false
         private set
+
+    /** The emoji layer's GIF key was pressed: the input method opens GIF search. */
+    var onEmojiLayerGifKey: (() -> Unit)? = null
 
     /** The emoji layer shows recent emoji on its keys (its Recents key was pressed). */
     var emojiLayerShowsRecents: Boolean = false
@@ -154,14 +159,18 @@ class SymLayoutController(
     private fun emojiLayerMappings(): Map<Int, String> {
         val base = alternateCharacterManager.getSymMappings()
         val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
-        if (recentsKey == KeyEvent.KEYCODE_UNKNOWN) return base
-        val shown = if (emojiLayerShowsRecents) {
-            val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey }
+        val gifKey = SettingsManager.activeEmojiLayerGifKey(context)
+        if (recentsKey == KeyEvent.KEYCODE_UNKNOWN && gifKey == KeyEvent.KEYCODE_UNKNOWN) return base
+        val shown = if (emojiLayerShowsRecents && recentsKey != KeyEvent.KEYCODE_UNKNOWN) {
+            val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey && it != gifKey }
             keys.zip(RecentEmojiManager.getRecentEmojis(context, keys.size)).toMap().toMutableMap()
         } else {
             base.toMutableMap()
         }
-        shown[recentsKey] = if (emojiLayerShowsRecents) RECENTS_BACK_LABEL else RECENTS_KEY_LABEL
+        if (recentsKey != KeyEvent.KEYCODE_UNKNOWN) {
+            shown[recentsKey] = if (emojiLayerShowsRecents) RECENTS_BACK_LABEL else RECENTS_KEY_LABEL
+        }
+        if (gifKey != KeyEvent.KEYCODE_UNKNOWN) shown[gifKey] = GIF_KEY_LABEL
         return shown
     }
 
@@ -344,6 +353,11 @@ class SymLayoutController(
             SettingsManager.getSymAutoClose(context)
         }
 
+        val gifKey = SettingsManager.activeEmojiLayerGifKey(context)
+        if (page == SymPage.EMOJI && gifKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == gifKey) {
+            if ((event?.repeatCount ?: 0) == 0) onEmojiLayerGifKey?.invoke()
+            return SymKeyResult.CONSUME
+        }
         val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
         if (page == SymPage.EMOJI && recentsKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == recentsKey) {
             if ((event?.repeatCount ?: 0) == 0 && toggleEmojiLayerRecents()) {

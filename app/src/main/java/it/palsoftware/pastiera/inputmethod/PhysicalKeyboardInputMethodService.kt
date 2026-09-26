@@ -2104,6 +2104,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             }
         }
         symLayoutController = SymLayoutController(this, prefs, alternateCharacterManager)
+        // Emoji layer's GIF key (physical): the same as its on-screen GIF key
+        symLayoutController.onEmojiLayerGifKey = {
+            uiHandler.post { candidatesBarController.onEmojiLayerGifRequested?.invoke() }
+        }
         keyboardVisibilityController = KeyboardVisibilityController(
             context = this,
             candidatesBarController = candidatesBarController,
@@ -2801,6 +2805,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         gifScope.cancel()
         HiddenAppKeyObserver.sink = null
         HiddenAppKeyObserver.interceptor = null
+        HiddenAppKeyObserver.hiddenAppInFront = false
         ClicksAccessibilityKeyBridge.unregister(this)
         clicksPowerShiftTapFilter.reset()
         accidentalKeyPressFilter.reset()
@@ -3125,6 +3130,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             ignoreNextEmojiSearchCursorAnchorUpdate = false
             return
         }
+        // Only a moved selection means the user went back to the app's text. The cursor also
+        // moves on screen whenever the keyboard changes height (opening emoji, GIF or symbol
+        // search), and that must not take typing away from the search that just opened.
+        val start = cursorAnchorInfo?.selectionStart ?: -1
+        val end = cursorAnchorInfo?.selectionEnd ?: -1
+        if (start < 0 || end < 0) return // the app doesn't report its selection here
+        val knownStart = emojiSearchExternalSelectionStart
+        val knownEnd = emojiSearchExternalSelectionEnd
+        if (knownStart == null || knownEnd == null) {
+            emojiSearchExternalSelectionStart = start
+            emojiSearchExternalSelectionEnd = end
+            return
+        }
+        if (start == knownStart && end == knownEnd) return
         disableEmojiSearchInputCapture()
     }
 
@@ -3540,6 +3559,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         super.onStartInput(info, restarting)
         EmojiCompatSupport.onStartInput(info)
         keyboardHiddenForApp = SettingsManager.isKeyboardHiddenForApp(this, info?.packageName)
+        HiddenAppKeyObserver.hiddenAppInFront = keyboardHiddenForApp
         val showLeds = keyboardHiddenForApp && SettingsManager.hiddenAppShowsLeds(this, info?.packageName)
         hiddenAppAllowsPanels = keyboardHiddenForApp && SettingsManager.hiddenAppAllowsPanels(this, info?.packageName)
         if (showLeds != hiddenAppShowsLeds || !restarting) observedModifierLeds.reset()
@@ -4564,9 +4584,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             val firstPress = (event_?.repeatCount ?: 0) == 0
             if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
                 if (firstPress) hiddenAppPassedThroughKeys += keyCode_
+                HiddenAppKeyObserver.logKey(event_, "input method, to the app")
                 observeHiddenAppKey(event_)
                 return super.onKeyDown(keyCode_, event_)
             }
+            HiddenAppKeyObserver.logKey(event_, "input method, to Pastiera")
             if (firstPress) hiddenAppPastieraKeys += keyCode_
         }
         val handled = handleKeyDown(keyCode_, event_)
@@ -5294,6 +5316,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 hiddenAppPassedThroughKeys.remove(keyCode_) -> false
                 else -> hiddenAppKeyGoesToPastiera(keyCode_)
             }
+            HiddenAppKeyObserver.logKey(event_, if (toPastiera) "input method, to Pastiera" else "input method, to the app")
             if (!toPastiera) {
                 observeHiddenAppKey(event_)
                 return super.onKeyUp(keyCode_, event_)

@@ -153,6 +153,7 @@ object SettingsManager {
     private const val KEY_EMOJI_KEY_OPENS_LAYER = "emoji_key_opens_layer" // Emoji key opens the emoji layer instead of the picker
     private const val KEY_EMOJI_KEY_AUTO_CLOSE = "emoji_key_auto_close" // Emoji key screens close after an emoji
     private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
+    private const val KEY_EMOJI_LAYER_GIF_KEY = "emoji_layer_gif_key" // Emoji layer key that opens GIF search
     private const val KEY_GIFS_ENABLED = "gifs_enabled" // GIF key on the emoji layer, GIF tab in the picker
     private const val KEY_KLIPY_API_KEY = "klipy_api_key" // User's own KLIPY key (not backed up)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
@@ -5359,6 +5360,27 @@ object SettingsManager {
         KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_M
     )
 
+    /** The emoji layer key that opens GIF search (while it's on): P unless changed (KEYCODE_UNKNOWN = off). */
+    fun getEmojiLayerGifKey(context: Context): Int {
+        val keyCode = getPreferences(context).getInt(KEY_EMOJI_LAYER_GIF_KEY, KeyEvent.KEYCODE_P)
+        return if (keyCode in EMOJI_LAYER_KEYS) keyCode else KeyEvent.KEYCODE_UNKNOWN
+    }
+
+    fun setEmojiLayerGifKey(context: Context, keyCode: Int): Boolean {
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode !in EMOJI_LAYER_KEYS) return false
+        // One key, one job: not the Recents key
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode == getEmojiLayerRecentsKey(context)) return false
+        getPreferences(context).edit().putInt(KEY_EMOJI_LAYER_GIF_KEY, keyCode).apply()
+        return true
+    }
+
+    /** The emoji layer's GIF key while GIF search is on and it isn't also the Recents key, else KEYCODE_UNKNOWN. */
+    fun activeEmojiLayerGifKey(context: Context): Int {
+        if (!getGifsEnabled(context)) return KeyEvent.KEYCODE_UNKNOWN
+        val keyCode = getEmojiLayerGifKey(context)
+        return if (keyCode == getEmojiLayerRecentsKey(context)) KeyEvent.KEYCODE_UNKNOWN else keyCode
+    }
+
     /** GIF search (KLIPY): a GIF key on the emoji layer and a GIF tab in the emoji picker. */
     fun getGifsEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_GIFS_ENABLED, false)
@@ -5390,6 +5412,8 @@ object SettingsManager {
 
     fun setEmojiLayerRecentsKey(context: Context, keyCode: Int): Boolean {
         if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode !in EMOJI_LAYER_KEYS) return false
+        // One key, one job: not the GIF key while GIF search is on
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && getGifsEnabled(context) && keyCode == getEmojiLayerGifKey(context)) return false
         getPreferences(context).edit().putInt(KEY_EMOJI_LAYER_RECENTS_KEY, keyCode).apply()
         return true
     }

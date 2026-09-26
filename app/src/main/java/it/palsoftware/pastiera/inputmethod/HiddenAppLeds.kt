@@ -2,6 +2,7 @@ package it.palsoftware.pastiera.inputmethod
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
 
 /**
@@ -135,6 +136,38 @@ internal class ObservedModifierLeds {
 internal object HiddenAppKeyObserver {
     @Volatile
     var sink: ((KeyEvent) -> Unit)? = null
+
+    /** An app with Pastiera hidden is in front (key diagnostics are logged only then). */
+    @Volatile
+    var hiddenAppInFront: Boolean = false
+
+    // The Titan 2 Elite's Ctrl keys and Sym report these non-standard scan codes
+    private val TITAN_SPECIAL_SCAN_CODES = setOf(65, 151, 251, 253)
+
+    /**
+     * Key diagnostics (logcat tag FluxKeys; pastiera-flux.sh key-log), only while a hidden app is
+     * in front and only for modifier, Sym, Fn, F-number and unknown keys: never text keys.
+     */
+    fun logKey(event: KeyEvent?, path: String) {
+        if (!hiddenAppInFront || event == null || !isDiagnosticKey(event)) return
+        if (event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return
+        Log.i(
+            "FluxKeys",
+            "$path: ${if (event.action == KeyEvent.ACTION_DOWN) "down" else "up"} " +
+                "${KeyEvent.keyCodeToString(event.keyCode)} scan=${event.scanCode} " +
+                "meta=0x${Integer.toHexString(event.metaState)} repeat=${event.repeatCount} device=${event.deviceId}"
+        )
+    }
+
+    fun isDiagnosticKey(event: KeyEvent): Boolean {
+        val code = event.keyCode
+        return KeyEvent.isModifierKey(code) ||
+            code == KeyEvent.KEYCODE_SYM ||
+            code == KeyEvent.KEYCODE_FUNCTION ||
+            code == KeyEvent.KEYCODE_UNKNOWN ||
+            code in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12 ||
+            event.scanCode in TITAN_SPECIAL_SCAN_CODES
+    }
 
     /**
      * Set while a hidden app allows Pastiera's emoji/symbols panels. Returns true when the input

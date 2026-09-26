@@ -32,6 +32,8 @@ import android.widget.TextView
 import android.util.Log
 import android.util.TypedValue
 import it.palsoftware.pastiera.R
+import it.palsoftware.pastiera.data.gif.KlipyGifs
+import it.palsoftware.pastiera.data.symbols.SymbolSearch
 import it.palsoftware.pastiera.MainActivity
 import it.palsoftware.pastiera.SymCustomizationActivity
 import it.palsoftware.pastiera.SettingsManager
@@ -357,8 +359,9 @@ class StatusBarController(
     private var emojiPickerView: EmojiPickerView? = null
     // Pastierina: the picker's search field sits in the middle of the compact bar
     private var emojiSearchInBar: Boolean = false
-    // Pastierina: on the emoji layer, a search bar sits there instead (tap for the picker's search)
-    private var emojiLayerSearchBar: TextView? = null
+    // Pastierina: on the emoji layer and symbols pages, a search bar sits there instead (tap for
+    // the picker's search)
+    private var emojiLayerBarRow: LinearLayout? = null
     // What the emoji layer grid's slot after L held when last built: search, GIF or nothing
     private var lastEmojiLayerSlot: String? = null
 
@@ -1325,8 +1328,9 @@ class StatusBarController(
         // Only scroll to top when view is just added (first open or switching pages)
         // Don't scroll if view is already in container (user is browsing)
         if (lastSymPageRendered != 4 || view.isStaleForCurrentEditor()) {
-            // First time, switching from another page, or the field / emoji font changed
-            view.refresh()
+            // First time, switching from another page, or the field / emoji font changed.
+            // Only a fresh opening leaves GIF or symbol search; a data refresh keeps it.
+            view.refresh(resetModes = lastSymPageRendered != 4)
         } else if (wasDetachedFromHost) {
             view.scrollToTop() // View was just added (happens when reopening after being removed)
         }
@@ -1367,16 +1371,21 @@ class StatusBarController(
     private fun updateEmojiLayerSearchBar(show: Boolean, symbols: Boolean = false) {
         val bar = fullSuggestionsBar
         val host = bar?.centerAccessoryHost()
-        val existing = emojiLayerSearchBar
+        val existing = emojiLayerBarRow
         if (show && bar != null && host != null) {
-            val searchBar = existing ?: TextView(context).apply {
-                textSize = 14f
-                setSingleLine(true)
-                gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                setPadding(dpToPx(8f), 0, dpToPx(8f), 0)
-                isClickable = true
-                isFocusable = true
-            }.also { emojiLayerSearchBar = it }
+            val row = existing ?: LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(TextView(context).apply {
+                    textSize = 14f
+                    setSingleLine(true)
+                    gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                    setPadding(dpToPx(8f), 0, dpToPx(8f), 0)
+                    isClickable = true
+                    isFocusable = true
+                }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+                // GIF search: the emoji layer's GIF key (P unless changed), not a tab here
+            }.also { emojiLayerBarRow = it }
+            val searchBar = row.getChildAt(0) as TextView
             // Emoji layer: emoji search; symbols pages: symbol search
             searchBar.contentDescription = context.getString(
                 if (symbols) R.string.symbol_search_placeholder else R.string.emoji_layer_search_button
@@ -1384,11 +1393,11 @@ class StatusBarController(
             searchBar.setOnClickListener {
                 if (symbols) onSymbolSearchRequested?.invoke() else onEmojiLayerSearchRequested?.invoke()
             }
-            if (searchBar.parent !== host) {
-                (searchBar.parent as? ViewGroup)?.removeView(searchBar)
+            if (row.parent !== host) {
+                (row.parent as? ViewGroup)?.removeView(row)
                 host.removeAllViews()
                 host.addView(
-                    searchBar,
+                    row,
                     FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
@@ -1397,16 +1406,17 @@ class StatusBarController(
             }
             // Same look as the picker's search field (EmojiPickerView)
             val theme = activeThemeColors()
-            searchBar.hint = context.getString(
-                if (symbols) R.string.symbol_search_placeholder else R.string.emoji_picker_search_placeholder
-            )
-            searchBar.setHintTextColor((theme.textAndIcons and 0x00FFFFFF) or (160 shl 24))
-            searchBar.background = GradientDrawable().apply {
+            fun barBackground() = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 setColor(theme.suggestion)
                 setStroke(dpToPx(1f), theme.divider)
                 cornerRadius = dpToPx(7f).toFloat()
             }
+            searchBar.hint = context.getString(
+                if (symbols) R.string.symbol_search_placeholder else R.string.emoji_picker_search_placeholder
+            )
+            searchBar.setHintTextColor((theme.textAndIcons and 0x00FFFFFF) or (160 shl 24))
+            searchBar.background = barBackground()
             bar.setCenterAccessoryActive(true)
         } else if (existing != null && existing.parent != null) {
             (existing.parent as? ViewGroup)?.removeView(existing)
@@ -1512,15 +1522,9 @@ class StatusBarController(
         container.setPadding(sidePadding, gap, sidePadding, gap)
         val inputConnectionChanged = lastInputConnectionUsed != inputConnection
         val inputConnectionBecameAvailable = lastInputConnectionUsed == null && inputConnection != null
-        // The emoji layer's slot after L: search outside Pastierina (which has it in the bar),
-        // otherwise the GIF key when GIF search is on
+        // The slot after L: search outside Pastierina (which has it, and the GIF tab, in the bar)
         val searchInGrid = page in listOf(1, 2, 5) && !pastierinaModeActive
-        val gifInGrid = page == 1 && !searchInGrid && SettingsManager.getGifsEnabled(context)
-        val slot = when {
-            searchInGrid -> "search"
-            gifInGrid -> "gif"
-            else -> "none"
-        }
+        val slot = if (searchInGrid) "search" else "none"
         if (lastSymPageRendered == page && lastSymMappingsRendered == symMappings && !inputConnectionChanged &&
             !inputConnectionBecameAvailable && lastEmojiLayerSlot == slot
         ) {
@@ -1608,8 +1612,6 @@ class StatusBarController(
                         if (searchInGrid) {
                             // Emoji layer outside Pastierina: search in the free slot after L
                             rowLayout.addView(createEmojiLayerSearchButton(keyHeight, fixedKeyWidth, page))
-                        } else if (gifInGrid) {
-                            rowLayout.addView(createEmojiLayerGifButton(keyHeight, fixedKeyWidth))
                         } else {
                             rowLayout.addView(View(context), LinearLayout.LayoutParams(fixedKeyWidth, keyHeight))
                         }
@@ -2561,13 +2563,19 @@ class StatusBarController(
             content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_KEY_LABEL ||
                 content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_BACK_LABEL
             )
+        // Emoji layer's GIF key: a short bold word, smaller than an emoji
+        val gifLabel = page == 1 && content == it.palsoftware.pastiera.core.SymLayoutController.GIF_KEY_LABEL
         val contentText = TextView(context).apply {
             text = content
-            textSize = if (recentsSymbol) contentTextSize * 1.35f else contentTextSize // textSize è in sp
+            textSize = when {
+                recentsSymbol -> contentTextSize * 1.35f
+                gifLabel -> contentTextSize * 0.55f
+                else -> contentTextSize
+            } // textSize è in sp
             gravity = Gravity.CENTER
             // Emoji layer: glyphs centre on their own box, not on the font's extra padding
             if (page == 1) includeFontPadding = false
-            if (recentsSymbol) setTypeface(null, android.graphics.Typeface.BOLD)
+            if (recentsSymbol || gifLabel) setTypeface(null, android.graphics.Typeface.BOLD)
             if (roundedCorners) setTextColor(theme.textAndIcons)
             // Per pagina 2 (caratteri), rendi bianco e in grassetto
             if (page == 2) {
@@ -2704,29 +2712,6 @@ class StatusBarController(
             setOnClickListener {
                 onSymCloseRequested?.invoke()
             }
-        }
-    }
-
-    /** Emoji layer: opens the emoji picker's GIF search (KLIPY). */
-    private fun createEmojiLayerGifButton(height: Int, width: Int): View {
-        val theme = activeThemeColors()
-        return FrameLayout(context).apply {
-            layoutParams = LinearLayout.LayoutParams(width, height)
-            isClickable = true
-            isFocusable = true
-            contentDescription = context.getString(R.string.gif_tab_description)
-            addView(TextView(context).apply {
-                text = context.getString(R.string.gif_tab)
-                textSize = 13f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(theme.textAndIcons)
-                gravity = Gravity.CENTER
-                layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            })
-            setOnClickListener { onEmojiLayerGifRequested?.invoke() }
         }
     }
 
@@ -2928,7 +2913,14 @@ class StatusBarController(
         }
         
         val recentsKey = page == 1 && keyCode == SettingsManager.getEmojiLayerRecentsKey(context)
-        if (recentsKey) {
+        val gifKey = page == 1 && keyCode == SettingsManager.activeEmojiLayerGifKey(context)
+        if (gifKey) {
+            // Emoji layer's GIF key: GIF search
+            keyButton.isClickable = true
+            keyButton.isFocusable = true
+            keyButton.contentDescription = context.getString(R.string.gif_tab_description)
+            keyButton.setOnClickListener { onEmojiLayerGifRequested?.invoke() }
+        } else if (recentsKey) {
             // Emoji layer's Recents key: recent emoji on the keys, or back
             keyButton.isClickable = true
             keyButton.isFocusable = true
@@ -3398,6 +3390,19 @@ class StatusBarController(
         emojiSearchInBar = pastierinaModeActive && !isFullSoftwareKeyboardMode &&
             snapshot.symPage == 4 && !snapshot.clipboardOverlay
         if (!emojiSearchInBar) releaseEmojiSearchFromBar()
+        // Symbol search: read the bundled list before it's needed
+        if (snapshot.symPage == 2 || snapshot.symPage == 5) {
+            SymbolSearch.prewarm(context)
+        }
+        // GIF search is one key away (emoji layer) or one tap (picker): have featured GIFs ready,
+        // except while the picker is there for symbol search (that gets the phone to itself)
+        val symbolSearchInPicker = snapshot.symPage == 4 &&
+            (pendingSymbolSearch || emojiPickerView?.isSymbolSearchOpen() == true)
+        if ((snapshot.symPage == 1 || snapshot.symPage == 4) && !symbolSearchInPicker &&
+            SettingsManager.getGifsEnabled(context)
+        ) {
+            KlipyGifs.prefetchFeatured(context, SettingsManager.getKlipyApiKey(context))
+        }
         // Emoji layer (1) and the symbols pages (2 symbols, 5 device) have a search bar there
         val barSearchPage = snapshot.symPage.takeIf {
             pastierinaModeActive && !isFullSoftwareKeyboardMode && !snapshot.clipboardOverlay && it in listOf(1, 2, 5)
