@@ -7,4 +7,6 @@
     <string name="shift_field_links">Links and web addresses</string>
     <string name="shift_field_email">Email addresses</string>
     <string name="shift_field_none">No fields</string>
+    <string name="search_bar_waits_title">Search bars wait for typing</string>
+    <string name="search_bar_waits_description">When an app opens with its search bar already focused, the keyboard bar appears only once you type or tap the bar.</string>
 </resources>

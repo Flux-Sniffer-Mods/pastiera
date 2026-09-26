@@ -1065,9 +1065,10 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="hidden_keyboard_apps_description">Pastiera resta nascosta nelle app elencate e lascia loro tutti i tasti. Utile per i desktop Termux:X11.</string>
     <string name="hidden_keyboard_apps_search">Cerca app</string>
     <string name="hidden_keyboard_apps_done">Fatto</string>
-    <string name="hidden_keyboard_apps_per_app_options">Ogni app spuntata ha due opzioni. LED di stato mantiene visibili i LED dei modificatori sopra l\'app. Emoji e Sym permette al tasto emoji e a Sym di aprire Pastiera; Sym non arriva più all\'app.</string>
-    <string name="hidden_keyboard_apps_option_leds">LED di stato</string>
-    <string name="hidden_keyboard_apps_option_panels">Emoji e Sym</string>
+    <string name="hidden_keyboard_apps_leds_only_title">Mostra solo i LED di stato</string>
+    <string name="hidden_keyboard_apps_leds_only_description">Mantiene visibili i LED dei modificatori in queste app, disegnati sopra l’app. Non compare nient’altro e non occupa spazio sullo schermo.</string>
+    <string name="hidden_keyboard_apps_panels_title">Tasto emoji e Sym aprono Pastiera</string>
+    <string name="hidden_keyboard_apps_panels_description">Il tasto del selettore emoji apre le emoji, Sym apre la pagina dei simboli. Mentre una è aperta, i tasti vanno a Pastiera. In Termux:X11, Sym non arriva più a X.</string>
     <string name="hidden_keyboard_apps_accessibility_hint">Le app che leggono direttamente la tastiera, come Termux:X11, richiedono il servizio di accessibilità di Pastiera per queste opzioni.</string>
     <string name="hidden_keyboard_apps_open_accessibility">Apri impostazioni di accessibilità</string>
     <string name="emoji_key_target_title">Il tasto emoji apre</string>
@@ -1086,7 +1087,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_tab_description">Cerca GIF</string>
     <string name="gif_attribution">Fornito da KLIPY</string>
     <string name="gif_search_placeholder">Cerca su KLIPY</string>
-    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Pastiera Flux → Emoji, simboli e GIF → Ricerca GIF.</string>
+    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Emoji, simboli e GIF → Ricerca GIF.</string>
     <string name="gif_sent_as_link">Questa app non accetta GIF qui, quindi è stato scritto il link.</string>
     <string name="gif_settings_title">Cerca GIF</string>
     <string name="gif_settings_description">Aggiunge un tasto GIF al livello emoji e una scheda GIF al selettore emoji, con GIF da KLIPY. Ricerche e GIF vengono scaricate da KLIPY solo mentre la ricerca GIF è aperta.</string>
@@ -1170,7 +1171,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="flux_offline_switch_description">Nulla in Pastiera va online.</string>
     <string name="flux_section_offline_affects">Mentre è attiva</string>
     <string name="flux_offline_affects">• La ricerca GIF sparisce, con la sua scheda e il tasto GIF del livello emoji\n• Dizionari e layout non si possono scaricare\n• Nessun controllo degli aggiornamenti né note di rilascio\n• Le emoji vengono solo dal font di sistema, senza il font emoji scaricabile (dal prossimo avvio della tastiera)</string>
-    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Pastiera Flux → Modalità offline).</string>
+    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Privacy e sistema → Modalità offline).</string>
     <string name="search_key_title">Tasto ricerca</string>
     <string name="search_key_description">Nel livello emoji e nelle pagine dei simboli questo tasto apre la ricerca; nel selettore emoji e nella ricerca GIF manda la digitazione alla ricerca. A se non lo cambi; non può essere il tasto Recenti o GIF.</string>
 </resources>

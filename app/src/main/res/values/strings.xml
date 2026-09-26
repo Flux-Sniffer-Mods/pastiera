@@ -540,8 +540,8 @@
     <string name="clicks_button_binding_success">Button assignment applied.</string>
     <string name="clicks_button_binding_failure">Button assignment could not be applied.</string>
     <string name="clicks_button_binding_pending">Will be applied when a supported keyboard connection is ready.</string>
-    <string name="clicks_launcher_interception_service_label">Pastiera Clicks button interception</string>
-    <string name="clicks_launcher_interception_service_description">Intercepts only explicitly configured buttons of a supported Clicks Power Keyboard.</string>
+    <string name="clicks_launcher_interception_service_label">Pastiera key interception</string>
+    <string name="clicks_launcher_interception_service_description">Handles the Clicks Power Keyboard buttons you configure. In apps where Pastiera is hidden, it also follows your keys for the status LEDs and passes the emoji key and Sym to Pastiera, if you turned those options on.</string>
     <string name="clicks_launcher_interception_title">Android Clicks-button interception</string>
     <string name="clicks_launcher_interception_enabled">Enabled · Only explicitly configured buttons of a supported Clicks Power Keyboard are filtered.</string>
     <string name="clicks_launcher_interception_disabled">Required for software-assigned Clicks buttons. Tap to enable it in Android Accessibility settings.</string>
@@ -1748,9 +1748,10 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="hidden_keyboard_apps_description">Pastiera stays out of sight in the apps you list and leaves every key to them. Useful for Termux:X11 desktops.</string>
     <string name="hidden_keyboard_apps_search">Search apps</string>
     <string name="hidden_keyboard_apps_done">Done</string>
-    <string name="hidden_keyboard_apps_per_app_options">Each ticked app has two options. Status LEDs keeps the modifier LEDs visible over the app. Emoji &amp; Sym lets your emoji key and Sym open Pastiera there; Sym then no longer reaches the app.</string>
-    <string name="hidden_keyboard_apps_option_leds">Status LEDs</string>
-    <string name="hidden_keyboard_apps_option_panels">Emoji &amp; Sym</string>
+    <string name="hidden_keyboard_apps_leds_only_title">Show status LEDs only</string>
+    <string name="hidden_keyboard_apps_leds_only_description">Keep the modifier LEDs visible in these apps, drawn over the app. Nothing else appears and no screen space is taken.</string>
+    <string name="hidden_keyboard_apps_panels_title">Emoji key and Sym open Pastiera</string>
+    <string name="hidden_keyboard_apps_panels_description">Your emoji picker key opens emoji, Sym opens the symbols page. While one is open, keys go to Pastiera. In Termux:X11, Sym then no longer reaches X.</string>
     <string name="hidden_keyboard_apps_accessibility_hint">Apps that read the keyboard themselves, like Termux:X11, need Pastiera’s accessibility service for these options.</string>
     <string name="hidden_keyboard_apps_open_accessibility">Open accessibility settings</string>
     <string name="emoji_key_target_title">Emoji key opens</string>
@@ -1769,7 +1770,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_tab_description">GIF search</string>
     <string name="gif_attribution">Powered by KLIPY</string>
     <string name="gif_search_placeholder">Search KLIPY</string>
-    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Pastiera Flux → Emoji, symbols &amp; GIFs → GIF search.</string>
+    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Emoji, symbols &amp; GIFs → GIF search.</string>
     <string name="gif_sent_as_link">This app doesn’t take GIFs here, so its link was typed instead.</string>
     <string name="gif_settings_title">GIF search</string>
     <string name="gif_settings_description">Adds a GIF key to the emoji layer and a GIF tab to the emoji picker, with GIFs from KLIPY. Searches and GIFs are only fetched from KLIPY while GIF search is open.</string>
@@ -1853,7 +1854,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="flux_offline_switch_description">Nothing in Pastiera goes online.</string>
     <string name="flux_section_offline_affects">While it’s on</string>
     <string name="flux_offline_affects">• GIF search is gone, with its tab and the emoji layer’s GIF key\n• Dictionaries and layouts can’t be downloaded\n• No update checks or release notes\n• Emoji come from the system font only, without the downloadable emoji font (from the next start of the keyboard)</string>
-    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Pastiera Flux → Offline mode).</string>
+    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Privacy &amp; system → Offline mode).</string>
     <string name="search_key_title">Search key</string>
     <string name="search_key_description">On the emoji layer and the symbols pages this key opens search; in the emoji picker and GIF search it puts typing into the search. A unless you change it; it can’t be the Recents or GIF key.</string>
 </resources>

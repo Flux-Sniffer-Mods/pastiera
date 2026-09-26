@@ -291,6 +291,29 @@ fun AppEnterBehaviorScreen(
             )
         }
 
+        EnterStandardsSection(
+            preset = preset,
+            excludedPackages = overrides.map { it.packageName }.toSet() + favoriteEnterBehaviorApps,
+            onAdopt = { packageName, standard ->
+                // Adopting the standard makes it an override you can then change
+                val behavior = when (standard) {
+                    EnterStandard.Email -> SettingsManager.ENTER_BEHAVIOR_ENTER_NEWLINE_CTRL_SEND
+                    else -> enterBehaviorForPreset(preset) ?: SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT
+                }
+                val addition = SettingsManager.AppEnterBehaviorOverride(
+                    packageName = packageName,
+                    behavior = behavior,
+                    sendStrategy = AppEnterStandards.sendStrategyFor(packageName)
+                        ?: SettingsManager.ENTER_SEND_STRATEGY_EDITOR_ACTION,
+                    additionalSendShortcut = additionalSendShortcutForNewApp(selectedAdditionalSendShortcut)
+                )
+                val updated = sortEnterBehaviorOverrides(context, overrides + addition)
+                overrides = updated
+                SettingsManager.setAppEnterBehaviorOverrides(context, updated)
+                bringIntoViewPackage = packageName
+            }
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 
@@ -322,6 +345,68 @@ fun AppEnterBehaviorScreen(
                 bringIntoViewPackage = apps.firstOrNull()?.packageName
             }
         )
+    }
+}
+
+/**
+ * The installed apps from the app shortcut list whose Enter follows their category's standard
+ * (AppEnterStandards). Tapping one turns it into an override you can change.
+ */
+@Composable
+private fun EnterStandardsSection(
+    preset: String,
+    excludedPackages: Set<String>,
+    onAdopt: (packageName: String, standard: EnterStandard) -> Unit
+) {
+    val context = LocalContext.current
+    val installed = remember { AppListHelper.getInstalledApps(context).map { it.packageName }.toSet() }
+    val rows = remember(excludedPackages, installed) {
+        AppEnterStandards.standardApps().filter { (app, _) ->
+            app.packageName in installed && app.packageName !in excludedPackages
+        }
+    }
+    Text(
+        text = stringResource(R.string.enter_standards_title),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
+            .settingRow("app_enter_behavior.standards")
+    )
+    Text(
+        text = stringResource(R.string.enter_standards_description),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+    )
+    if (rows.isEmpty()) {
+        Text(
+            text = stringResource(R.string.enter_standards_empty),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        return
+    }
+    val chatSummary = stringResource(R.string.enter_standard_chat, getEnterPresetLabel(preset))
+    val emailSummary = stringResource(R.string.enter_standard_email)
+    rows.forEach { (app, standard) ->
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onAdopt(app.packageName, standard) }
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                Text(
+                    text = getApplicationLabel(context, app.packageName) ?: app.appName,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = if (standard == EnterStandard.Email) emailSummary else chatSummary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

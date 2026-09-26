@@ -590,8 +590,8 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="clicks_button_binding_success">Tastenbelegung angewendet.</string>
     <string name="clicks_button_binding_failure">Die Tastenbelegung konnte nicht angewendet werden.</string>
     <string name="clicks_button_binding_pending">Wird angewendet, sobald eine unterstützte Keyboard-Verbindung bereit ist.</string>
-    <string name="clicks_launcher_interception_service_label">Pastiera Clicks-Tastenabfang</string>
-    <string name="clicks_launcher_interception_service_description">Fängt ausschließlich ausdrücklich konfigurierte Tasten eines unterstützten Clicks Power Keyboards ab.</string>
+    <string name="clicks_launcher_interception_service_label">Pastiera-Tastenabfang</string>
+    <string name="clicks_launcher_interception_service_description">Verarbeitet die konfigurierten Tasten eines Clicks Power Keyboards. In Apps, in denen Pastiera ausgeblendet ist, verfolgt er außerdem Ihre Tasten für die Status-LEDs und gibt Emoji-Taste und Sym an Pastiera weiter, sofern diese Optionen aktiviert sind.</string>
     <string name="clicks_launcher_interception_title">Android-Abfang für Clicks-Tasten</string>
     <string name="clicks_launcher_interception_enabled">Aktiv · Ausschließlich ausdrücklich konfigurierte Tasten eines unterstützten Clicks Power Keyboards werden gefiltert.</string>
     <string name="clicks_launcher_interception_disabled">Für softwareseitig belegte Clicks-Tasten erforderlich. Antippen, um den Dienst in Androids Bedienungshilfen zu aktivieren.</string>

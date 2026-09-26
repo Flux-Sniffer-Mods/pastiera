@@ -2,6 +2,8 @@ package it.palsoftware.pastiera
 
 /** Entries for system controls whose screens also expose the same stable IDs. */
 internal fun systemSettingEntries(): List<SettingEntry> = listOf(
+    SettingEntry("advanced.hidden_keyboard_apps", R.string.hidden_keyboard_apps_title,
+        summaryRes = R.string.hidden_keyboard_apps_description, route = SettingRoute(SettingsDestination.Advanced)),
     SettingEntry("advanced.corner_calibration", R.string.corner_calibration_title,
         summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.Advanced),
         availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
@@ -37,19 +39,27 @@ internal fun systemSettingEntries(): List<SettingEntry> = listOf(
         id = "trackpad.add_word",
         titleRes = R.string.trackpad_gesture_add_word_title,
         summaryRes = R.string.trackpad_gesture_add_word_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     ),
     SettingEntry(
         id = "trackpad.add_word_full_width",
         titleRes = R.string.trackpad_gesture_add_word_full_width_title,
         summaryRes = R.string.trackpad_gesture_add_word_full_width_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     ),
     SettingEntry(
         id = "trackpad.swipe_to_delete",
         titleRes = R.string.swipe_to_delete_title,
         summaryRes = R.string.swipe_to_delete_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
+    ),
+    SettingEntry(
+        id = "trackpad.phone_settings",
+        titleRes = R.string.phone_trackpad_settings_title,
+        summaryRes = R.string.phone_trackpad_settings_description,
+        route = SettingRoute(SettingsDestination.TrackpadGestures),
+        availabilityCheck = { _ -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() },
+        unavailableFallbackId = "trackpad.suggestion_swipe_directions"
     ),
     SettingEntry(
         id = "trackpad.suggestion_swipe_directions",
@@ -66,6 +76,6 @@ internal fun systemSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry(
         id = "trackpad.swipe_to_delete_provider",
         titleRes = R.string.swipe_to_delete_provider_title,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     )
 )

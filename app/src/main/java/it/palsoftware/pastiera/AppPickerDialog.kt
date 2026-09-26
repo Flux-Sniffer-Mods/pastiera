@@ -33,13 +33,14 @@ import android.graphics.drawable.ColorDrawable
 @Composable
 fun AppPickerDialog(
     onAppSelected: (InstalledApp) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    excludePackages: Set<String> = emptySet()
 ) {
     val context = LocalContext.current
     
     // Carica le app installate
     val installedApps by remember {
-        mutableStateOf(AppListHelper.getInstalledApps(context))
+        mutableStateOf(AppListHelper.getInstalledApps(context).filter { it.packageName !in excludePackages })
     }
     
     var searchQuery by remember { mutableStateOf("") }
