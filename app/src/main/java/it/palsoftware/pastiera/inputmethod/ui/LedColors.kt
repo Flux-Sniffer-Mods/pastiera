@@ -19,6 +19,9 @@ object LedColors {
 
     enum class Level { OFF, ACTIVE, LOCKED }
 
+    private const val ACTIVE_SATURATION = 0.8f
+    private const val ACTIVE_MAX_VALUE = 0.68f
+
     fun enabled(context: Context): Boolean = SettingsManager.getLedIndividualColorsEnabled(context)
 
     fun lockedAnimationEnabled(context: Context): Boolean = SettingsManager.getLedLockedAnimationEnabled(context)
@@ -48,11 +51,11 @@ object LedColors {
         Color.colorToHSV(base, hsv)
         return when (level) {
             Level.OFF -> Color.HSVToColor(110, floatArrayOf(hsv[0], hsv[1] * 0.45f, hsv[2] * 0.35f))
-            Level.ACTIVE -> Color.HSVToColor(floatArrayOf(hsv[0], hsv[1], hsv[2]))
-            // Locked stands well apart from active: fully bright and much more saturated
-            Level.LOCKED -> Color.HSVToColor(
-                floatArrayOf(hsv[0], (hsv[1] * 1.5f + 0.25f).coerceAtMost(1f), (hsv[2] * 1.4f + 0.35f).coerceAtMost(1f))
-            )
+            // Active leaves room above it: bright colours (the light blue Shift) are calmed down, so
+            // locking always shows a clear jump to full colour
+            Level.ACTIVE -> Color.HSVToColor(floatArrayOf(hsv[0], hsv[1] * ACTIVE_SATURATION, hsv[2].coerceAtMost(ACTIVE_MAX_VALUE)))
+            // Locked: the colour at full saturation and full brightness
+            Level.LOCKED -> Color.HSVToColor(floatArrayOf(hsv[0], 1f, 1f))
         }
     }
 
