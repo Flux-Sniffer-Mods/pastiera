@@ -3,6 +3,7 @@ package it.palsoftware.pastiera
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -198,7 +199,7 @@ fun TextInputSettingsScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(48.dp)
+                                    .heightIn(min = 48.dp)
                                     .padding(horizontal = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -655,15 +656,13 @@ private fun SettingsSwitchRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2
+                fontWeight = FontWeight.Medium
             )
             if (description != null) {
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -697,14 +696,12 @@ private fun SettingsNavigationRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2
+                fontWeight = FontWeight.Medium
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Icon(
@@ -744,8 +741,7 @@ private fun SettingsDropdownSwitchRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2
+                fontWeight = FontWeight.Medium
             )
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -904,18 +900,23 @@ private fun AutoShiftFieldTypesRow() {
                 Column {
                     Text(
                         stringResource(R.string.auto_capitalize_restricted_fields_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
                     all.forEach { type ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .clip(MaterialTheme.shapes.small)
                                 .clickable {
                                     types = if (type in types) types - type else types + type
                                     it.palsoftware.pastiera.inputmethod.ShiftFieldTypes.setEnabled(context, types)
-                                },
-                            verticalAlignment = Alignment.CenterVertically
+                                }
+                                .padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Checkbox(checked = type in types, onCheckedChange = null)
                             Text(stringResource(type.labelRes), style = MaterialTheme.typography.bodyLarge)

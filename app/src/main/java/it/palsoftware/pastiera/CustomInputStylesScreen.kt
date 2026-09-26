@@ -157,8 +157,8 @@ fun CustomInputStylesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Flat rows under section headings, like the other settings pages
+            contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             item {
                 LanguageLayoutModeCard()
@@ -166,6 +166,10 @@ fun CustomInputStylesScreen(
 
             item {
                 LayoutSwitchShortcutsCard()
+            }
+
+            item {
+                SettingsSectionDivider(stringResource(R.string.custom_input_styles_languages_section))
             }
 
             if (inputStyles.isEmpty()) {
@@ -360,7 +364,7 @@ private fun LanguageLayoutModeCard() {
         mutableStateOf(SettingsManager.isKeyboardLayoutAutoByLocale(context))
     }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .settingRow(SettingLinkIds.CUSTOM_INPUT_STYLES_LAYOUT_MODE)
@@ -368,7 +372,7 @@ private fun LanguageLayoutModeCard() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -423,28 +427,12 @@ private fun LayoutSwitchShortcutsCard() {
         mutableStateOf(SettingsManager.getLanguagePerAppEnabled(context))
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    SettingsSectionDivider(stringResource(R.string.layout_switch_shortcuts_title))
+    Column {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Keyboard,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stringResource(R.string.layout_switch_shortcuts_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
 
             LayoutSwitchShortcutRow(
                 title = stringResource(R.string.alt_shift_layout_switch_title),
@@ -644,7 +632,7 @@ private fun CustomInputStyleItem(
     onDelete: () -> Unit,
     onHideSystemLocale: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
@@ -652,7 +640,7 @@ private fun CustomInputStyleItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

@@ -64,6 +64,7 @@ enum class SettingsDestination {
     AppLanguage,
     DeviceSymLayerEditor,
     LedColors,
+    EmojiProfiles,
     Modifiers,
     FluxEmojiGifs,
     FluxTitanScreen,
@@ -79,7 +80,8 @@ enum class SettingsDestination {
     Apps,
     AppShortcuts,
     Developer,
-    TerminalMode
+    TerminalMode,
+    ExactTyping
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -221,7 +223,8 @@ fun SettingsScreen(
                 TypingHubScreen(
                     modifier = modifier,
                     onBack = { navigateBack() },
-                    onNavigate = { destination -> navigateTo(destination) }
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onOpenCustomization = { destination -> openCustomization(destination) }
                 )
             }
             SettingsDestination.EditingKeys -> {
@@ -256,6 +259,9 @@ fun SettingsScreen(
             }
             SettingsDestination.TerminalMode -> {
                 TerminalModeScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.ExactTyping -> {
+                ExactTypingScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.Developer -> {
                 DeveloperOptionsScreen(modifier = modifier, onBack = { navigateBack() })
@@ -326,6 +332,21 @@ fun SettingsScreen(
                     onNavigate = { destination -> navigateTo(destination) }
                 )
             }
+            SettingsDestination.FluxEmojiGifs -> {
+                FluxEmojiGifsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxTitanScreen -> {
+                FluxTitanScreenSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxHiddenApps -> {
+                FluxHiddenAppsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxLinuxDesktop -> {
+                FluxLinuxDesktopScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxOffline -> {
+                FluxOfflineScreen(modifier = modifier, onBack = { navigateBack() })
+            }
             SettingsDestination.About -> {
                 AboutScreen(
                     modifier = modifier,
@@ -340,6 +361,9 @@ fun SettingsScreen(
             }
             SettingsDestination.AppLanguage -> {
                 AppLanguageSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.EmojiProfiles -> {
+                EmojiLayerProfilesScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.LedColors -> {
                 LedColorsScreen(modifier = modifier, onBack = { navigateBack() })
@@ -384,6 +408,9 @@ private fun SettingsMainScreen(
     onOpenSettingEntry: (SettingEntry) -> Unit
 ) {
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    // Both lists keep their place while the other is shown, and when you come back from a page
+    val resultsScrollState = rememberScrollState()
+    val categoriesScrollState = rememberScrollState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchResults = remember(searchQuery, context) {
         SettingLinkRegistry.search(context, searchQuery)
@@ -436,7 +463,7 @@ private fun SettingsMainScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(resultsScrollState)
                 ) {
                     if (searchResults.isEmpty()) {
                         Text(
@@ -453,7 +480,6 @@ private fun SettingsMainScreen(
                                 entry = entry,
                                 onClick = {
                                     keyboardController?.hide()
-                                    searchQuery = ""
                                     onOpenSettingEntry(entry)
                                 }
                             )
@@ -465,21 +491,21 @@ private fun SettingsMainScreen(
                 Column(
                     modifier = modifier
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(categoriesScrollState)
                 ) {
-                    SettingsCategoryRow(
-                        icon = Icons.Filled.Keyboard,
-                        title = stringResource(R.string.settings_keyboards_layouts_title),
-                        description = stringResource(R.string.settings_keyboards_layouts_description),
-                        linkId = SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS,
-                        onClick = { onNavigate(SettingsDestination.KeyboardsLayouts) }
-                    )
                     SettingsCategoryRow(
                         icon = Icons.Filled.TextFields,
                         title = stringResource(R.string.settings_typing_title),
                         description = stringResource(R.string.settings_typing_description),
                         linkId = SettingLinkIds.MAIN_TYPING,
                         onClick = { onNavigate(SettingsDestination.Typing) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Keyboard,
+                        title = stringResource(R.string.settings_keyboards_layouts_title),
+                        description = stringResource(R.string.settings_keyboards_layouts_description),
+                        linkId = SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS,
+                        onClick = { onNavigate(SettingsDestination.KeyboardsLayouts) }
                     )
                     SettingsCategoryRow(
                         iconRes = R.drawable.modifier_keys_24,
@@ -496,6 +522,13 @@ private fun SettingsMainScreen(
                         onClick = { onNavigate(SettingsDestination.FluxEmojiGifs) }
                     )
                     SettingsCategoryRow(
+                        icon = Icons.Filled.Apps,
+                        title = stringResource(R.string.settings_apps_title),
+                        description = stringResource(R.string.settings_apps_description),
+                        linkId = SettingLinkIds.MAIN_APPS,
+                        onClick = { onNavigate(SettingsDestination.Apps) }
+                    )
+                    SettingsCategoryRow(
                         icon = Icons.Filled.Palette,
                         title = stringResource(R.string.settings_look_sound_title),
                         description = stringResource(R.string.settings_look_sound_description),
@@ -508,13 +541,6 @@ private fun SettingsMainScreen(
                         description = stringResource(R.string.settings_trackpad_gestures_description),
                         linkId = SettingLinkIds.ADVANCED_TRACKPAD_GESTURES,
                         onClick = { onNavigate(SettingsDestination.TrackpadGestures) }
-                    )
-                    SettingsCategoryRow(
-                        icon = Icons.Filled.Apps,
-                        title = stringResource(R.string.settings_apps_title),
-                        description = stringResource(R.string.settings_apps_description),
-                        linkId = SettingLinkIds.MAIN_APPS,
-                        onClick = { onNavigate(SettingsDestination.Apps) }
                     )
                     SettingsCategoryRow(
                         icon = Icons.Filled.Shield,
@@ -583,16 +609,14 @@ internal fun SettingsCategoryRow(
                         MaterialTheme.colorScheme.onSurface
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    maxLines = 1
+                    }
                 )
                 if (description != null) {
                     Text(
                         text = description,
                         modifier = Modifier.padding(top = 2.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

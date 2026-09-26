@@ -38,6 +38,13 @@ object SettingLinkIds {
     const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
     const val MAIN_DEVELOPER = "main.developer"
     const val MAIN_TERMINAL_MODE = "main.terminal_mode"
+    const val MAIN_EXACT_TYPING = "main.exact_typing"
+    const val EXACT_TYPING_NO_SUGGESTION_FIELDS = "exact_typing.no_suggestion_fields"
+    const val PRIVACY_INCOGNITO_ALWAYS = "privacy.incognito_always"
+    const val PRIVACY_PASTE_SUGGESTION = "privacy.paste_suggestion"
+    const val PRIVACY_ONE_TIME_CODES = "privacy.one_time_codes"
+    const val PRIVACY_CLEAN_LINKS = "privacy.clean_links"
+    const val PRIVACY_INCOGNITO_FOLLOW_APPS = "privacy.incognito_follow_apps"
     const val TERMINAL_MODE_ENABLED = "terminal_mode.enabled"
     const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"
 
@@ -95,7 +102,14 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
     const val MAIN_LED_COLORS = "main.led_colors"
+    const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
+    const val RECOMMENDED_SETTINGS = "system.recommended_settings"
+    const val TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode.hide_keyboard"
+    const val TERMINAL_MODE_EMOJI_KEY = "terminal_mode.emoji_key"
+    const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
+    const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
     const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
+    const val LED_LOCKED_ANIMATION = "led_colors.locked_animation"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 
@@ -120,6 +134,7 @@ object SettingLinkIds {
     const val ADVANCED_EXPERIMENTAL_CANDIDATES_VIEW = "advanced.experimental_candidates_view"
     const val ADVANCED_SHOW_TUTORIAL = "advanced.show_tutorial"
     const val ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL = "advanced.show_release_notes_tutorial"
+    const val FORK_UPDATE_CHANNEL = "advanced.update_channel"
 
     // Trackpad gesture screen
     const val TRACKPAD_GESTURES_ENABLED = "trackpad.gestures_enabled"
@@ -205,6 +220,7 @@ enum class SettingAvailability {
     AutoReplaceEnabled,
     CtrlTapLatchesEnabled,
     TrackpadShizukuProvider,
+    DeveloperOptionsEnabled,
     /** The row no longer exists; old links resolve to [SettingEntry.unavailableFallbackId]. */
     Retired
 }
@@ -232,6 +248,7 @@ data class SettingEntry(
             SettingsManager.getCtrlTapLatches(context)
         SettingAvailability.TrackpadShizukuProvider ->
             SettingsManager.getTrackpadProvider(context) == SettingsManager.TRACKPAD_PROVIDER_SHIZUKU
+        SettingAvailability.DeveloperOptionsEnabled -> SettingsManager.getDeveloperOptionsEnabled(context)
         SettingAvailability.Retired -> false
     }
 }
@@ -258,7 +275,8 @@ object SettingLinkRegistry {
         keyboardThemeTarget: SettingsManager.KeyboardThemeTarget? = null,
         keyboardThemeTab: KeyboardThemeEditorTab? = null,
         availability: SettingAvailability = SettingAvailability.Always,
-        unavailableFallbackId: String? = null
+        unavailableFallbackId: String? = null,
+        availabilityCheck: ((android.content.Context) -> Boolean)? = null
     ) = SettingEntry(
         id = id,
         titleRes = titleRes,
@@ -270,7 +288,8 @@ object SettingLinkRegistry {
             keyboardThemeTab = keyboardThemeTab
         ),
         availability = availability,
-        unavailableFallbackId = unavailableFallbackId
+        unavailableFallbackId = unavailableFallbackId,
+        availabilityCheck = availabilityCheck
     )
 
     val entries: List<SettingEntry> = listOf(
@@ -452,7 +471,7 @@ object SettingLinkRegistry {
             SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
             R.string.auto_show_keyboard_title,
             R.string.auto_show_keyboard_description,
-            destination = SettingsDestination.Apps
+            destination = SettingsDestination.KeyboardsLayouts
         ),
         entry(
             SettingLinkIds.TEXT_INPUT_SEARCH_BAR_WAITS,
@@ -525,7 +544,9 @@ object SettingLinkRegistry {
         entry(
             SettingLinkIds.KEYBOARDS_DEVICES_KEYBOARD_ACCESSORIES,
             R.string.keyboard_accessories_title,
-            destination = SettingsDestination.KeyboardsDevices
+            destination = SettingsDestination.KeyboardsDevices,
+            availabilityCheck = { SettingsManager.hasClicksKeyboard(it) },
+            unavailableFallbackId = SettingLinkIds.KEYBOARDS_DEVICES_BUILT_IN_KEYBOARDS
         ),
 
         entry(
@@ -672,7 +693,7 @@ object SettingLinkRegistry {
         entry(
             SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD,
             R.string.swipe_incremental_threshold_title,
-            destination = SettingsDestination.LookSound
+            destination = SettingsDestination.TrackpadGestures
         ),
         entry(
             SettingLinkIds.ADVANCED_CLIPBOARD_RETENTION_TIME,
@@ -693,10 +714,18 @@ object SettingLinkRegistry {
             destination = SettingsDestination.Advanced
         ),
         entry(
+            SettingLinkIds.FORK_UPDATE_CHANNEL,
+            R.string.fork_update_channel_title,
+            R.string.fork_update_channel_stable,
+            destination = SettingsDestination.Advanced
+        ),
+        entry(
             SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL,
             R.string.tutorial_show_release_notes,
             R.string.tutorial_show_release_notes_description,
-            destination = SettingsDestination.Advanced
+            destination = SettingsDestination.Developer,
+            availability = SettingAvailability.DeveloperOptionsEnabled,
+            unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED
         ),
 
         entry(
@@ -739,7 +768,9 @@ object SettingLinkRegistry {
             SettingLinkIds.TRACKPAD_DEBUG,
             R.string.trackpad_debug_title,
             R.string.trackpad_debug_description,
-            destination = SettingsDestination.TrackpadGestures
+            destination = SettingsDestination.Developer,
+            availability = SettingAvailability.DeveloperOptionsEnabled,
+            unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED
         ),
 
         entry(
@@ -1081,7 +1112,10 @@ object SettingLinkRegistry {
         SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
         SettingsDestination.Developer to R.string.developer_options_title,
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
-        SettingsDestination.TerminalMode to R.string.terminal_mode_title
+        SettingsDestination.LedColors to R.string.led_colors_title,
+        SettingsDestination.EmojiProfiles to R.string.emoji_profiles_title,
+        SettingsDestination.TerminalMode to R.string.terminal_mode_title,
+        SettingsDestination.ExactTyping to R.string.exact_typing_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

@@ -133,7 +133,7 @@ fun CustomTopBar(
                     // "Based on Pastiera" credit
                     .padding(
                         start = 16.dp, end = 16.dp,
-                        top = if (compactHeader) statusBarInset + 8.dp else 32.dp,
+                        top = if (compactHeader) statusBarInset + 2.dp else 32.dp,
                         bottom = when {
                             compactHeader -> 20.dp
                             it.palsoftware.pastiera.BuildConfig.APP_NAME != "Pastiera" -> 46.dp
@@ -150,13 +150,13 @@ fun CustomTopBar(
                 ) {
                     Text(
                         text = it.palsoftware.pastiera.BuildConfig.APP_NAME,
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = if (compactHeader) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
                         text = "Go with the flux",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = if (compactHeader) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.9f),
                         fontWeight = FontWeight.Medium
                     )
@@ -164,11 +164,11 @@ fun CustomTopBar(
                     if (it.palsoftware.pastiera.BuildConfig.APP_NAME != "Pastiera") {
                         Text(
                             text = "Based on Pastiera by PalSoftware ↗",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = if (compactHeader) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.85f),
                             textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
                             modifier = Modifier
-                                .padding(top = if (compactHeader) 4.dp else 6.dp)
+                                .padding(top = if (compactHeader) 2.dp else 6.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable {
                                     runCatching {
@@ -191,7 +191,7 @@ fun CustomTopBar(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .offset(y = headerContentOffset)
-                        .size(64.dp)
+                        .size(if (compactHeader) 48.dp else 64.dp)
                         .clip(RoundedCornerShape(24.dp))
                         .background(
                             color = PastieraBeige.copy(alpha = 0.9f)
@@ -201,7 +201,7 @@ fun CustomTopBar(
                         imageVector = Icons.Filled.Settings,
                         contentDescription = stringResource(R.string.settings_content_description),
                         tint = Color.White,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(if (compactHeader) 28.dp else 36.dp)
                     )
                 }
             }

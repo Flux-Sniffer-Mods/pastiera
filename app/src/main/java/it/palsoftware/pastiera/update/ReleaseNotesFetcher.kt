@@ -36,9 +36,7 @@ data class ReleaseNotesSummary(
             return ReleaseNotesSummary(
                 version = version,
                 title = when (language) {
-                    "de" -> "Pastiera $version"
-                    "it" -> "Pastiera $version"
-                    else -> "Pastiera $version"
+                    else -> "${it.palsoftware.pastiera.BuildConfig.APP_NAME} $version"
                 },
                 highlights = when (language) {
                     "de" -> listOf(
@@ -85,6 +83,10 @@ fun fetchReleaseNotesForVersion(
     languageTag: String,
     callback: (ReleaseNotesSummary?) -> Unit
 ) {
+    if (it.palsoftware.pastiera.OfflineMode.enabled) {
+        callback(null)
+        return
+    }
     val normalizedVersion = normalizeReleaseVersion(version)
     if (normalizedVersion.isBlank()) {
         postReleaseNotes(callback, null)
@@ -155,7 +157,7 @@ private fun parseReleaseNotesJson(body: String, expectedVersion: String): Releas
 
         ReleaseNotesSummary(
             version = version,
-            title = json.optString("title").takeIf(String::isNotBlank) ?: "Pastiera $version",
+            title = json.optString("title").takeIf(String::isNotBlank) ?: "${it.palsoftware.pastiera.BuildConfig.APP_NAME} $version",
             highlights = highlights,
             improvements = parseStringArray(json, "improvements", 8),
             bugFixes = parseStringArray(json, "bugFixes", 12),
@@ -184,30 +186,69 @@ fun friendlyVersion(version: String, locale: java.util.Locale = java.util.Locale
     return "$base · ${d.toInt()} $month $y, $h:$mi"
 }
 
+/** A fork version's build time as a number ("0.90-flux.202609261444" → 202609261444), or null for other versions. */
+internal fun forkBuildStamp(version: String?): Long? {
+    val m = FORK_VERSION.find(version?.trim() ?: return null) ?: return null
+    return m.groupValues.drop(2).joinToString("").toLongOrNull()
+}
+
 /**
  * Release notes shipped inside the app (assets/fork/whats_new.json), used instead of the online
  * notes when present: a fork build describes its own changes, offline.
+ *
+ * An entry is either text, or {"text": …, "after": "yyyyMMddHHmm"}: new since the build made at
+ * that time. With [sinceVersion] (the version the notes were last seen on) only entries newer
+ * than it are listed; without it, or when nothing is newer, all of them are.
  */
-fun bundledReleaseNotes(context: android.content.Context, version: String): ReleaseNotesSummary? = runCatching {
+fun bundledReleaseNotes(
+    context: android.content.Context,
+    version: String,
+    sinceVersion: String? = null
+): ReleaseNotesSummary? = runCatching {
     val body = context.assets.open("fork/whats_new.json").bufferedReader().use { it.readText() }
+    // Releases (0.91) carry no build time in their name: the notes list when each was built
+    val releaseStamp = sinceVersion?.let { runCatching { JSONObject(body).optJSONObject("releases")?.optString(it) }.getOrNull() }
+        ?.toLongOrNull()
+    parseBundledReleaseNotes(body, version, forkBuildStamp(sinceVersion) ?: releaseStamp)
+        ?: if (sinceVersion != null) parseBundledReleaseNotes(body, version, null) else null
+}.getOrNull()
+
+internal fun parseBundledReleaseNotes(body: String, version: String, sinceStamp: Long?): ReleaseNotesSummary? {
     val json = JSONObject(body)
-    val highlights = parseStringArray(json, "highlights", 12)
-    if (highlights.isEmpty()) return@runCatching null
-    ReleaseNotesSummary(
+    val highlights = parseEntries(json, "highlights", sinceStamp)
+    val improvements = parseEntries(json, "improvements", sinceStamp)
+    val bugFixes = parseEntries(json, "bugFixes", sinceStamp)
+    val upstream = parseEntries(json, "upstream", sinceStamp)
+    if (highlights.isEmpty() && improvements.isEmpty() && bugFixes.isEmpty()) return null
+    return ReleaseNotesSummary(
         version = version,
         title = json.optString("title").takeIf(String::isNotBlank)?.let { "$it ${shortVersion(version)}" }
-            ?: "Pastiera ${shortVersion(version)}",
-        highlights = highlights,
-        improvements = parseStringArray(json, "improvements", 12),
-        bugFixes = parseStringArray(json, "bugFixes", 12),
+            ?: "${it.palsoftware.pastiera.BuildConfig.APP_NAME} ${shortVersion(version)}",
+        highlights = highlights.ifEmpty { improvements },
+        improvements = if (highlights.isEmpty()) emptyList() else improvements,
+        bugFixes = bugFixes,
         docsUrl = json.optString("docsUrl").takeIf { it.startsWith("https://") } ?: "https://pastiera.eu/",
-        intro = json.optString("intro").takeIf(String::isNotBlank),
+        intro = (if (sinceStamp != null) json.optString("introSince") else "").takeIf(String::isNotBlank)
+            ?: json.optString("intro").takeIf(String::isNotBlank),
         sectionTitle = json.optString("sectionTitle").takeIf(String::isNotBlank),
         upstreamTitle = json.optString("upstreamTitle").takeIf(String::isNotBlank),
-        upstreamChanges = parseStringArray(json, "upstream", 20),
+        upstreamChanges = upstream,
         docsLabel = json.optString("docsLabel").takeIf(String::isNotBlank)
     )
-}.getOrNull()
+}
+
+/** Entries newer than [sinceStamp] (all of them without it); plain text entries are the oldest. */
+private fun parseEntries(json: JSONObject, key: String, sinceStamp: Long?): List<String> {
+    val array = json.optJSONArray(key) ?: return emptyList()
+    return buildList {
+        for (index in 0 until array.length()) {
+            val entry = array.opt(index)
+            val text = ((entry as? JSONObject)?.optString("text") ?: entry as? String)?.trim().orEmpty()
+            val after = (entry as? JSONObject)?.optString("after")?.toLongOrNull() ?: 0L
+            if (text.isNotBlank() && (sinceStamp == null || after >= sinceStamp)) add(text)
+        }
+    }
+}
 
 private fun parseStringArray(json: JSONObject, key: String, limit: Int): List<String> {
     val array = json.optJSONArray(key) ?: return emptyList()

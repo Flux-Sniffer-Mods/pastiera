@@ -2,21 +2,21 @@
 <!-- Settings organised by what you are trying to do -->
 <resources>
     <string name="settings_keyboards_layouts_title">Keyboards &amp; layouts</string>
-    <string name="settings_keyboards_layouts_description">Devices, input languages, layout switching</string>
+    <string name="settings_keyboards_layouts_description">Input languages, keyboards and devices, showing the keyboard</string>
     <string name="settings_typing_title">Typing</string>
-    <string name="settings_typing_description">Capitals and punctuation, editing keys, auto-correction, text expansion</string>
+    <string name="settings_typing_description">Suggestions and auto-correction, capitals and punctuation, text expansion, variations, editing keys, Nav Mode</string>
     <string name="settings_modifiers_sym_title">Modifiers &amp; SYM</string>
     <string name="settings_modifiers_sym_description">Tap, lock and long press, SYM pages, key shortcuts, Nav Mode</string>
     <string name="settings_emoji_symbols_gifs_title">Emoji, symbols &amp; GIFs</string>
     <string name="settings_emoji_symbols_gifs_description">Emoji key and layer, the picker, symbol and GIF search</string>
     <string name="settings_look_sound_title">Look &amp; sound</string>
-    <string name="settings_look_sound_description">Theme and LED colours, status bar, sound and haptics, language</string>
+    <string name="settings_look_sound_description">Theme, status LEDs, status bar, sound and haptics</string>
     <string name="settings_trackpad_gestures_title">Trackpad &amp; gestures</string>
-    <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words</string>
+    <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words; the status bar swipe pad</string>
     <string name="settings_apps_title">Apps</string>
-    <string name="settings_apps_description">App shortcuts, Enter per app, Quick Launcher, hidden keyboard apps, Linux desktop</string>
+    <string name="settings_apps_description">App shortcuts, Enter per app, Quick Launcher, terminals and Linux desktop</string>
     <string name="settings_privacy_system_title">Privacy &amp; system</string>
-    <string name="settings_privacy_system_description">Offline mode, backup, clipboard, accessibility, updates, about</string>
+    <string name="settings_privacy_system_description">Incognito, offline mode, clipboard, accessibility, app language, backup, updates</string>
 
     <string name="settings_keyboards_devices_description">Built-in, on-screen and accessory keyboards, and switching between them</string>
     <string name="settings_input_languages_description">Languages, their layouts and the keys that switch them</string>
@@ -24,13 +24,13 @@
     <string name="settings_capitalisation_punctuation_title">Capitals &amp; punctuation</string>
     <string name="settings_capitalisation_punctuation_description">Capital letters, spacing, dashes and quotes</string>
     <string name="settings_editing_keys_title">Editing keys</string>
-    <string name="settings_editing_keys_description">Backspace combinations and navigation</string>
-    <string name="settings_auto_correction_description">Replacements, suggestions and dictionaries</string>
+    <string name="settings_editing_keys_description">Backspace and Delete combinations</string>
+    <string name="settings_auto_correction_description">Suggestions, automatic correction, emoji suggestions, spell checker, dictionaries and replacements</string>
     <string name="settings_text_expansion_hub_description">Snippets, and emoji and symbol shortcodes</string>
     <string name="settings_section_enter">Enter</string>
 
-    <string name="settings_theme_led_colours_title">Theme &amp; LED colours</string>
-    <string name="settings_theme_led_colours_description">Keyboard colours, key shapes and the modifier LEDs</string>
+    <string name="settings_theme_led_colours_title">Theme</string>
+    <string name="settings_theme_led_colours_description">Keyboard colours and key shapes</string>
     <string name="settings_section_status_bar">Status bar</string>
     <string name="settings_section_sound_popups">Sound &amp; popups</string>
     <string name="settings_variations_popup_description">The characters offered when you hold a key</string>
@@ -135,6 +135,14 @@
     <string name="led_colors_individual_on">Each LED has its own colour: dim when off, the colour when active, brighter and more saturated when locked.</string>
     <string name="led_colors_section">LEDs</string>
     <string name="led_colors_states">Off, active, locked. Tap to change.</string>
+    <string name="led_colors_tap_hint">Tap an LED to change its colour</string>
+    <string name="led_colors_level_off">Off</string>
+    <string name="led_colors_level_active">Active</string>
+    <string name="led_colors_level_locked">Locked</string>
+    <string name="led_colors_sym_states">Active: held, or the emoji layer · Locked: tapped for one symbol, or the symbols</string>
+    <string name="led_colors_sym_states_split">Active: held · Locked: tapped for one symbol, or the symbols</string>
+    <string name="led_colors_emoji_states">Active: held · Locked: tapped for one emoji, or the emoji layer or picker</string>
+    <string name="led_colors_emoji">Emoji key</string>
     <string name="led_colors_shift">Shift</string>
     <string name="led_colors_ctrl">Ctrl</string>
     <string name="led_colors_alt">Alt</string>
@@ -171,12 +179,6 @@
     <string name="emoji_profile_food">Food and drink</string>
     <string name="emoji_profile_travel">Travel and outdoors</string>
     <string name="emoji_profile_gaming">Gaming</string>
-    <string name="recommended_settings_title">Recommended settings</string>
-    <string name="recommended_settings_description">Turn on the settings that help most with a hardware keyboard, fitted to your phone. Shows every change first.</string>
-    <string name="recommended_settings_will_turn_on">This turns on:</string>
-    <string name="recommended_settings_nothing">Everything recommended is already on.</string>
-    <string name="recommended_settings_apply">Turn on</string>
-    <string name="recommended_settings_applied">Recommended settings turned on</string>
     <string name="terminal_mode_hide_keyboard_title">Hide the keyboard</string>
     <string name="terminal_mode_hide_keyboard_description">Like the Linux desktop: Pastiera stays out of sight in terminals. Alt still types your Alt layer and SYM its symbols, unseen; Ctrl stays Ctrl. The clipboard and emoji picker show while open.</string>
     <string name="led_locked_animation_title">Animate locked LEDs</string>
@@ -195,6 +197,7 @@
     <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (suspend)</string>
     <string name="terminal_emoji_key_ctrl_l">Ctrl+L (clear the screen)</string>
     <string name="terminal_emoji_key_ctrl_r">Ctrl+R (search history)</string>
+    <string name="terminal_emoji_key_alt">Alt (hold with another key)</string>
     <string name="alt_key_editor_in_use_title">Device SYM layer in use</string>
     <string name="alt_key_editor_in_use_auto">Automatic: %1$s (from your keyboard)</string>
     <string name="alt_key_editor_curated_section">Curated profiles</string>

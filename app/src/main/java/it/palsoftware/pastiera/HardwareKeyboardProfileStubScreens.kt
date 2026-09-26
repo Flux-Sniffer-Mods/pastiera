@@ -310,12 +310,7 @@ fun ClicksPowerKeyboardSettingsScreen(
             inProgress = buttonBindingsInProgress,
             resultMessage = buttonBindingResult,
             onBack = { mappingPage = null },
-            onOpenLauncherInterceptionSettings = {
-                context.startActivity(
-                    Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            },
+            onOpenLauncherInterceptionSettings = { RestrictedSettings.openAccessibility(context) },
             onRedSelected = { choiceId, mode, firmwareOutput, pastieraFunction ->
                 clicksButtonMode = mode
                 SettingsManager.setClicksButtonMode(context, mode)

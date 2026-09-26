@@ -380,6 +380,11 @@ class StatusBarController(
     private var emojiPickerView: EmojiPickerView? = null
     // Pastierina: the picker's search field sits in the middle of the compact bar
     private var emojiSearchInBar: Boolean = false
+    // Pastierina: on the emoji layer and symbols pages, a search bar sits there instead (tap for
+    // the picker's search)
+    private var emojiLayerBarRow: LinearLayout? = null
+    // What the emoji layer grid's slot after L held when last built: search, GIF or nothing
+    private var lastEmojiLayerSlot: String? = null
 
     /** Hidden app with "Show status LEDs only": draw nothing but the LED strip, over the app. */
     var ledsOnlyMode: Boolean = false
@@ -1436,9 +1441,11 @@ class StatusBarController(
         symSurfaceView: FrameLayout
     ) {
         ledStatusView.getView()?.visibility = View.VISIBLE
+        ledStatusView.layout = modifierLedLayout()
         ledStatusView.update(snapshot)
         hideHamburgerMenu()
         releaseEmojiSearchFromBar()
+        updateEmojiLayerSearchBar(false)
         fullSuggestionsBar?.ensureView()?.visibility = View.GONE
         variationBarView?.hideImmediate()
         variationsWrapper?.visibility = View.GONE
@@ -1452,6 +1459,67 @@ class StatusBarController(
         symShown = false
         wasSymActive = false
         lastSymPageRendered = 0
+    }
+
+    /**
+     * Emoji layer in Pastierina: a search bar in the middle of the bar, looking like the picker's
+     * own search field there. Physical keys keep typing the layer's emoji; tapping the bar opens
+     * the picker with search ready, and the picker's field then takes this same spot.
+     */
+    private fun updateEmojiLayerSearchBar(show: Boolean, symbols: Boolean = false) {
+        val bar = fullSuggestionsBar
+        val host = bar?.centerAccessoryHost()
+        val existing = emojiLayerBarRow
+        if (show && bar != null && host != null) {
+            val row = existing ?: LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(TextView(context).apply {
+                    textSize = 14f
+                    setSingleLine(true)
+                    gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                    setPadding(dpToPx(8f), 0, dpToPx(8f), 0)
+                    isClickable = true
+                    isFocusable = true
+                }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+                // GIF search: the emoji layer's GIF key (P unless changed), not a tab here
+            }.also { emojiLayerBarRow = it }
+            val searchBar = row.getChildAt(0) as TextView
+            // Emoji layer: emoji search; symbols pages: symbol search
+            searchBar.contentDescription = context.getString(
+                if (symbols) R.string.symbol_search_placeholder else R.string.emoji_layer_search_button
+            )
+            searchBar.setOnClickListener {
+                if (symbols) onSymbolSearchRequested?.invoke() else onEmojiLayerSearchRequested?.invoke()
+            }
+            if (row.parent !== host) {
+                (row.parent as? ViewGroup)?.removeView(row)
+                host.removeAllViews()
+                host.addView(
+                    row,
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    ).apply { setMargins(dpToPx(4f), dpToPx(3f), dpToPx(4f), dpToPx(3f)) }
+                )
+            }
+            // Same look as the picker's search field (EmojiPickerView)
+            val theme = activeThemeColors()
+            fun barBackground() = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(theme.suggestion)
+                setStroke(dpToPx(1f), theme.divider)
+                cornerRadius = dpToPx(7f).toFloat()
+            }
+            searchBar.hint = context.getString(
+                if (symbols) R.string.symbol_search_placeholder else R.string.emoji_picker_search_placeholder
+            )
+            searchBar.setHintTextColor((theme.textAndIcons and 0x00FFFFFF) or (160 shl 24))
+            searchBar.background = barBackground()
+            bar.setCenterAccessoryActive(true)
+        } else if (existing != null && existing.parent != null) {
+            (existing.parent as? ViewGroup)?.removeView(existing)
+            if (!emojiSearchInBar) bar?.setCenterAccessoryActive(false)
+        }
     }
 
     private fun releaseEmojiSearchFromBar() {
@@ -2620,13 +2688,19 @@ class StatusBarController(
             content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_KEY_LABEL ||
                 content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_BACK_LABEL
             )
+        // Emoji layer's GIF key: a short bold word, smaller than an emoji
+        val gifLabel = page == 1 && content == it.palsoftware.pastiera.core.SymLayoutController.GIF_KEY_LABEL
         val contentText = TextView(context).apply {
             text = content
-            textSize = if (recentsSymbol) contentTextSize * 1.35f else contentTextSize // textSize è in sp
+            textSize = when {
+                recentsSymbol -> contentTextSize * 1.35f
+                gifLabel -> contentTextSize * 0.55f
+                else -> contentTextSize
+            } // textSize è in sp
             gravity = Gravity.CENTER
             // Emoji layer: glyphs centre on their own box, not on the font's extra padding
             if (page == 1) includeFontPadding = false
-            if (recentsSymbol) setTypeface(null, android.graphics.Typeface.BOLD)
+            if (recentsSymbol || gifLabel) setTypeface(null, android.graphics.Typeface.BOLD)
             if (roundedCorners) setTextColor(theme.textAndIcons)
             // Per pagina 2 (caratteri), rendi bianco e in grassetto
             if (page == 2) {
@@ -3478,7 +3552,7 @@ class StatusBarController(
         val symbolSearchInPicker = snapshot.symPage == 4 &&
             (pendingSymbolSearch || emojiPickerView?.isSymbolSearchOpen() == true)
         if ((snapshot.symPage == 1 || snapshot.symPage == 4) && !symbolSearchInPicker &&
-            SettingsManager.getGifsEnabled(context)
+            SettingsManager.gifsAvailable(context)
         ) {
             KlipyGifs.prefetchFeatured(context, SettingsManager.getKlipyApiKey(context))
         }

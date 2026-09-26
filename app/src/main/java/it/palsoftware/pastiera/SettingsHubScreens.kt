@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.ShortText
 import androidx.compose.material.icons.filled.SmartButton
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
@@ -54,11 +56,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /*
- * The main screen's groups, organised by what you are trying to do:
- *   Keyboards & layouts  - devices, input languages and layout switching, Titan 2 Elite screen
- *   Typing               - capitalisation and punctuation, editing keys, auto-correction, text expansion
- *   Look & sound         - theme and LED colours, the status bar, sound and haptics, variations, app language
- *   Apps                 - app shortcuts, Quick Launcher, hidden keyboard apps, Linux desktop, showing the keyboard
+ * The main screen's groups, most used first, each ordered the same way:
+ *   Typing               - suggestions and auto-correction, capitals and punctuation, text expansion,
+ *                          variations; editing keys and Nav Mode
+ *   Keyboards & layouts  - input languages, keyboards and devices, showing the keyboard, Titan 2 Elite screen
+ *   Apps                 - app shortcuts, Enter per app, Quick Launcher; terminals and desktops
+ *   Look & sound         - theme and LED colours, the status bar, sound and haptics
  * Modifiers & SYM, Emoji, symbols & GIFs, Trackpad & gestures and Privacy & system open their screens directly.
  */
 
@@ -73,18 +76,28 @@ fun KeyboardsLayoutsHubScreen(
     var searchBarWaits by remember { mutableStateOf(SettingsManager.getSearchBarWaitsForTyping(context)) }
     FluxScreenScaffold(stringResource(R.string.settings_keyboards_layouts_title), onBack, modifier) {
         SettingsCategoryRow(
+            icon = Icons.Filled.Language,
+            title = stringResource(R.string.custom_input_styles_title),
+            description = stringResource(R.string.settings_input_languages_description),
+            linkId = SettingLinkIds.MAIN_CUSTOM_INPUT_STYLES,
+            onClick = { onNavigate(SettingsDestination.CustomInputStyles) }
+        )
+        SettingsCategoryRow(
             icon = Icons.Filled.Keyboard,
             title = stringResource(R.string.keyboards_devices_title),
             description = stringResource(R.string.settings_keyboards_devices_description),
             linkId = SettingLinkIds.MAIN_KEYBOARDS_DEVICES,
             onClick = { onNavigate(SettingsDestination.KeyboardsDevices) }
         )
-        SettingsCategoryRow(
-            icon = Icons.Filled.Language,
-            title = stringResource(R.string.custom_input_styles_title),
-            description = stringResource(R.string.settings_input_languages_description),
-            linkId = SettingLinkIds.MAIN_CUSTOM_INPUT_STYLES,
-            onClick = { onNavigate(SettingsDestination.CustomInputStyles) }
+        FluxSwitchRow(
+            linkId = SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
+            title = stringResource(R.string.auto_show_keyboard_title),
+            description = stringResource(R.string.auto_show_keyboard_description),
+            checked = autoShowKeyboard,
+            onCheckedChange = { enabled ->
+                autoShowKeyboard = enabled
+                SettingsManager.setAutoShowKeyboard(context, enabled)
+            }
         )
         FluxSwitchRow(
             linkId = SettingLinkIds.TEXT_INPUT_SEARCH_BAR_WAITS,
@@ -113,23 +126,11 @@ fun KeyboardsLayoutsHubScreen(
 fun TypingHubScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onNavigate: (SettingsDestination) -> Unit
+    onNavigate: (SettingsDestination) -> Unit,
+    onOpenCustomization: (String) -> Unit = {}
 ) {
     FluxScreenScaffold(stringResource(R.string.settings_typing_title), onBack, modifier) {
-        SettingsCategoryRow(
-            icon = Icons.Filled.TextFields,
-            title = stringResource(R.string.settings_capitalisation_punctuation_title),
-            description = stringResource(R.string.settings_capitalisation_punctuation_description),
-            linkId = SettingLinkIds.MAIN_TEXT_INPUT,
-            onClick = { onNavigate(SettingsDestination.TextInput) }
-        )
-        SettingsCategoryRow(
-            icon = Icons.AutoMirrored.Filled.KeyboardReturn,
-            title = stringResource(R.string.settings_editing_keys_title),
-            description = stringResource(R.string.settings_editing_keys_description),
-            linkId = SettingLinkIds.MAIN_EDITING_KEYS,
-            onClick = { onNavigate(SettingsDestination.EditingKeys) }
-        )
+        // Most used first: what you type, then how it's corrected and shaped, then editing
         SettingsCategoryRow(
             icon = Icons.Filled.Spellcheck,
             title = stringResource(R.string.settings_category_auto_correction),
@@ -138,11 +139,41 @@ fun TypingHubScreen(
             onClick = { onNavigate(SettingsDestination.AutoCorrection) }
         )
         SettingsCategoryRow(
+            icon = Icons.Filled.TextFields,
+            title = stringResource(R.string.settings_capitalisation_punctuation_title),
+            description = stringResource(R.string.settings_capitalisation_punctuation_description),
+            linkId = SettingLinkIds.MAIN_TEXT_INPUT,
+            onClick = { onNavigate(SettingsDestination.TextInput) }
+        )
+        SettingsCategoryRow(
             icon = Icons.Filled.ShortText,
             title = stringResource(R.string.text_expansion_title),
             description = stringResource(R.string.settings_text_expansion_hub_description),
             linkId = SettingLinkIds.TEXT_INPUT_TEXT_EXPANSION,
             onClick = { onNavigate(SettingsDestination.TextExpansion) }
+        )
+        SettingsCategoryRow(
+            icon = Icons.Filled.Tune,
+            title = stringResource(R.string.variation_customize_title),
+            description = stringResource(R.string.settings_variations_popup_description),
+            linkId = "customization.variations",
+            onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_VARIATIONS) }
+        )
+
+        SettingsSectionDivider(stringResource(R.string.settings_section_editing))
+        SettingsCategoryRow(
+            icon = Icons.AutoMirrored.Filled.KeyboardReturn,
+            title = stringResource(R.string.settings_editing_keys_title),
+            description = stringResource(R.string.settings_editing_keys_description),
+            linkId = SettingLinkIds.MAIN_EDITING_KEYS,
+            onClick = { onNavigate(SettingsDestination.EditingKeys) }
+        )
+        SettingsCategoryRow(
+            icon = Icons.Filled.OpenWith,
+            title = stringResource(R.string.nav_mode_title),
+            description = stringResource(R.string.settings_nav_mode_hub_description),
+            linkId = SettingLinkIds.MAIN_NAV_MODE,
+            onClick = { onNavigate(SettingsDestination.NavMode) }
         )
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -155,7 +186,6 @@ fun LookSoundHubScreen(
     onNavigate: (SettingsDestination) -> Unit,
     onOpenCustomization: (String) -> Unit
 ) {
-    val context = LocalContext.current
     FluxScreenScaffold(stringResource(R.string.settings_look_sound_title), onBack, modifier) {
         SettingsCategoryRow(
             icon = Icons.Filled.Palette,
@@ -164,8 +194,6 @@ fun LookSoundHubScreen(
             linkId = SettingLinkIds.MAIN_KEYBOARD_THEME,
             onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_KEYBOARD_THEME) }
         )
-
-        SettingsSectionDivider(stringResource(R.string.settings_section_status_bar))
         SettingsCategoryRow(
             icon = Icons.Filled.Lightbulb,
             title = stringResource(R.string.led_colors_title),
@@ -180,31 +208,12 @@ fun LookSoundHubScreen(
             linkId = SettingLinkIds.MAIN_STATUS_BAR_BUTTONS,
             onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_STATUS_BAR_BUTTONS) }
         )
-        SwipePadThresholdRow()
-
-        SettingsSectionDivider(stringResource(R.string.settings_section_sound_popups))
         SettingsCategoryRow(
             icon = Icons.AutoMirrored.Filled.VolumeUp,
             title = stringResource(R.string.settings_category_sounds),
             description = stringResource(R.string.settings_sounds_description),
             linkId = "customization.sounds",
             onClick = { onOpenCustomization("sounds") }
-        )
-        SettingsCategoryRow(
-            icon = Icons.Filled.Tune,
-            title = stringResource(R.string.variation_customize_title),
-            description = stringResource(R.string.settings_variations_popup_description),
-            linkId = "customization.variations",
-            onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_VARIATIONS) }
-        )
-
-        SettingsSectionDivider(stringResource(R.string.settings_section_language))
-        SettingsCategoryRow(
-            icon = ImageVector.vectorResource(R.drawable.translate_24),
-            title = stringResource(R.string.app_language_title),
-            description = currentAppLanguageLabel(context),
-            linkId = SettingLinkIds.MAIN_APP_LANGUAGE,
-            onClick = { onNavigate(SettingsDestination.AppLanguage) }
         )
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -217,8 +226,6 @@ fun AppsHubScreen(
     onNavigate: (SettingsDestination) -> Unit,
     onOpenCustomization: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    var autoShowKeyboard by remember { mutableStateOf(SettingsManager.getAutoShowKeyboard(context)) }
     FluxScreenScaffold(stringResource(R.string.settings_apps_title), onBack, modifier) {
         SettingsCategoryRow(
             icon = Icons.Filled.SwapHoriz,
@@ -241,6 +248,22 @@ fun AppsHubScreen(
             linkId = SettingLinkIds.MAIN_LAUNCHER_SHORTCUTS,
             onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_LAUNCHER_SHORTCUTS) }
         )
+
+        SettingsSectionDivider(stringResource(R.string.settings_section_terminals))
+        SettingsCategoryRow(
+            icon = Icons.Filled.Code,
+            title = stringResource(R.string.exact_typing_title),
+            description = stringResource(R.string.exact_typing_description),
+            linkId = SettingLinkIds.MAIN_EXACT_TYPING,
+            onClick = { onNavigate(SettingsDestination.ExactTyping) }
+        )
+        SettingsCategoryRow(
+            icon = Icons.Filled.Terminal,
+            title = stringResource(R.string.terminal_mode_title),
+            description = stringResource(R.string.terminal_mode_description),
+            linkId = SettingLinkIds.MAIN_TERMINAL_MODE,
+            onClick = { onNavigate(SettingsDestination.TerminalMode) }
+        )
         SettingsCategoryRow(
             icon = Icons.Filled.VisibilityOff,
             title = stringResource(R.string.flux_hidden_apps_title),
@@ -255,30 +278,13 @@ fun AppsHubScreen(
             linkId = SettingLinkIds.MAIN_FLUX_LINUX_DESKTOP,
             onClick = { onNavigate(SettingsDestination.FluxLinuxDesktop) }
         )
-        SettingsCategoryRow(
-            icon = Icons.Filled.Terminal,
-            title = stringResource(R.string.terminal_mode_title),
-            description = stringResource(R.string.terminal_mode_description),
-            linkId = SettingLinkIds.MAIN_TERMINAL_MODE,
-            onClick = { onNavigate(SettingsDestination.TerminalMode) }
-        )
-        FluxSwitchRow(
-            linkId = SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
-            title = stringResource(R.string.auto_show_keyboard_title),
-            description = stringResource(R.string.auto_show_keyboard_description),
-            checked = autoShowKeyboard,
-            onCheckedChange = { enabled ->
-                autoShowKeyboard = enabled
-                SettingsManager.setAutoShowKeyboard(context, enabled)
-            }
-        )
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 /** How far a swipe on the status bar's swipe pad moves the cursor by one step. */
 @Composable
-private fun SwipePadThresholdRow() {
+internal fun SwipePadThresholdRow() {
     val context = LocalContext.current
     val prefs = remember { SettingsManager.getPreferences(context) }
     // Stored 3 to 25 (distance per step); the slider shows it inverted so right is more sensitive
@@ -297,7 +303,7 @@ private fun SwipePadThresholdRow() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .heightIn(min = 64.dp)
             .settingRow(SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD)
     ) {
         Row(
@@ -317,14 +323,12 @@ private fun SwipePadThresholdRow() {
                 Text(
                     text = stringResource(R.string.swipe_incremental_threshold_title),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "${String.format("%.1f", threshold)} ${stringResource(R.string.dip_unit)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Slider(
@@ -373,12 +377,17 @@ internal fun SettingsUpdateRows(context: android.content.Context) {
             }
         )
     }
+    val fork = it.palsoftware.pastiera.update.forkUpdatesEnabled()
     SettingsCategoryRow(
-        icon = ImageVector.vectorResource(R.drawable.plektra_open_monochrome_24),
-        title = stringResource(
-            if (checkingForUpdates) R.string.settings_update_checking else R.string.settings_update_section_title
+        icon = if (fork) Icons.Filled.SystemUpdate else ImageVector.vectorResource(R.drawable.plektra_open_monochrome_24),
+        title = stringResource(when {
+            checkingForUpdates -> if (fork) R.string.fork_update_checking else R.string.settings_update_checking
+            fork -> R.string.fork_update_settings_title
+            else -> R.string.settings_update_section_title
+        }),
+        description = stringResource(
+            if (fork) R.string.fork_update_settings_description else R.string.settings_update_section_description
         ),
-        description = stringResource(R.string.settings_update_section_description),
         enabled = !checkingForUpdates,
         onClick = {
             checkingForUpdates = true
@@ -395,19 +404,32 @@ internal fun SettingsUpdateRows(context: android.content.Context) {
                         Toast.LENGTH_SHORT
                     ).show()
                     result.hasAnnouncement && result.releaseTag != null && result.displayName != null ->
-                        it.palsoftware.pastiera.update.showUpdateDialog(
-                            context,
-                            result.releaseTag,
-                            result.displayName,
-                            result.releasePageUrl
-                        )
+                        it.palsoftware.pastiera.update.showReleaseNotice(context, result)
                     else -> Toast.makeText(
                         context,
-                        context.getString(R.string.settings_update_up_to_date),
+                        context.getString(if (fork) R.string.fork_update_current else R.string.settings_update_up_to_date),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
+        }
+    )
+    if (fork) ForkUpdateChannelRow(context)
+}
+
+/** Which releases updates offer: full releases, or dev builds too. */
+@Composable
+private fun ForkUpdateChannelRow(context: android.content.Context) {
+    var channel by remember { mutableStateOf(SettingsManager.getForkUpdateChannel(context)) }
+    val dev = channel == SettingsManager.FORK_UPDATE_CHANNEL_DEV
+    FluxSwitchRow(
+        linkId = SettingLinkIds.FORK_UPDATE_CHANNEL,
+        title = stringResource(R.string.fork_update_channel_title),
+        description = stringResource(if (dev) R.string.fork_update_channel_dev else R.string.fork_update_channel_stable),
+        checked = dev,
+        onCheckedChange = { on ->
+            channel = if (on) SettingsManager.FORK_UPDATE_CHANNEL_DEV else SettingsManager.FORK_UPDATE_CHANNEL_STABLE
+            SettingsManager.setForkUpdateChannel(context, channel)
         }
     )
 }
@@ -580,6 +602,62 @@ fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 showPicker = false
                 apps = apps + app.packageName
                 SettingsManager.setTerminalModeApps(context, apps)
+            },
+            onDismiss = { showPicker = false }
+        )
+    }
+}
+
+/**
+ * Exact typing (Settings > Apps): in the apps you pick (SSH clients, code editors, AI agents),
+ * every character stays as typed. Suggestions still show and only apply when you pick one.
+ */
+@Composable
+fun ExactTypingScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var apps by remember { mutableStateOf(SettingsManager.getExactTypingApps(context)) }
+    var noSuggestionFields by remember { mutableStateOf(SettingsManager.getExactTypingForNoSuggestionFields(context)) }
+    var showPicker by remember { mutableStateOf(false) }
+    val installed = remember { AppListHelper.getInstalledApps(context).associate { it.packageName to it.appName } }
+    FluxScreenScaffold(stringResource(R.string.exact_typing_title), onBack, modifier) {
+        FluxNote(stringResource(R.string.exact_typing_note))
+        FluxSwitchRow(
+            linkId = SettingLinkIds.EXACT_TYPING_NO_SUGGESTION_FIELDS,
+            title = stringResource(R.string.exact_typing_no_suggestions_title),
+            description = stringResource(R.string.exact_typing_no_suggestions_description),
+            checked = noSuggestionFields,
+            onCheckedChange = {
+                noSuggestionFields = it
+                SettingsManager.setExactTypingForNoSuggestionFields(context, it)
+            }
+        )
+        SettingsSectionDivider(stringResource(R.string.exact_typing_apps))
+        apps.forEach { packageName ->
+            FluxActionRow(
+                linkId = null,
+                title = installed[packageName] ?: packageName,
+                description = stringResource(R.string.terminal_mode_remove_app, packageName),
+                onClick = {
+                    apps = apps - packageName
+                    SettingsManager.setExactTypingApps(context, apps)
+                }
+            )
+        }
+        FluxActionRow(
+            linkId = null,
+            title = stringResource(R.string.exact_typing_add_app),
+            description = stringResource(R.string.exact_typing_add_app_description),
+            onClick = { showPicker = true }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+    if (showPicker) {
+        AppPickerDialog(
+            excludePackages = remember(apps) { apps.toSet() },
+            onAppSelected = { app ->
+                showPicker = false
+                apps = apps + app.packageName
+                SettingsManager.setExactTypingApps(context, apps)
             },
             onDismiss = { showPicker = false }
         )
