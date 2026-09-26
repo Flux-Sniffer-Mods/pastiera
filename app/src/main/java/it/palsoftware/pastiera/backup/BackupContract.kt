@@ -333,6 +333,7 @@ internal object BackupPreferenceContract {
             "clean_pasted_links" to PreferenceValueType.BOOLEAN,
             "emoji_suggestions_enabled" to PreferenceValueType.BOOLEAN,
             "suggestions_bold" to PreferenceValueType.BOOLEAN,
+            "suggestion_keys" to PreferenceValueType.STRING,
             "inline_autofill_enabled" to PreferenceValueType.BOOLEAN,
             "led_individual_colors" to PreferenceValueType.BOOLEAN,
             "led_locked_animation" to PreferenceValueType.BOOLEAN,

@@ -74,6 +74,7 @@ object SettingsManager {
     private const val KEY_CLEAN_PASTED_LINKS = "clean_pasted_links" // Strip tracking from pasted links
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
+    private const val KEY_SUGGESTION_KEYS = "suggestion_keys" // Keys that pick a suggestion
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
     private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
@@ -2893,6 +2894,16 @@ object SettingsManager {
 
     fun setSuggestionsBold(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_SUGGESTIONS_BOLD, enabled).apply()
+    }
+
+    /** Keys that pick a suggestion (an [it.palsoftware.pastiera.inputmethod.SuggestionKeys] option). */
+    fun getSuggestionKeys(context: Context): String =
+        getPreferences(context).getString(KEY_SUGGESTION_KEYS, null)
+            ?.takeIf { option -> option in it.palsoftware.pastiera.inputmethod.SuggestionKeys.OPTIONS }
+            ?: it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_SHIFT_QWE
+
+    fun setSuggestionKeys(context: Context, option: String) {
+        getPreferences(context).edit().putString(KEY_SUGGESTION_KEYS, option).apply()
     }
 
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =

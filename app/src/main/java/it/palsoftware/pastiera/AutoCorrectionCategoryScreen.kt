@@ -60,6 +60,8 @@ fun AutoCorrectionCategoryScreen(
         mutableStateOf(SettingsManager.getInlineAutofillEnabled(context))
     }
     var suggestionsBold by remember { mutableStateOf(SettingsManager.getSuggestionsBold(context)) }
+    var suggestionKeys by remember { mutableStateOf(SettingsManager.getSuggestionKeys(context)) }
+    var choosingSuggestionKeys by remember { mutableStateOf(false) }
     var emojiSuggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getEmojiSuggestionsEnabled(context))
     }
@@ -310,6 +312,43 @@ fun AutoCorrectionCategoryScreen(
                                 }
                             }
                         }
+
+                        FluxActionRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SUGGESTION_KEYS,
+                            title = stringResource(R.string.suggestion_keys_title),
+                            description = suggestionKeysLabel(suggestionKeys),
+                            onClick = { choosingSuggestionKeys = true }
+                        )
+                        if (choosingSuggestionKeys) {
+                            AlertDialog(
+                                onDismissRequest = { choosingSuggestionKeys = false },
+                                title = { Text(stringResource(R.string.suggestion_keys_title)) },
+                                text = {
+                                    Column {
+                                        it.palsoftware.pastiera.inputmethod.SuggestionKeys.OPTIONS.forEach { option ->
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.fillMaxWidth().clickable {
+                                                    suggestionKeys = option
+                                                    SettingsManager.setSuggestionKeys(context, option)
+                                                    choosingSuggestionKeys = false
+                                                }.padding(vertical = 6.dp)
+                                            ) {
+                                                RadioButton(selected = option == suggestionKeys, onClick = null)
+                                                Text(suggestionKeysLabel(option), modifier = Modifier.padding(start = 12.dp))
+                                            }
+                                        }
+                                    }
+                                },
+                                confirmButton = {},
+                                dismissButton = {
+                                    TextButton(onClick = { choosingSuggestionKeys = false }) {
+                                        Text(stringResource(R.string.cancel))
+                                    }
+                                }
+                            )
+                        }
+
                         FluxSwitchRow(
                             linkId = SettingLinkIds.AUTO_CORRECTION_SUGGESTIONS_BOLD,
                             title = stringResource(R.string.suggestions_bold_title),
@@ -1031,3 +1070,12 @@ private class DefaultUserDefaultsStore(private val context: Context) {
         }
     }
 }
+
+@Composable
+private fun suggestionKeysLabel(option: String): String = stringResource(
+    when (option) {
+        it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_SHIFT_QWE -> R.string.suggestion_keys_ctrl_shift_qwe
+        it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_DIGITS -> R.string.suggestion_keys_ctrl_digits
+        else -> R.string.suggestion_keys_off
+    }
+)

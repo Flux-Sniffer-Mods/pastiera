@@ -222,4 +222,8 @@
     <string name="suggestions_bold_description">Parole della barra dei suggerimenti in grassetto, più facili da vedere</string>
     <string name="clean_links_title">Pulisci i link incollati</string>
     <string name="clean_links_description">I link incollati dagli appunti perdono il tracciamento (utm_, fbclid, si…) e aprono il sito completo, non quello mobile</string>
+    <string name="suggestion_keys_title">Scegli i suggerimenti dalla tastiera</string>
+    <string name="suggestion_keys_ctrl_shift_qwe">Ctrl+Maiusc+Q, W o E: il suggerimento a sinistra, al centro o a destra</string>
+    <string name="suggestion_keys_ctrl_digits">Ctrl+1, 2 o 3: il suggerimento a sinistra, al centro o a destra (fila dei numeri)</string>
+    <string name="suggestion_keys_off">Disattivato</string>
 </resources>

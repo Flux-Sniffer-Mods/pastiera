@@ -186,6 +186,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    // The key of a suggestion shortcut, whose key-up is ours too
+    private var suggestionKeyUpPending: Int = KeyEvent.KEYCODE_UNKNOWN
     // The focused app is on the "hide keyboard in these apps" list: no UI, keys go to the app
     private var keyboardHiddenForApp: Boolean = false
     // ...but with "Show status LEDs only": the LED strip stays, following observed modifiers
@@ -5614,6 +5616,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             return true
         }
 
+        // A suggestion picked from the keyboard (Ctrl+Shift+Q/W/E by default): only while the bar
+        // shows suggestions, otherwise the keys do what they always did
+        if (hasEditableField && event != null && event.repeatCount == 0 && symPage == 0) {
+            val slot = SuggestionKeys.slotFor(
+                SettingsManager.getSuggestionKeys(this),
+                keyCode,
+                ctrl = event.isCtrlPressed || ctrlPhysicallyPressed,
+                shift = event.isShiftPressed || shiftPhysicallyPressed,
+                alt = event.isAltPressed || altPhysicallyPressed
+            )
+            if (slot != null && visibleSuggestionStrings().isNotEmpty()) {
+                suggestionKeyUpPending = keyCode
+                acceptSuggestionAtIndex(slot)
+                return true
+            }
+        }
+
         // Handle Ctrl+Space for subtype cycling
         if (
             layoutSwitchChordsAllowed &&
@@ -5934,6 +5953,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val event = remapped.event
         if (keyCode == KeyEvent.KEYCODE_ENTER && consumeAltEnterUntilKeyUp) {
             consumeAltEnterUntilKeyUp = false
+            return true
+        }
+        if (suggestionKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode == suggestionKeyUpPending) {
+            suggestionKeyUpPending = KeyEvent.KEYCODE_UNKNOWN
             return true
         }
         if (emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiPickerKeyUpPending) {

@@ -227,4 +227,8 @@
     <string name="suggestions_bold_description">Suggestion bar words in bold, easier to spot at a glance</string>
     <string name="clean_links_title">Clean pasted links</string>
     <string name="clean_links_description">Links you paste from the clipboard lose tracking (utm_, fbclid, si…) and open the full site, not the mobile one</string>
+    <string name="suggestion_keys_title">Pick suggestions from the keyboard</string>
+    <string name="suggestion_keys_ctrl_shift_qwe">Ctrl+Shift+Q, W or E: the left, middle or right suggestion</string>
+    <string name="suggestion_keys_ctrl_digits">Ctrl+1, 2 or 3: the left, middle or right suggestion (number row)</string>
+    <string name="suggestion_keys_off">Off</string>
 </resources>
