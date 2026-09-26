@@ -198,7 +198,7 @@
     <string name="alt_key_editor_copy_to_edit">Copia per modificare</string>
     <string name="alt_key_editor_use_description">Usa questo profilo per il livello SYM del dispositivo su ogni tastiera.</string>
     <string name="alt_key_editor_in_use_now">Questo è ora il tuo livello SYM del dispositivo.</string>
-    <string name="sym_symbols_pencil_description">Modifica le varianti. Tieni premuto per modificare il livello simboli.</string>
+    <string name="sym_symbols_pencil_description">Modifica le varianti. Tieni premuto per modificare questo livello di simboli.</string>
     <string name="default_config_title">Configurazione predefinita</string>
     <string name="default_config_description">Imposta Pastiera come in una nuova installazione, calibrata su un Titan 2 Elite: tema, LED, modificatori, SYM, varianti, app e altro.</string>
     <string name="default_config_confirm">Sostituisce le impostazioni attuali con la configurazione predefinita. Fai prima un backup se potresti volerle recuperare.</string>

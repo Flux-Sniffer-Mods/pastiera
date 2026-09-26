@@ -2555,11 +2555,12 @@ class StatusBarController(
     }
 
     /**
-     * The pencil on a SYM page. On the symbols page it opens the variations mapping (the
-     * alternates each character offers); holding it opens the symbols layer editor as before.
+     * The pencil on a SYM page. On the symbol panels (the symbols page and the Device SYM page)
+     * it opens the variations mapping (the alternates each character offers); holding it opens
+     * that panel's own layer editor, as the tap did before. The emoji layer keeps its editor.
      */
     private fun bindSymPencil(button: View, page: Int) {
-        if (page != 2) {
+        if (page != 2 && page != 5) {
             button.setOnClickListener { openSymCustomization(page = page, keyCode = null, openPicker = false) }
             return
         }

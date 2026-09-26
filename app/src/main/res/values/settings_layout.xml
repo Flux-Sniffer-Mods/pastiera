@@ -203,7 +203,7 @@
     <string name="alt_key_editor_copy_to_edit">Copy to edit</string>
     <string name="alt_key_editor_use_description">Use this profile for the Device SYM layer on every keyboard.</string>
     <string name="alt_key_editor_in_use_now">This is your Device SYM layer now.</string>
-    <string name="sym_symbols_pencil_description">Edit variations. Hold to edit the symbols layer.</string>
+    <string name="sym_symbols_pencil_description">Edit variations. Hold to edit this symbol layer.</string>
     <string name="default_config_title">Default configuration</string>
     <string name="default_config_description">Set Pastiera up the way it comes on a fresh install, tuned on a Titan 2 Elite: theme, LEDs, modifiers, SYM, variations, apps and more.</string>
     <string name="default_config_confirm">This replaces your current settings with the default configuration. Back up first if you might want them back.</string>
