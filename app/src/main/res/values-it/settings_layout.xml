@@ -166,4 +166,10 @@
     <string name="emoji_profile_food">Cibo e bevande</string>
     <string name="emoji_profile_travel">Viaggi e aria aperta</string>
     <string name="emoji_profile_gaming">Giochi</string>
+    <string name="recommended_settings_title">Impostazioni consigliate</string>
+    <string name="recommended_settings_description">Attiva le impostazioni più utili con una tastiera fisica, adattate al tuo telefono. Mostra prima ogni modifica.</string>
+    <string name="recommended_settings_will_turn_on">Verranno attivate:</string>
+    <string name="recommended_settings_nothing">Tutto quello che è consigliato è già attivo.</string>
+    <string name="recommended_settings_apply">Attiva</string>
+    <string name="recommended_settings_applied">Impostazioni consigliate attivate</string>
 </resources>

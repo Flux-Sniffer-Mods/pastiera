@@ -171,4 +171,10 @@
     <string name="emoji_profile_food">Food and drink</string>
     <string name="emoji_profile_travel">Travel and outdoors</string>
     <string name="emoji_profile_gaming">Gaming</string>
+    <string name="recommended_settings_title">Recommended settings</string>
+    <string name="recommended_settings_description">Turn on the settings that help most with a hardware keyboard, fitted to your phone. Shows every change first.</string>
+    <string name="recommended_settings_will_turn_on">This turns on:</string>
+    <string name="recommended_settings_nothing">Everything recommended is already on.</string>
+    <string name="recommended_settings_apply">Turn on</string>
+    <string name="recommended_settings_applied">Recommended settings turned on</string>
 </resources>

@@ -95,6 +95,7 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
     const val MAIN_LED_COLORS = "main.led_colors"
     const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
+    const val RECOMMENDED_SETTINGS = "system.recommended_settings"
     const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
     const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
     const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
