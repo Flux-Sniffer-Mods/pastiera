@@ -542,10 +542,49 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
-    fun autoCap_restrictedFieldsSetting_startsUriFieldWithShift() {
+    fun autoCap_recommendedSettings_startEveryTextBoxWithShift() {
+        val context = RuntimeEnvironment.getApplication()
+        assertTrue(it.palsoftware.pastiera.DefaultConfig.apply(context))
+        val kinds = mapOf(
+            "plain" to InputType.TYPE_CLASS_TEXT,
+            "sentences" to (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES),
+            "multiline" to (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES),
+            "message" to (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
+        )
+        var time = 20_000L
+        val failed = kinds.filter { (_, type) ->
+            focusNewField(newRecorder = RecordingInputConnection(), inputType = type, packageName = "com.example.notes")
+            service.onStartInputView(editorInfo, false)
+            time += 1_000L
+            pressKey(KeyEvent.KEYCODE_H, time)
+            !recorder.committedTexts.joinToString("").startsWith("H")
+        }.keys.associateWith { recorder.committedTexts }
+        assertEquals(emptyMap<String, Any>(), failed)
+    }
+
+    @Test
+    fun exactTyping_onlyForFieldsTheAppAsksForNoSuggestions() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setExactTypingForNoSuggestionFields(context, true)
+        SettingsManager.setAutoCapitalizeFirstLetter(context, true)
+        // The keyboard's own no-suggestions flag doesn't make a plain field exact
+        focusNewField(newRecorder = RecordingInputConnection(), inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
+        service.onStartInputView(editorInfo, false)
+        assertTrue(modifierController().shiftOneShot)
+        // A field the app marks no-suggestions is
+        focusNewField(
+            newRecorder = RecordingInputConnection(),
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        )
+        service.onStartInputView(editorInfo, false)
+        assertFalse(modifierController().shiftOneShot)
+    }
+
+    @Test
+    fun autoCap_linksChosen_startsUriFieldWithShift() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setAutoCapitalizeFirstLetter(context, true)
-        SettingsManager.setAutoCapitalizeRestrictedFields(context, true)
+        ShiftFieldTypes.setEnabled(context, setOf(ShiftFieldTypes.Type.TEXT, ShiftFieldTypes.Type.LINKS))
 
         focusNewField(
             newRecorder = RecordingInputConnection(),
@@ -843,6 +882,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
 
     @Test
     fun deviceSanity_symACyclesDeviceThenEmojiThenSymbols_exactMappings() {
+        // This checks A's mapping on each page: the search key (A by default) is off here
+        SettingsManager.setSearchKey(RuntimeEnvironment.getApplication(), KeyEvent.KEYCODE_UNKNOWN)
         val t0 = 4_000L
 
         tapSym(t0)
@@ -1029,7 +1070,7 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
-    fun emojiPickerKey_autoRepeatDoesNotRetoggle() {
+    fun emojiPickerKey_heldWithoutChoosingLetsGo() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
 
@@ -1046,8 +1087,9 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
             keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_RIGHT, 8_000L, 8_600L)
         )
 
+        // Held past a tap and let go without choosing anything: nothing opens
         assertTrue(repeatHandled)
-        assertEquals(EMOJI_PICKER_PAGE, symLayout().currentSymPage())
+        assertEquals(0, symLayout().currentSymPage())
     }
 
     @Test
@@ -1075,6 +1117,20 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun layoutSwitchChords_notFromEmojiScreensOrWithTheEmojiKey() {
+        val context = RuntimeEnvironment.getApplication()
+        val blocked = PhysicalKeyboardInputMethodService::class.java
+            .getDeclaredMethod("layoutSwitchChordBlocked", Int::class.java, Boolean::class.java)
+            .apply { isAccessible = true }
+        fun isBlocked(keyCode: Int, symOpen: Boolean) = blocked.invoke(service, keyCode, symOpen) as Boolean
+
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_ALT_RIGHT)
+        assertFalse(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_RIGHT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, true))
+    }
+
+    @Test
     fun hiddenApp_holdingALetterInATextFieldDoesNotRepeatIntoTheApp() {
         setField(service, "keyboardHiddenForApp", true)
 
@@ -1095,8 +1151,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     fun hiddenApp_withPanels_emojiKeyOpensPickerAndClosesItAgain() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
-        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
+        setField(service, "hiddenAppAllowsPanels", true)
 
         val (openDown, openUp) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 12_000L)
         assertTrue(openDown)
@@ -1108,11 +1164,25 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun hiddenApp_withPanels_symSpaceIsAChordNotASymTap() {
+        setField(service, "keyboardHiddenForApp", true)
+        setField(service, "hiddenAppAllowsPanels", true)
+
+        service.onKeyDown(KeyEvent.KEYCODE_SYM, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SYM, 13_000L, 13_000L))
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_SPACE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SPACE, 13_050L, 13_050L)))
+        service.onKeyUp(KeyEvent.KEYCODE_SPACE, keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SPACE, 13_050L, 13_100L))
+        service.onKeyUp(KeyEvent.KEYCODE_SYM, keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SYM, 13_000L, 13_150L))
+
+        // No symbols panel over the app
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
     fun hiddenApp_withPanels_keyPressedBeforeThePanelReleasesToTheApp() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
-        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
+        setField(service, "hiddenAppAllowsPanels", true)
 
         val shiftDown = service.onKeyDown(
             KeyEvent.KEYCODE_SHIFT_LEFT,

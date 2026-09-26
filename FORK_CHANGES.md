@@ -11,9 +11,12 @@ Flux Keyboard was called **Pastiera Flux** (app ID `it.palsoftware.pastiera.flux
 ## Emoji, symbols and GIFs
 
 - **Emoji picker key**: a dedicated key (Right Shift by default), assigned by pressing it. A modifier key opens the picker when released, so it still works in chords like Ctrl+Shift+Q.
+- **Hold or tap the emoji key**: hold it and press a key to type that key's emoji from the emoji layer; optionally, one tap makes the next key do the same, and a second tap opens the emoji screen. Held without choosing anything, it just lets go.
+- **Tap SYM for one symbol** (option): one tap makes the next key type its symbol without opening the symbols; a second tap opens them. Holding SYM works as before, and held without choosing anything it just lets go.
 - **GIF search** (KLIPY) in the picker and on the emoji layer, with favourites, recents and caching.
 - **Symbol search** across every Unicode symbol.
 - **Emoji layer**: search, a Recents key, and **profiles** for common situations (chatting, work, social…) that can follow the app you're in.
+- Search, Recents and GIF keys on the layers have a tint of their own, and nothing in the default layers sits under them.
 - Emoji beyond the system font, and names for every emoji in search.
 - A search key (⌕) on every panel; letters type the layer's mappings unless type-to-search is on.
 
@@ -21,12 +24,16 @@ Flux Keyboard was called **Pastiera Flux** (app ID `it.palsoftware.pastiera.flux
 
 - **Spell checker**: Flux Keyboard as Android's spell checker, underlining typos in any app.
 - **Inline autofill**: password manager chips in the suggestion bar.
+- **One-time codes**: a code from a notification (sign-in, bank, delivery) is offered as a chip in the next text field for three minutes. Off until you give it notification access.
 - **Pick suggestions from the keyboard**: Ctrl+Shift+Q, W or E takes the left, middle or right suggestion (Ctrl+1/2/3 on keyboards with a number row). Either Shift works, including Right Shift while it's the emoji key.
+- **Trackpad swipes**: optionally, swipe left, up or right anywhere on the trackpad for the left, middle or right suggestion, and swipe down to delete the previous word. Short and slanted swipes count, whichever way they mostly go.
 - **Backspace undoes an auto-replace** and keeps the space after it; text replacements can be undone with auto-replace off too.
+- **Automatic Shift by field type**: choose which kinds of text field start with a capital (text, names and addresses by default; search, links and email addresses off). A kind that's off gets no automatic Shift, even when an app asks for capitals.
 - **Paste suggestion**: what you just copied, offered in the next text field.
 - **Clean pasted links**: pasted links lose tracking (utm_, fbclid, si…) and open the full site rather than the mobile one.
 - **Emoji suggestions**: an emoji for the word you're typing.
-- **Exact typing** (Apps): in the apps you pick (SSH clients, code editors, AI agents) nothing rewrites what you type: no auto-correct, text replacements, auto-capitals, double-space full stop or automatic spaces. Optionally also wherever an app asks for no suggestions.
+- **Exact typing** (Apps): in the apps you pick (SSH clients, code editors, AI agents) nothing rewrites what you type: no auto-correct, text replacements, auto-capitals, double-space full stop or automatic spaces. Optionally also wherever an app itself asks for no suggestions.
+- **Remember the language per app**: each app gets back the language you last typed in there.
 - **Snippets** fill in `{date}`, `{time}`, `{datetime}`, `{isodate}`, `{day}` and `{clipboard}`.
 - **Smart toggle**: Alt and Ctrl switch themselves off by context.
 - **Voice input keeps listening** through pauses until you stop it or stay silent.
@@ -35,28 +42,40 @@ Flux Keyboard was called **Pastiera Flux** (app ID `it.palsoftware.pastiera.flux
 - No automatic Shift in scripts without capitals (Thai, Arabic, CJK…).
 - **Bold suggestions** option.
 
-## Apps
+## Keyboard layouts
+
+- **Edit layouts in the app**: tap a key to change what it types with and without Shift, then save, restore the original, save as a new layout or **export** it as JSON. No web editor needed.
+
+## Apps and the quick launcher
 
 - **App shortcuts**: the same shortcuts in every app, suggested per category, plus each app's own launcher shortcuts and settings (Ctrl+Alt+1–4, Ctrl+,).
-- **Terminal mode**: Termux gets Pastiera's Alt and SYM, a real Ctrl, a hidden keyboard and a choice of what the emoji key sends.
-- **Enter per app** gets standards by app category, next to App shortcuts.
-- **Hidden-keyboard apps** (Termux:X11, Niagara Launcher by default), with LEDs and panels per app.
+- **Quick launcher**: the built-in one by default, in the keyboard's theme colours, with apps' own long-press shortcuts ("New message", "Scan QR code") as results.
+- **Niagara search as the quick launcher** (option): Back, the key or the gesture, before opening anything returns to the app you opened it from, and on Niagara's home screen the built-in quick launcher opens instead.
+- **Search bars wait for typing** (option): when an app opens with its search bar focused, the keyboard bar stays hidden until you type or tap the bar.
+- **Terminal mode**: Termux gets the keyboard's Alt and SYM, a real Ctrl, a hidden keyboard and a choice of what the emoji key sends, including Alt.
+- **Enter per app** gets standards by app category (chat apps use your messaging preset, email apps send with Ctrl+Enter), next to App shortcuts.
+- **Hidden-keyboard apps** (Niagara Launcher by default; Termux:X11 and others from the tutorial), with LEDs and panels per app. SYM chords reach the keyboard there, so SYM + Space opens the quick launcher instead of the symbols panel.
 - The **QuickLauncher** opens from other apps (key mappers, Tasker) and the app icon.
-- **Linux desktop** keyboard layout from Pastiera's Alt map and SYM page.
+- **Linux desktop** keyboard layout from the keyboard's Alt map and SYM page.
 
 ## Titan 2 Elite, status bar and LEDs
 
-- **Recommended settings** apply a configuration made on a Titan 2 Elite, after saying how much would change.
-- A status bar fitted to the rounded display: filled corners, straight outer buttons, a 5 dp lift above four LEDs, and room around the SYM screens.
-- Every Titan 2 Elite setting on one screen.
-- **Per-LED colours**, a clear active-to-locked jump and an optional sweeping gradient when locked.
+- **Recommended settings** apply a configuration made on a Titan 2 Elite, after saying how much would change. Settings that need a permission or another app (one-time codes, Niagara search, hidden-keyboard apps) start off and are set up from the tutorial.
+- A status bar fitted to the rounded display: filled corners, straight outer buttons, a 5 dp lift above the LEDs, and room around the SYM screens.
+- Every Titan 2 Elite setting on one screen, and a **phone trackpad settings** shortcut (also a quick launcher command) to the phone's Keyboard gestures page, or Settings search with it ready to paste.
+- **Per-LED colours**, a clear active-to-locked jump and an optional sweeping gradient when locked, set from one table with Off, Active and Locked columns.
+- **SYM's LED** is lit while SYM is held and locked while it's tapped for one symbol or the symbols are open. A **fifth LED** does the same for the emoji key (on by default, off in Settings); all five LEDs share the width equally.
+- **Wallpaper colours** (option): the keyboard takes its colours from your wallpaper.
 - A **customisable menu bar** (which buttons, in what order) with a GIF button.
-- Indicators are text symbols, never emoji.
 
-## Settings and privacy
+## Settings, tutorial and privacy
 
-- **Updates from this fork**: Flux Keyboard checks this repository's latest release, not upstream's, and offers the APK straight from the notice.
-- Settings grouped by task, ordered by usefulness, searchable, with rows sized to their text.
+- **Flux Keyboard**: its own name, app ID, icon (a keyboard, in Niagara's icon packs too) and home screen fitted to the Titan 2 Elite, crediting and linking the original Pastiera. The compact mode is called **Solderina**.
+- **A tutorial of its own**: one-step setup, every new feature, a page for making it yours, and the extras that need a permission, on pages that scroll. After an update, **What's new** shows alone, lists only what's new since the version you had, and closes with ✕ or Done.
+- **Updates from this fork**: Flux Keyboard checks this repository's latest release, not upstream's, compares versions properly, and downloads and installs the update itself (Android asks before installing). Choose full releases only, or dev builds too; a dev build starts on dev updates and a full release on releases.
+- **Restricted settings**: features that need the accessibility service or notification access say when Android blocks them for apps installed from a file, and open App info to lift the block.
+- Settings grouped by task, ordered by usefulness, searchable, with rows sized to their text. Search keeps your query and your place when you open a result and come back, and nothing is focused on its own.
+- Input Languages laid out like every other page.
 - **Offline mode**: nothing in the keyboard goes online.
 - Settings for hardware the phone doesn't have (Clicks keyboard, Titan 2 layout) stay hidden.
 - Developer options gather calibration and debug tools.
@@ -64,7 +83,7 @@ Flux Keyboard was called **Pastiera Flux** (app ID `it.palsoftware.pastiera.flux
 ## SYM layers and variations
 
 - **Device SYM layer editor** with curated and custom profiles.
-- The pencil on the symbol panels edits that layer; holding it edits the variations mapping.
+- The pencil on the symbol panels edits that layer's mapping; holding it on pages that have them edits the variations.
 - Dev's choice static variations by default.
 
 ## From the Pastiera team since 0.85
