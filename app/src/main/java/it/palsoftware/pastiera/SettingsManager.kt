@@ -70,6 +70,7 @@ object SettingsManager {
     private const val KEY_SMART_ALT_OFF_AFTER_OPENING = "smart_alt_off_after_opening"
     private const val KEY_DEVELOPER_OPTIONS_ENABLED = "developer_options_enabled"
     private const val KEY_INCOGNITO_ALWAYS = "incognito_always"
+    private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
@@ -2830,6 +2831,14 @@ object SettingsManager {
             .apply()
     }
     
+    /** Offer what you just copied as a suggestion to paste when you start typing in a field. */
+    fun getPasteSuggestionEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_PASTE_SUGGESTION, true)
+
+    fun setPasteSuggestionEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_PASTE_SUGGESTION, enabled).apply()
+    }
+
     /** Incognito typing everywhere: Pastiera learns nothing from what you type. */
     fun getIncognitoAlways(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_INCOGNITO_ALWAYS, false)

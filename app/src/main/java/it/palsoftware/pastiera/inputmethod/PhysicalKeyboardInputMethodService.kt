@@ -1,5 +1,6 @@
 package it.palsoftware.pastiera.inputmethod
 
+import it.palsoftware.pastiera.clipboard.PasteSuggestion
 import it.palsoftware.pastiera.shortcuts.AppShortcutRemapper
 import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
 import it.palsoftware.pastiera.shortcuts.KeyCombo
@@ -103,6 +104,7 @@ import rikka.shizuku.Shizuku
 class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibilityKeyBridge.Target {
 
     companion object {
+        private const val PASTE_SUGGESTION_WINDOW_MS = 60_000L
         private const val TAG = "PastieraInputMethod"
         private const val TRACKPAD_DEBUG_TAG = "TrackpadDebug"
         private const val NATIVE_TRACKPAD_MIN_SWIPE_VELOCITY_PX_PER_MS = 2f
@@ -3828,6 +3830,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         updateInputContextState(info)
         isInputViewActive = inputContextState.isEditable
         traceImeVisibility("onStartInputView restarting=$restarting")
+        if (!restarting) offerPasteSuggestion()
         initializeInputContext(restarting)
         suggestionController.onContextReset()
         
@@ -4689,6 +4692,34 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
     }
 
+    // Paste suggestion: the chip offering what was just copied, while it is shown
+    private var pasteSuggestionShown = false
+
+    /** In a new text field, offer text copied within the last minute as a chip to paste it. */
+    private fun offerPasteSuggestion() {
+        if (!::clipboardHistoryManager.isInitialized || !::candidatesBarController.isInitialized) return
+        if (!SettingsManager.getPasteSuggestionEnabled(this)) return
+        val state = inputContextState
+        if (!state.isReallyEditable || state.isPasswordField || terminalModeActive || keyboardHiddenForApp) return
+        val copy = clipboardHistoryManager.recentCopy ?: return
+        if (System.currentTimeMillis() - copy.timestamp > PASTE_SUGGESTION_WINDOW_MS) return
+        val label = PasteSuggestion.label(copy.text)
+        pasteSuggestionShown = true
+        candidatesBarController.showExpansionSuggestions(listOf(label)) { _ ->
+            clearPasteSuggestion()
+            currentInputConnection?.commitText(copy.text, 1)
+            clipboardHistoryManager.consumeRecentCopy()
+            updateStatusBarText()
+        }
+        updateStatusBarText()
+    }
+
+    private fun clearPasteSuggestion() {
+        if (!pasteSuggestionShown) return
+        pasteSuggestionShown = false
+        candidatesBarController.clearExpansionSuggestions()
+    }
+
     // Terminal mode (Termux): see TerminalMode
     private var terminalModeActive = false
     // Keys sent to the terminal with Ctrl: their release goes the same way
@@ -4928,6 +4959,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val hasEditableField = initialInputConnection != null && inputType != EditorInfo.TYPE_NULL
         if (hasEditableField && !isInputViewActive) {
             isInputViewActive = true
+        }
+        if (pasteSuggestionShown && event?.repeatCount == 0 && !KeyEvent.isModifierKey(keyCode)) {
+            // Typing: the paste suggestion goes away (it is offered once per copy)
+            clearPasteSuggestion()
+            if (::clipboardHistoryManager.isInitialized) clipboardHistoryManager.consumeRecentCopy()
         }
         if (remapAppShortcut(keyCode_, event, hasEditableField)) {
             return true

@@ -57,5 +57,8 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.incognito_follow_apps_description,
         route = SettingRoute(SettingsDestination.Advanced),
         availabilityCheck = { !SettingsManager.getIncognitoAlways(it) },
-        unavailableFallbackId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS)
+        unavailableFallbackId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS),
+    SettingEntry(SettingLinkIds.PRIVACY_PASTE_SUGGESTION, R.string.paste_suggestion_title,
+        summaryRes = R.string.paste_suggestion_description,
+        route = SettingRoute(SettingsDestination.Advanced))
 )

@@ -106,6 +106,7 @@ fun AdvancedSettingsScreen(
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
     var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
+    var pasteSuggestion by remember { mutableStateOf(SettingsManager.getPasteSuggestionEnabled(context)) }
     var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
     var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
@@ -477,6 +478,17 @@ fun AdvancedSettingsScreen(
                                 }
                             }
                         }
+
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
+                            title = stringResource(R.string.paste_suggestion_title),
+                            description = stringResource(R.string.paste_suggestion_description),
+                            checked = pasteSuggestion,
+                            onCheckedChange = {
+                                pasteSuggestion = it
+                                SettingsManager.setPasteSuggestionEnabled(context, it)
+                            }
+                        )
 
                         SettingsSectionDivider(stringResource(R.string.settings_category_accessibility))
                         SettingsCategoryRow(

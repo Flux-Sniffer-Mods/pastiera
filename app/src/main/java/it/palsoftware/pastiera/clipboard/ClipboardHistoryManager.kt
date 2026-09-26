@@ -59,9 +59,33 @@ class ClipboardHistoryManager internal constructor(
         accessStateListeners.clear()
     }
 
+    /** The last text copied while Pastiera was listening, for the paste suggestion. */
+    data class RecentCopy(val timestamp: Long, val text: String)
+
+    @Volatile
+    var recentCopy: RecentCopy? = null
+        private set
+
+    /** Forget the recent copy once it has been offered or used. */
+    fun consumeRecentCopy() {
+        recentCopy = null
+    }
+
     override fun onPrimaryClipChanged() {
+        recordRecentCopy()
         if (!isEnabled || !isHistoryAccessible()) return
         fetchPrimaryClip()
+    }
+
+    private fun recordRecentCopy() {
+        recentCopy = null
+        val clipData = runCatching { clipboardManager.primaryClip }.getOrNull() ?: return
+        if (clipData.itemCount == 0 || clipData.description?.hasMimeType("text/*") == false) return
+        // Passwords and codes copied from password managers are never suggested
+        if (clipData.description?.extras?.getBoolean("android.content.extra.IS_SENSITIVE") == true) return
+        val text = clipData.getItemAt(0)?.coerceToText(context)?.toString()
+        if (text.isNullOrBlank()) return
+        recentCopy = RecentCopy(System.currentTimeMillis(), text)
     }
 
     private fun fetchPrimaryClip() {
