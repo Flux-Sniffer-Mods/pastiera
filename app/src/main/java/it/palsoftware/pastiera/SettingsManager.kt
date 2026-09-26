@@ -68,6 +68,7 @@ object SettingsManager {
     private const val KEY_AUTO_SHOW_KEYBOARD = "auto_show_keyboard"
     private const val KEY_CLEAR_ALT_ON_SPACE = "clear_alt_on_space"
     private const val KEY_SMART_ALT_OFF_AFTER_OPENING = "smart_alt_off_after_opening"
+    private const val KEY_DEVELOPER_OPTIONS_ENABLED = "developer_options_enabled"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
     private const val KEY_LAYOUT_AWARE_CTRL_SHORTCUTS = "layout_aware_ctrl_shortcuts"
@@ -2824,6 +2825,14 @@ object SettingsManager {
             .apply()
     }
     
+    /** Developer options (calibration, debugging and preview tools) are shown in the settings. */
+    fun getDeveloperOptionsEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_DEVELOPER_OPTIONS_ENABLED, false)
+
+    fun setDeveloperOptionsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_DEVELOPER_OPTIONS_ENABLED, enabled).apply()
+    }
+
     /** Smart toggle: Alt lock switches off after an opening quote or bracket typed with Alt. */
     fun getSmartAltOffAfterOpening(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_SMART_ALT_OFF_AFTER_OPENING, false)

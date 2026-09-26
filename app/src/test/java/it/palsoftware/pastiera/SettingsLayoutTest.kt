@@ -98,4 +98,26 @@ class SettingsLayoutTest {
             assertTrue(id, SettingLinkRegistry.search(context, context.getString(title)).any { it.id == id })
         }
     }
+
+    @Test
+    fun developerToolsOnlyShowWithDeveloperOptions() {
+        val developerIds = listOf(
+            SettingLinkIds.TRACKPAD_DEBUG,
+            SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL,
+            SettingLinkIds.MAIN_DEVELOPER
+        )
+        developerIds.forEach { id ->
+            val entry = requireNotNull(SettingLinkRegistry.byId(id))
+            assertFalse(id, entry.isAvailable(context))
+            assertEquals(id, SettingLinkIds.DEVELOPER_OPTIONS_ENABLED, SettingLinkRegistry.visibleTarget(context, entry).id)
+        }
+        SettingsManager.setDeveloperOptionsEnabled(context, true)
+        developerIds.forEach { id ->
+            val entry = requireNotNull(SettingLinkRegistry.byId(id))
+            assertTrue(id, entry.isAvailable(context))
+            assertEquals(id, SettingsDestination.Developer, entry.route.destination)
+        }
+        // Corner calibration also needs the Titan 2 Elite screen
+        assertEquals(SettingsDestination.Developer, route("advanced.corner_calibration").destination)
+    }
 }

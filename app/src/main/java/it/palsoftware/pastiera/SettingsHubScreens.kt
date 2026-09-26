@@ -373,3 +373,54 @@ internal fun SettingsUpdateRows(context: android.content.Context) {
         }
     )
 }
+
+/**
+ * Developer options (Privacy & system, behind its switch): calibration, debugging and preview
+ * tools that most people never need.
+ */
+@Composable
+fun DeveloperOptionsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val context = LocalContext.current
+    if (settingsChild(context, "developer") == "ime_test") {
+        ImeTestScreen(modifier = modifier, onBack = onBack)
+        return
+    }
+    FluxScreenScaffold(stringResource(R.string.developer_options_title), onBack, modifier) {
+        FluxNote(stringResource(R.string.developer_options_note))
+        if (fluxTitanScreenAvailable(context)) {
+            FluxActionRow(
+                linkId = "advanced.corner_calibration",
+                title = stringResource(R.string.corner_calibration_title),
+                description = stringResource(R.string.corner_calibration_description),
+                onClick = { context.startActivity(android.content.Intent(context, CornerCalibrationActivity::class.java)) }
+            )
+        }
+        FluxActionRow(
+            linkId = SettingLinkIds.TRACKPAD_DEBUG,
+            title = stringResource(R.string.trackpad_debug_title),
+            description = stringResource(R.string.trackpad_debug_description),
+            onClick = { context.startActivity(android.content.Intent(context, TrackpadDebugActivity::class.java)) }
+        )
+        FluxActionRow(
+            linkId = SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL,
+            title = stringResource(R.string.tutorial_show_release_notes),
+            description = stringResource(R.string.tutorial_show_release_notes_description),
+            onClick = {
+                context.startActivity(android.content.Intent(context, TutorialActivity::class.java).apply {
+                    putExtra(TutorialActivity.EXTRA_UPDATE_TUTORIAL, true)
+                    putExtra(TutorialActivity.EXTRA_PREVIEW_UPDATE_TUTORIAL, true)
+                    putExtra(TutorialActivity.EXTRA_PREVIOUS_VERSION, "0.84beta")
+                })
+            }
+        )
+        if (BuildConfig.DEBUG) {
+            FluxActionRow(
+                linkId = null,
+                title = "IME Test Screen",
+                description = "Test all input field types and IME actions",
+                onClick = { openSettingsChild(context, "developer", "ime_test") }
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}

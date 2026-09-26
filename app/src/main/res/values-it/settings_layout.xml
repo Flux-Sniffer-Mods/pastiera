@@ -54,4 +54,8 @@
     <string name="smart_alt_off_description">Con Alt bloccato, digitare con Alt una virgoletta o parentesi di apertura (\" ( [ {) spegne Alt, così le parole all’interno escono come lettere</string>
     <string name="smart_ctrl_off_title">Attivazione intelligente: Ctrl si spegne dopo una scorciatoia</string>
     <string name="smart_ctrl_off_description">Un Ctrl toccato si spegne dopo una scorciatoia come copia, incolla o annulla; gli spostamenti di cursore e selezione lo lasciano attivo</string>
+    <string name="developer_options_title">Opzioni sviluppatore</string>
+    <string name="developer_options_description">Mostra strumenti di calibrazione, debug e anteprima</string>
+    <string name="developer_options_row_description">Calibrazione degli angoli, debug del trackpad, anteprima delle novità</string>
+    <string name="developer_options_note">Strumenti per calibrare, fare il debug e provare Pastiera in anteprima. Alla maggior parte delle persone non servono.</string>
 </resources>

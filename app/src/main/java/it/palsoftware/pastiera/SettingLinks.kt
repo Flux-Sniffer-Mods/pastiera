@@ -36,6 +36,8 @@ object SettingLinkIds {
     const val MAIN_LOOK_SOUND = "main.look_sound"
     const val MAIN_APPS = "main.apps"
     const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
+    const val MAIN_DEVELOPER = "main.developer"
+    const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"
 
     // App shortcuts screen
     const val APP_SHORTCUTS_ENABLED = "app_shortcuts.enabled"
@@ -190,6 +192,7 @@ enum class SettingAvailability {
     AutoReplaceEnabled,
     CtrlTapLatchesEnabled,
     TrackpadShizukuProvider,
+    DeveloperOptionsEnabled,
     /** The row no longer exists; old links resolve to [SettingEntry.unavailableFallbackId]. */
     Retired
 }
@@ -217,6 +220,7 @@ data class SettingEntry(
             SettingsManager.getCtrlTapLatches(context)
         SettingAvailability.TrackpadShizukuProvider ->
             SettingsManager.getTrackpadProvider(context) == SettingsManager.TRACKPAD_PROVIDER_SHIZUKU
+        SettingAvailability.DeveloperOptionsEnabled -> SettingsManager.getDeveloperOptionsEnabled(context)
         SettingAvailability.Retired -> false
     }
 }
@@ -669,7 +673,9 @@ object SettingLinkRegistry {
             SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL,
             R.string.tutorial_show_release_notes,
             R.string.tutorial_show_release_notes_description,
-            destination = SettingsDestination.Advanced
+            destination = SettingsDestination.Developer,
+            availability = SettingAvailability.DeveloperOptionsEnabled,
+            unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED
         ),
 
         entry(
@@ -712,7 +718,9 @@ object SettingLinkRegistry {
             SettingLinkIds.TRACKPAD_DEBUG,
             R.string.trackpad_debug_title,
             R.string.trackpad_debug_description,
-            destination = SettingsDestination.TrackpadGestures
+            destination = SettingsDestination.Developer,
+            availability = SettingAvailability.DeveloperOptionsEnabled,
+            unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED
         ),
 
         entry(
@@ -1046,7 +1054,8 @@ object SettingLinkRegistry {
         SettingsDestination.LookSound to R.string.settings_look_sound_title,
         SettingsDestination.TrackpadGestures to R.string.settings_trackpad_gestures_title,
         SettingsDestination.Apps to R.string.settings_apps_title,
-        SettingsDestination.AppShortcuts to R.string.app_shortcuts_title
+        SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
+        SettingsDestination.Developer to R.string.developer_options_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

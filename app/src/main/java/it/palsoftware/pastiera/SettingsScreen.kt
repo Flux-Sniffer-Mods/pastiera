@@ -76,7 +76,8 @@ enum class SettingsDestination {
     LookSound,
     TrackpadGestures,
     Apps,
-    AppShortcuts
+    AppShortcuts,
+    Developer
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -253,6 +254,9 @@ fun SettingsScreen(
                     onNavigate = { destination -> navigateTo(destination) },
                     onOpenCustomization = { destination -> openCustomization(destination) }
                 )
+            }
+            SettingsDestination.Developer -> {
+                DeveloperOptionsScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.AppShortcuts -> {
                 AppShortcutsSettingsScreen(modifier = modifier, onBack = { navigateBack() })

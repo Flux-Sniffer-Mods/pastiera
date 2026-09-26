@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
@@ -104,6 +105,7 @@ fun AdvancedSettingsScreen(
     var clipboardRetentionTime by remember {
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
+    var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -500,48 +502,24 @@ fun AdvancedSettingsScreen(
 
 
 
-                        // IME Test Screen (only in debug builds)
-                        if (BuildConfig.DEBUG) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(64.dp)
-                                    .clickable { navigateTo(AdvancedDestination.ImeTest) }
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.TextFields,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "IME Test Screen",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1
-                                        )
-                                        Text(
-                                            text = "Test all input field types and IME actions",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1
-                                        )
-                                    }
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED,
+                            title = stringResource(R.string.developer_options_title),
+                            description = stringResource(R.string.developer_options_description),
+                            checked = developerOptions,
+                            onCheckedChange = { enabled ->
+                                developerOptions = enabled
+                                SettingsManager.setDeveloperOptionsEnabled(context, enabled)
                             }
+                        )
+                        if (developerOptions) {
+                            SettingsCategoryRow(
+                                icon = Icons.Filled.Code,
+                                title = stringResource(R.string.developer_options_title),
+                                description = stringResource(R.string.developer_options_row_description),
+                                linkId = SettingLinkIds.MAIN_DEVELOPER,
+                                onClick = { onNavigate(SettingsDestination.Developer) }
+                            )
                         }
 
                         SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
@@ -591,53 +569,6 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL) {
-                                    val intent = Intent(context, TutorialActivity::class.java).apply {
-                                        putExtra(TutorialActivity.EXTRA_UPDATE_TUTORIAL, true)
-                                        putExtra(TutorialActivity.EXTRA_PREVIEW_UPDATE_TUTORIAL, true)
-                                        putExtra(TutorialActivity.EXTRA_PREVIOUS_VERSION, "0.84beta")
-                                    }
-                                    context.startActivity(intent)
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show_release_notes),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show_release_notes_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
                         SettingsUpdateRows(context)
                         SettingsCategoryRow(
                             icon = Icons.Filled.Info,

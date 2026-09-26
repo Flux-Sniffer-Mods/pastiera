@@ -35,5 +35,13 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         route = SettingRoute(SettingsDestination.Modifiers)),
     SettingEntry(SettingLinkIds.MODIFIERS_SMART_CTRL_OFF, R.string.smart_ctrl_off_title,
         summaryRes = R.string.smart_ctrl_off_description,
-        route = SettingRoute(SettingsDestination.Modifiers))
+        route = SettingRoute(SettingsDestination.Modifiers)),
+    SettingEntry(SettingLinkIds.DEVELOPER_OPTIONS_ENABLED, R.string.developer_options_title,
+        summaryRes = R.string.developer_options_description,
+        route = SettingRoute(SettingsDestination.Advanced)),
+    SettingEntry(SettingLinkIds.MAIN_DEVELOPER, R.string.developer_options_title,
+        summaryRes = R.string.developer_options_row_description,
+        route = SettingRoute(SettingsDestination.Developer),
+        availabilityCheck = { SettingsManager.getDeveloperOptionsEnabled(it) },
+        unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED)
 )
