@@ -71,6 +71,7 @@ object SettingsManager {
     private const val KEY_DEVELOPER_OPTIONS_ENABLED = "developer_options_enabled"
     private const val KEY_INCOGNITO_ALWAYS = "incognito_always"
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
+    private const val KEY_CLEAN_PASTED_LINKS = "clean_pasted_links" // Strip tracking from pasted links
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
@@ -2900,6 +2901,18 @@ object SettingsManager {
     fun setEmojiSuggestionsEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_EMOJI_SUGGESTIONS, enabled).apply()
     }
+
+    /** Links Pastiera pastes lose their tracking parameters and mobile hosts. On by default. */
+    fun getCleanPastedLinks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_CLEAN_PASTED_LINKS, true)
+
+    fun setCleanPastedLinks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_CLEAN_PASTED_LINKS, enabled).apply()
+    }
+
+    /** [text] as Pastiera pastes it: links cleaned when that's on. */
+    fun textToPaste(context: Context, text: String): String =
+        if (getCleanPastedLinks(context)) it.palsoftware.pastiera.clipboard.LinkCleaner.clean(text) else text
 
     fun getPasteSuggestionEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_PASTE_SUGGESTION, true)

@@ -42,6 +42,7 @@ object SettingLinkIds {
     const val EXACT_TYPING_NO_SUGGESTION_FIELDS = "exact_typing.no_suggestion_fields"
     const val PRIVACY_INCOGNITO_ALWAYS = "privacy.incognito_always"
     const val PRIVACY_PASTE_SUGGESTION = "privacy.paste_suggestion"
+    const val PRIVACY_CLEAN_LINKS = "privacy.clean_links"
     const val PRIVACY_INCOGNITO_FOLLOW_APPS = "privacy.incognito_follow_apps"
     const val TERMINAL_MODE_ENABLED = "terminal_mode.enabled"
     const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"

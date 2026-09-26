@@ -110,6 +110,7 @@ fun AdvancedSettingsScreen(
     }
     var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
     var pasteSuggestion by remember { mutableStateOf(SettingsManager.getPasteSuggestionEnabled(context)) }
+    var cleanLinks by remember { mutableStateOf(SettingsManager.getCleanPastedLinks(context)) }
     var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
     var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
@@ -336,6 +337,16 @@ fun AdvancedSettingsScreen(
                             onCheckedChange = {
                                 pasteSuggestion = it
                                 SettingsManager.setPasteSuggestionEnabled(context, it)
+                            }
+                        )
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_CLEAN_LINKS,
+                            title = stringResource(R.string.clean_links_title),
+                            description = stringResource(R.string.clean_links_description),
+                            checked = cleanLinks,
+                            onCheckedChange = {
+                                cleanLinks = it
+                                SettingsManager.setCleanPastedLinks(context, it)
                             }
                         )
 

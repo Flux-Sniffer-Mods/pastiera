@@ -189,7 +189,7 @@ class ClipboardHistoryManager internal constructor(
      */
     fun pasteText(text: String, inputConnection: android.view.inputmethod.InputConnection?) {
         if (!isHistoryAccessible()) return
-        inputConnection?.commitText(text, 1)
+        inputConnection?.commitText(it.palsoftware.pastiera.SettingsManager.textToPaste(context, text), 1)
     }
 
     /**

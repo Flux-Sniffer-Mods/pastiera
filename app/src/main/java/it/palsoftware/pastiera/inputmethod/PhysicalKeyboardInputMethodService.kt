@@ -4829,7 +4829,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         pasteSuggestionShown = true
         candidatesBarController.showExpansionSuggestions(listOf(label)) { _ ->
             clearPasteSuggestion()
-            currentInputConnection?.commitText(copy.text, 1)
+            currentInputConnection?.commitText(SettingsManager.textToPaste(this, copy.text), 1)
             clipboardHistoryManager.consumeRecentCopy()
             updateStatusBarText()
         }

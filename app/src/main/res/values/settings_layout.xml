@@ -225,4 +225,6 @@
     <string name="menu_bar_reset">Reset the menu bar</string>
     <string name="suggestions_bold_title">Bold suggestions</string>
     <string name="suggestions_bold_description">Suggestion bar words in bold, easier to spot at a glance</string>
+    <string name="clean_links_title">Clean pasted links</string>
+    <string name="clean_links_description">Links you paste from the clipboard lose tracking (utm_, fbclid, si…) and open the full site, not the mobile one</string>
 </resources>

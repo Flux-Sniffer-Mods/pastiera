@@ -131,6 +131,9 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry("hardware.alt_editor.import", R.string.alt_key_editor_import_title,
         summaryRes = R.string.alt_key_editor_transfer_description,
         route = SettingRoute(SettingsDestination.DeviceSymLayerEditor)),
+    SettingEntry(SettingLinkIds.PRIVACY_CLEAN_LINKS, R.string.clean_links_title,
+        summaryRes = R.string.clean_links_description,
+        route = SettingRoute(SettingsDestination.Advanced)),
     SettingEntry(SettingLinkIds.PRIVACY_PASTE_SUGGESTION, R.string.paste_suggestion_title,
         summaryRes = R.string.paste_suggestion_description,
         route = SettingRoute(SettingsDestination.Advanced))
