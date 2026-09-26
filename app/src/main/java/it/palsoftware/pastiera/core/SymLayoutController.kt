@@ -55,6 +55,9 @@ class SymLayoutController(
     /** The emoji layer's GIF key was pressed: the input method opens GIF search. */
     var onEmojiLayerGifKey: (() -> Unit)? = null
 
+    /** Type to search: a letter on the emoji layer (true) or a symbols page (false), and its text. */
+    var onTypeToSearch: ((emoji: Boolean, text: String) -> Unit)? = null
+
     /** The emoji layer shows recent emoji on its keys (its Recents key was pressed). */
     var emojiLayerShowsRecents: Boolean = false
         private set
@@ -159,10 +162,12 @@ class SymLayoutController(
     private fun emojiLayerMappings(): Map<Int, String> {
         val base = alternateCharacterManager.getSymMappings()
         val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
-        val gifKey = SettingsManager.activeEmojiLayerGifKey(context)
+        val showingRecents = emojiLayerShowsRecents && recentsKey != KeyEvent.KEYCODE_UNKNOWN
+        // While the layer shows recent emoji, the GIF key holds one of them too
+        val gifKey = if (showingRecents) KeyEvent.KEYCODE_UNKNOWN else SettingsManager.activeEmojiLayerGifKey(context)
         if (recentsKey == KeyEvent.KEYCODE_UNKNOWN && gifKey == KeyEvent.KEYCODE_UNKNOWN) return base
-        val shown = if (emojiLayerShowsRecents && recentsKey != KeyEvent.KEYCODE_UNKNOWN) {
-            val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey && it != gifKey }
+        val shown = if (showingRecents) {
+            val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey }
             keys.zip(RecentEmojiManager.getRecentEmojis(context, keys.size)).toMap().toMutableMap()
         } else {
             base.toMutableMap()
@@ -353,7 +358,8 @@ class SymLayoutController(
             SettingsManager.getSymAutoClose(context)
         }
 
-        val gifKey = SettingsManager.activeEmojiLayerGifKey(context)
+        // While the layer shows recent emoji, the GIF key is one of them
+        val gifKey = if (emojiLayerShowsRecents) KeyEvent.KEYCODE_UNKNOWN else SettingsManager.activeEmojiLayerGifKey(context)
         if (page == SymPage.EMOJI && gifKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == gifKey) {
             if ((event?.repeatCount ?: 0) == 0) onEmojiLayerGifKey?.invoke()
             return SymKeyResult.CONSUME
@@ -362,6 +368,22 @@ class SymLayoutController(
         if (page == SymPage.EMOJI && recentsKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == recentsKey) {
             if ((event?.repeatCount ?: 0) == 0 && toggleEmojiLayerRecents()) {
                 updateStatusBar()
+            }
+            return SymKeyResult.CONSUME
+        }
+
+        // Type to search (its settings): a plain letter starts emoji or symbol search with it
+        val typeToSearch = when (page) {
+            SymPage.EMOJI -> SettingsManager.getEmojiLayerTypeToSearch(context)
+            SymPage.SYMBOLS, SymPage.DEVICE -> SettingsManager.getSymbolsTypeToSearch(context)
+            else -> false
+        }
+        if (typeToSearch && event != null && keyCode in KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z &&
+            !event.isAltPressed && !event.isCtrlPressed && !altLatchActive && !ctrlLatchActive
+        ) {
+            if (event.repeatCount == 0) {
+                val typed = event.unicodeChar.takeIf { it > 0 }?.toChar() ?: ('a' + (keyCode - KeyEvent.KEYCODE_A))
+                onTypeToSearch?.invoke(page == SymPage.EMOJI, typed.toString())
             }
             return SymKeyResult.CONSUME
         }

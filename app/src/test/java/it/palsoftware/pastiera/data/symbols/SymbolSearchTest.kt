@@ -106,4 +106,25 @@ class SymbolSearchTest {
         // After a system update the fonts may differ: check again
         assertNull(SymbolSearch.loadVerdicts(file, "build-2"))
     }
+
+    @Test
+    fun recentlyUsedSymbolsComeFirstNewestFirst() {
+        val found = listOf("→", "←", "↑", "↓").map { SymbolSearch.Entry(it, "arrow $it") }
+
+        val ordered = SymbolSearch.recentsFirst(found, recents = listOf("↓", "x", "←"))
+
+        assertEquals(listOf("↓", "←", "→", "↑"), ordered.map { it.symbol })
+    }
+
+    @Test
+    fun pickedSymbolsAreRememberedNewestFirst() {
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        File(context.filesDir, "symbol-recents.txt").delete()
+
+        SymbolSearch.addRecent(context, "°")
+        SymbolSearch.addRecent(context, "™")
+        SymbolSearch.addRecent(context, "°")
+
+        assertEquals(listOf("°", "™"), SymbolSearch.recentSymbols(context))
+    }
 }

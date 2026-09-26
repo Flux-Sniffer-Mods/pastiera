@@ -155,6 +155,16 @@ object SettingsManager {
     private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
     private const val KEY_EMOJI_LAYER_GIF_KEY = "emoji_layer_gif_key" // Emoji layer key that opens GIF search
     private const val KEY_HIDDEN_APP_STANDARD_MODIFIERS = "hidden_app_standard_modifiers" // Titan Ctrl/Sym as standard keys
+    private const val KEY_EMOJI_SEARCH_ENTER_PICKS = "emoji_search_enter_picks" // Enter: first emoji, close
+    private const val KEY_SYMBOL_SEARCH_ENTER_PICKS = "symbol_search_enter_picks" // Enter: first symbol, close
+    private const val KEY_GIF_SEARCH_ENTER_PICKS = "gif_search_enter_picks" // Enter: first GIF (closes)
+    private const val KEY_RECENTS_FIRST_IN_SEARCH = "recents_first_in_search" // recently used first in searches
+    private const val KEY_GIF_SHOW_FAVOURITES = "gif_show_favourites" // Favourites section in GIF search
+    private const val KEY_GIF_SHOW_RECENTS = "gif_show_recents" // Recent section in GIF search
+    private const val KEY_EMOJI_PICKER_FOCUS_SEARCH = "emoji_picker_focus_search" // typing searches on open
+    private const val KEY_GIF_FOCUS_SEARCH = "gif_focus_search" // typing searches GIFs on open
+    private const val KEY_EMOJI_LAYER_TYPE_TO_SEARCH = "emoji_layer_type_to_search" // a letter starts emoji search
+    private const val KEY_SYMBOLS_TYPE_TO_SEARCH = "symbols_type_to_search" // a letter starts symbol search
     private const val KEY_GIFS_ENABLED = "gifs_enabled" // GIF key on the emoji layer, GIF tab in the picker
     private const val KEY_KLIPY_API_KEY = "klipy_api_key" // User's own KLIPY key (not backed up)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
@@ -5370,6 +5380,89 @@ object SettingsManager {
 
     fun setHiddenAppStandardModifiers(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_HIDDEN_APP_STANDARD_MODIFIERS, enabled).apply()
+    }
+
+    /** The emoji picker opens with its search taking typing. On by default. */
+    fun getEmojiPickerFocusSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_PICKER_FOCUS_SEARCH, true)
+
+    fun setEmojiPickerFocusSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_PICKER_FOCUS_SEARCH, enabled).apply()
+    }
+
+    /** GIF search opens with its search taking typing. On by default. */
+    fun getGifFocusSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_FOCUS_SEARCH, true)
+
+    fun setGifFocusSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_FOCUS_SEARCH, enabled).apply()
+    }
+
+    /** On the emoji layer, a letter key starts emoji search with that letter (off: it types its emoji). */
+    fun getEmojiLayerTypeToSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_LAYER_TYPE_TO_SEARCH, false)
+
+    fun setEmojiLayerTypeToSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_LAYER_TYPE_TO_SEARCH, enabled).apply()
+    }
+
+    /** On the symbols pages, a letter key starts symbol search with that letter (off: it types its symbol). */
+    fun getSymbolsTypeToSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, false)
+
+    fun setSymbolsTypeToSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, enabled).apply()
+    }
+
+    /**
+     * Emoji, symbols and GIFs used recently (and favourite GIFs) come first in their searches.
+     * On by default.
+     */
+    fun getRecentsFirstInSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_RECENTS_FIRST_IN_SEARCH, true)
+
+    fun setRecentsFirstInSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_RECENTS_FIRST_IN_SEARCH, enabled).apply()
+    }
+
+    /** GIF search shows the favourite GIFs at its top (with an empty search). On by default. */
+    fun getGifShowFavourites(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SHOW_FAVOURITES, true)
+
+    fun setGifShowFavourites(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SHOW_FAVOURITES, enabled).apply()
+    }
+
+    /** GIF search shows the recently sent GIFs (with an empty search). On by default. */
+    fun getGifShowRecents(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SHOW_RECENTS, true)
+
+    fun setGifShowRecents(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SHOW_RECENTS, enabled).apply()
+    }
+
+    /** Enter in emoji search picks the first emoji and closes (after a pick, only closes). On by default. */
+    fun getEmojiSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_SEARCH_ENTER_PICKS, true)
+
+    fun setEmojiSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_SEARCH_ENTER_PICKS, enabled).apply()
+    }
+
+    /** Enter in symbol search picks the first symbol and closes (after a pick, only closes). On by default. */
+    fun getSymbolSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SYMBOL_SEARCH_ENTER_PICKS, true)
+
+    fun setSymbolSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SYMBOL_SEARCH_ENTER_PICKS, enabled).apply()
+    }
+
+    /** Enter in GIF search sends the first GIF (which closes the picker). On by default. */
+    fun getGifSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SEARCH_ENTER_PICKS, true)
+
+    fun setGifSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SEARCH_ENTER_PICKS, enabled).apply()
     }
 
     /** The emoji layer key that opens GIF search (while it's on): P unless changed (KEYCODE_UNKNOWN = off). */

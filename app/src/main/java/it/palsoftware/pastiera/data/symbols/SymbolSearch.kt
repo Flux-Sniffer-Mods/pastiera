@@ -183,6 +183,28 @@ object SymbolSearch {
         }
     }
 
+    private const val RECENTS_FILE = "symbol-recents.txt"
+    const val MAX_RECENTS = 40
+
+    /** Symbols picked from symbol search, newest first. */
+    fun recentSymbols(context: Context): List<String> = runCatching {
+        File(context.applicationContext.filesDir, RECENTS_FILE).takeIf { it.isFile }
+            ?.readLines()?.filter { it.isNotEmpty() }
+    }.getOrNull().orEmpty()
+
+    /** A symbol was picked: it goes to the top of the recents. */
+    fun addRecent(context: Context, symbol: String) {
+        val updated = (listOf(symbol) + recentSymbols(context).filter { it != symbol }).take(MAX_RECENTS)
+        runCatching { File(context.applicationContext.filesDir, RECENTS_FILE).writeText(updated.joinToString("\n")) }
+    }
+
+    /** [found] with the [recents] among them first (newest first), the rest in their order. */
+    fun recentsFirst(found: List<Entry>, recents: List<String>): List<Entry> {
+        if (recents.isEmpty()) return found
+        val rank = recents.withIndex().associate { (index, symbol) -> symbol to index }
+        return found.sortedBy { rank[it.symbol] ?: Int.MAX_VALUE }
+    }
+
     /** Forgets every answer (tests). */
     fun clearVerdicts() {
         verdicts.clear()

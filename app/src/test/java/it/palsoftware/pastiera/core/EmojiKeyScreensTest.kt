@@ -176,4 +176,69 @@ class EmojiKeyScreensTest {
         assertTrue(SettingsManager.setEmojiLayerGifKey(context, KeyEvent.KEYCODE_L))
         assertEquals(KeyEvent.KEYCODE_L, SettingsManager.getEmojiLayerGifKey(context))
     }
+
+    @Test
+    fun aLetterOnTheEmojiLayerStartsASearchWhenTypeToSearchIsOn() {
+        SettingsManager.setEmojiLayerTypeToSearch(context, true)
+        val searches = mutableListOf<Pair<Boolean, String>>()
+        controller.onTypeToSearch = { emoji, text -> searches += emoji to text }
+        controller.toggleEmojiKeyPage(layer = true)
+
+        val result = controller.handleKeyWhenActive(
+            KeyEvent.KEYCODE_S,
+            KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_S, 0),
+            null,
+            ctrlLatchActive = false,
+            altLatchActive = false,
+            updateStatusBar = {}
+        )
+
+        assertEquals(SymLayoutController.SymKeyResult.CONSUME, result)
+        assertEquals(listOf(true to "s"), searches)
+    }
+
+    @Test
+    fun lettersTypeTheirEmojiWhenTypeToSearchIsOff() {
+        SettingsManager.setEmojiLayerTypeToSearch(context, false)
+        val searches = mutableListOf<Pair<Boolean, String>>()
+        controller.onTypeToSearch = { emoji, text -> searches += emoji to text }
+        controller.toggleEmojiKeyPage(layer = true)
+
+        controller.handleKeyWhenActive(
+            KeyEvent.KEYCODE_S,
+            KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_S, 0),
+            null,
+            ctrlLatchActive = false,
+            altLatchActive = false,
+            updateStatusBar = {}
+        )
+
+        assertTrue(searches.isEmpty())
+    }
+
+    @Test
+    fun withRecentsShownTheGifKeyHoldsARecentEmoji() {
+        SettingsManager.setGifsEnabled(context, true)
+        SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_Q)
+        val recent = listOf("😀", "😂", "😍", "😎", "👍", "🙏", "🎉", "🔥", "❤", "😢")
+        recent.forEach { RecentEmojiManager.addRecentEmoji(context, it) }
+        var gifRequests = 0
+        controller.onEmojiLayerGifKey = { gifRequests++ }
+        controller.toggleEmojiKeyPage(layer = true)
+        assertEquals(SymLayoutController.GIF_KEY_LABEL, controller.currentSymMappings()!![KeyEvent.KEYCODE_P])
+
+        assertTrue(controller.toggleEmojiLayerRecents())
+
+        // P is the ninth key after Q: the ninth most recent emoji, not GIF
+        assertEquals(recent.reversed()[8], controller.currentSymMappings()!![KeyEvent.KEYCODE_P])
+        controller.handleKeyWhenActive(
+            KeyEvent.KEYCODE_P,
+            KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_P, 0),
+            null,
+            ctrlLatchActive = false,
+            altLatchActive = false,
+            updateStatusBar = {}
+        )
+        assertEquals(0, gifRequests)
+    }
 }

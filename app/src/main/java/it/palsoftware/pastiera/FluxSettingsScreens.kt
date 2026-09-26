@@ -259,6 +259,16 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var klipyApiKey by remember { mutableStateOf(SettingsManager.getUserKlipyApiKey(context)) }
     var emojiLayerGifKey by remember { mutableStateOf(SettingsManager.getEmojiLayerGifKey(context)) }
     var showGifKeyDialog by remember { mutableStateOf(false) }
+    var enterPicksEmoji by remember { mutableStateOf(SettingsManager.getEmojiSearchEnterPicks(context)) }
+    var recentsFirst by remember { mutableStateOf(SettingsManager.getRecentsFirstInSearch(context)) }
+    var gifFavourites by remember { mutableStateOf(SettingsManager.getGifShowFavourites(context)) }
+    var gifRecents by remember { mutableStateOf(SettingsManager.getGifShowRecents(context)) }
+    var enterPicksSymbol by remember { mutableStateOf(SettingsManager.getSymbolSearchEnterPicks(context)) }
+    var enterPicksGif by remember { mutableStateOf(SettingsManager.getGifSearchEnterPicks(context)) }
+    var emojiPickerFocus by remember { mutableStateOf(SettingsManager.getEmojiPickerFocusSearch(context)) }
+    var gifFocus by remember { mutableStateOf(SettingsManager.getGifFocusSearch(context)) }
+    var layerTypeToSearch by remember { mutableStateOf(SettingsManager.getEmojiLayerTypeToSearch(context)) }
+    var symbolsTypeToSearch by remember { mutableStateOf(SettingsManager.getSymbolsTypeToSearch(context)) }
 
     FluxScreenScaffold(stringResource(R.string.flux_emoji_gifs_title), onBack, modifier) {
         FluxNote(stringResource(R.string.flux_emoji_gifs_note))
@@ -502,6 +512,112 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
             }
         }
+
+        SettingsSectionDivider(stringResource(R.string.flux_section_search_on_open))
+        FluxSwitchRow(
+            linkId = "flux_emoji.focus_picker",
+            title = stringResource(R.string.flux_focus_picker_title),
+            description = stringResource(R.string.flux_focus_picker_description),
+            checked = emojiPickerFocus,
+            onCheckedChange = { enabled ->
+                emojiPickerFocus = enabled
+                SettingsManager.setEmojiPickerFocusSearch(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.focus_gif",
+            title = stringResource(R.string.flux_focus_gif_title),
+            description = stringResource(R.string.flux_focus_gif_description),
+            checked = gifFocus,
+            onCheckedChange = { enabled ->
+                gifFocus = enabled
+                SettingsManager.setGifFocusSearch(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.type_to_search_layer",
+            title = stringResource(R.string.flux_type_to_search_layer_title),
+            description = stringResource(R.string.flux_type_to_search_layer_description),
+            checked = layerTypeToSearch,
+            onCheckedChange = { enabled ->
+                layerTypeToSearch = enabled
+                SettingsManager.setEmojiLayerTypeToSearch(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.type_to_search_symbols",
+            title = stringResource(R.string.flux_type_to_search_symbols_title),
+            description = stringResource(R.string.flux_type_to_search_symbols_description),
+            checked = symbolsTypeToSearch,
+            onCheckedChange = { enabled ->
+                symbolsTypeToSearch = enabled
+                SettingsManager.setSymbolsTypeToSearch(context, enabled)
+            }
+        )
+
+        SettingsSectionDivider(stringResource(R.string.flux_section_enter))
+        FluxSwitchRow(
+            linkId = "flux_emoji.enter_emoji",
+            title = stringResource(R.string.flux_enter_emoji_title),
+            description = stringResource(R.string.flux_enter_emoji_description),
+            checked = enterPicksEmoji,
+            onCheckedChange = { enabled ->
+                enterPicksEmoji = enabled
+                SettingsManager.setEmojiSearchEnterPicks(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.enter_symbol",
+            title = stringResource(R.string.flux_enter_symbol_title),
+            description = stringResource(R.string.flux_enter_symbol_description),
+            checked = enterPicksSymbol,
+            onCheckedChange = { enabled ->
+                enterPicksSymbol = enabled
+                SettingsManager.setSymbolSearchEnterPicks(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.enter_gif",
+            title = stringResource(R.string.flux_enter_gif_title),
+            description = stringResource(R.string.flux_enter_gif_description),
+            checked = enterPicksGif,
+            onCheckedChange = { enabled ->
+                enterPicksGif = enabled
+                SettingsManager.setGifSearchEnterPicks(context, enabled)
+            }
+        )
+
+        SettingsSectionDivider(stringResource(R.string.flux_section_recents))
+        FluxSwitchRow(
+            linkId = "flux_emoji.recents_first",
+            title = stringResource(R.string.flux_recents_first_title),
+            description = stringResource(R.string.flux_recents_first_description),
+            checked = recentsFirst,
+            onCheckedChange = { enabled ->
+                recentsFirst = enabled
+                SettingsManager.setRecentsFirstInSearch(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.gif_favourites",
+            title = stringResource(R.string.flux_gif_favourites_title),
+            description = stringResource(R.string.flux_gif_favourites_description),
+            checked = gifFavourites,
+            onCheckedChange = { enabled ->
+                gifFavourites = enabled
+                SettingsManager.setGifShowFavourites(context, enabled)
+            }
+        )
+        FluxSwitchRow(
+            linkId = "flux_emoji.gif_recents",
+            title = stringResource(R.string.flux_gif_recents_title),
+            description = stringResource(R.string.flux_gif_recents_description),
+            checked = gifRecents,
+            onCheckedChange = { enabled ->
+                gifRecents = enabled
+                SettingsManager.setGifShowRecents(context, enabled)
+            }
+        )
 
         // Dedicated emoji picker key: press the key to use (works with whatever keys the device has)
         if (showEmojiPickerKeyDialog) {

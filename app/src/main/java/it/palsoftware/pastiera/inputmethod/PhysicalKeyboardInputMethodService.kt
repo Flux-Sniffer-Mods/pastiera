@@ -10,6 +10,7 @@ import it.palsoftware.pastiera.AppBroadcastActions
 import it.palsoftware.pastiera.ClicksPowerKeyboardController
 import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.data.desktop.DesktopKeyboardLayout
+import it.palsoftware.pastiera.data.gif.GifCollections
 import it.palsoftware.pastiera.SoftwareKeyboardModeActions
 import android.inputmethodservice.InputMethodService
 import android.hardware.input.InputManager
@@ -2110,6 +2111,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         symLayoutController.onEmojiLayerGifKey = {
             uiHandler.post { candidatesBarController.onEmojiLayerGifRequested?.invoke() }
         }
+        // Type to search: the emoji layer's or a symbols page's search, already holding the letter
+        symLayoutController.onTypeToSearch = { emoji, text ->
+            uiHandler.post {
+                if (emoji) {
+                    candidatesBarController.requestEmojiPickerSearch(text)
+                } else {
+                    candidatesBarController.requestSymbolSearch(text)
+                }
+                symLayoutController.openEmojiPickerPage()
+                updateStatusBarText()
+            }
+        }
         keyboardVisibilityController = KeyboardVisibilityController(
             context = this,
             candidatesBarController = candidatesBarController,
@@ -2988,6 +3001,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
      */
     private fun sendGif(gif: GifResult) {
         val editorInfo = currentInputEditorInfo ?: return
+        // Recent GIFs (GIF search's Recent section, and recently used first)
+        GifCollections.addRecent(this, gif)
         val acceptsGif = KlipyGifs.editorAcceptsGif(EditorInfoCompat.getContentMimeTypes(editorInfo))
         // A GIF is a one-off: close the picker straight away
         if (symLayoutController.closeSymPage()) updateStatusBarText()

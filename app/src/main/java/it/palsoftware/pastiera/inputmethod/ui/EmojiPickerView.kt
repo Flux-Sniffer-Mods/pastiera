@@ -33,6 +33,7 @@ import android.widget.ProgressBar
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.PopupWindow
+import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -44,6 +45,7 @@ import it.palsoftware.pastiera.data.emoji.EmojiRepository
 import it.palsoftware.pastiera.data.emoji.RecentEmojiManager
 import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
 import it.palsoftware.pastiera.data.emoji.EmojiCompatSupport
+import it.palsoftware.pastiera.data.gif.GifCollections
 import it.palsoftware.pastiera.data.gif.GifResult
 import it.palsoftware.pastiera.data.gif.KlipyGifs
 import it.palsoftware.pastiera.data.symbols.SymbolSearch
@@ -126,6 +128,10 @@ class EmojiPickerView(
     private var gifMode: Boolean = false
     private var gifJob: Job? = null
     private val gifAdapter = GifAdapter()
+    // GIF section headers span the grid's width
+    private val gifSpans = object : GridLayoutManager.SpanSizeLookup() {
+        override fun getSpanSize(position: Int): Int = if (gifAdapter.isHeader(position)) GIF_COLUMNS else 1
+    }
     private val gifTabButton: TextView
     private val gifAttribution: TextView
 
@@ -610,10 +616,42 @@ class EmojiPickerView(
      * Commits the top emoji search result and closes the picker.
      * Stays neutral when the search input capture is inactive or there are no results.
      */
+    // Something was picked since the search last changed: Enter then only closes (it's "done",
+    // not "add the first result again")
+    private var pickedSinceSearchChange = false
+
+    /**
+     * Enter in the search, per its setting: picks the first emoji or symbol (or sends the first
+     * GIF) and closes; after a pick, or with no symbol/GIF results, it only closes. Emoji search
+     * without results stays neutral.
+     */
     fun commitTopSearchResultAndClose() {
         if (!isSearchInputActive()) return
-        val top = lastSearchResults.firstOrNull() ?: return
-        onEmojiSelected(top.entry.base, top.categoryId, closeAfterCommit = true)
+        when {
+            gifMode -> {
+                if (!SettingsManager.getGifSearchEnterPicks(context)) return
+                val top = gifAdapter.first()
+                if (top != null) onGifChosen?.invoke(top) else onCloseRequested?.invoke()
+            }
+            symbolMode -> {
+                if (!SettingsManager.getSymbolSearchEnterPicks(context)) return
+                val top = symbolAdapter.first()
+                if (!pickedSinceSearchChange && top != null) {
+                    currentInputConnection?.commitText(top.symbol, 1)
+                    SymbolSearch.addRecent(context, top.symbol)
+                }
+                onCloseRequested?.invoke()
+            }
+            else -> {
+                if (!SettingsManager.getEmojiSearchEnterPicks(context)) return
+                if (pickedSinceSearchChange) {
+                    onCloseRequested?.invoke()
+                    return
+                }
+                val top = lastSearchResults.firstOrNull() ?: return
+                onEmojiSelected(top.entry.base, top.categoryId, closeAfterCommit = true)
+            }
+        }
     }
 
     private fun deleteSearchTextBackwards() {
@@ -942,6 +980,7 @@ class EmojiPickerView(
 
     private fun scheduleSearch() {
         searchJob?.cancel()
+        pickedSinceSearchChange = false
         if (gifMode || symbolMode) {
             // Symbol search is instant; GIF search keeps its own short wait before asking KLIPY
             log("typed: \"$searchQuery\" (scope=${coroutineScope.isActive})")
@@ -1007,6 +1046,21 @@ class EmojiPickerView(
         if (!SettingsManager.getGifsEnabled(context)) return
         setGifMode(true)
         setSearchPanelVisible(true)
+        // Its setting: typing searches at once, or only after tapping the search
+        if (!SettingsManager.getGifFocusSearch(context)) setSearchInputCaptureEnabled(false)
+    }
+
+    /**
+     * A fresh opening of the picker with nothing asked for: its search takes typing at once
+     * ([focus]) or waits for a tap (the field stays in view in the Pastierina bar).
+     */
+    fun applyOpenFocus(focus: Boolean) {
+        if (gifMode || symbolMode) return
+        if (focus) {
+            setSearchPanelVisible(true)
+        } else if (searchFieldHost != null) {
+            setSearchInputCaptureEnabled(false)
+        }
     }
 
     /** Shows or hides the GIF tab as the setting changes; leaves GIF mode when it's turned off. */
@@ -1020,8 +1074,9 @@ class EmojiPickerView(
         if (gifMode == enabled) return
         if (enabled && symbolMode) setSymbolMode(false)
         gifMode = enabled
+        pickedSinceSearchChange = false
         gifTabButton.background = createTabBackground(enabled)
-        showInGrid(if (enabled) gifAdapter else null, spanCount = 3)
+        showInGrid(if (enabled) gifAdapter else null, spanCount = GIF_COLUMNS, spanSizeLookup = gifSpans)
         gifAttribution.visibility = if (enabled) View.VISIBLE else View.GONE
         tabRow.alpha = if (enabled) 0.55f else 1f
         searchField.hint = context.getString(
@@ -1053,7 +1108,7 @@ class EmojiPickerView(
                 runCatching { KlipyGifs.cachedResults(context, query.trim()) }.getOrNull()
             }
             if (cached != null && cached.first.isNotEmpty()) {
-                gifAdapter.submit(cached.first)
+                gifAdapter.submit(cached.first, query.trim())
                 recyclerView.scrollToPosition(0)
                 showGifMessage(null)
                 if (cached.second) {
@@ -1081,10 +1136,11 @@ class EmojiPickerView(
             }
             // Refreshed behind cached results: only redraw if something changed
             if (results.map { it.id } != gifAdapter.ids()) {
-                gifAdapter.submit(results)
+                gifAdapter.submit(results, query.trim())
                 recyclerView.scrollToPosition(0)
             }
-            showGifMessage(if (results.isEmpty()) R.string.gif_no_results else null)
+            // The user's own GIFs may show even when KLIPY found none
+            showGifMessage(if (gifAdapter.itemCount == 0) R.string.gif_no_results else null)
             log("gifs: ${results.size} results for \"$query\" | ${gridState()}")
             logGridAfterLayout("gifs")
         }
@@ -1170,11 +1226,15 @@ class EmojiPickerView(
      * GIF and symbol search show their results in the emoji grid itself: [adapter] replaces
      * its content ([spanCount] columns), null puts the emoji content back.
      */
-    private fun showInGrid(adapter: RecyclerView.Adapter<*>?, spanCount: Int) {
+    private fun showInGrid(
+        adapter: RecyclerView.Adapter<*>?,
+        spanCount: Int,
+        spanSizeLookup: GridLayoutManager.SpanSizeLookup = GridLayoutManager.DefaultSpanSizeLookup()
+    ) {
         val lm = recyclerView.layoutManager as? GridLayoutManager ?: return
         if (adapter != null) {
             lm.spanCount = spanCount
-            lm.spanSizeLookup = GridLayoutManager.DefaultSpanSizeLookup()
+            lm.spanSizeLookup = spanSizeLookup
             recyclerView.adapter = adapter
             recyclerView.visibility = View.VISIBLE
             loadingView.visibility = View.GONE
@@ -1203,6 +1263,7 @@ class EmojiPickerView(
         if (symbolMode == enabled) return
         if (enabled && gifMode) setGifMode(false)
         symbolMode = enabled
+        pickedSinceSearchChange = false
         showInGrid(if (enabled) symbolAdapter else null, spanCount = 8)
         tabRow.alpha = if (enabled) 0.55f else 1f
         searchField.hint = context.getString(
@@ -1234,7 +1295,12 @@ class EmojiPickerView(
                     val searched = SystemClock.elapsedRealtime()
                     // Symbols the fonts can't draw are dropped; about a screenful is checked
                     // now, the rest as they scroll into view
-                    SymbolSearch.renderable(found).also {
+                    val ordered = if (SettingsManager.getRecentsFirstInSearch(context)) {
+                        SymbolSearch.recentsFirst(found, SymbolSearch.recentSymbols(context))
+                    } else {
+                        found
+                    }
+                    SymbolSearch.renderable(ordered).also {
                         log(
                             "symbols: list ${listed - started} ms, search ${searched - listed} ms, " +
                                 "glyph checks ${SystemClock.elapsedRealtime() - searched} ms"
@@ -1263,6 +1329,8 @@ class EmojiPickerView(
 
     private fun onSymbolChosen(entry: SymbolSearch.Entry) {
         currentInputConnection?.commitText(entry.symbol, 1)
+        SymbolSearch.addRecent(context, entry.symbol)
+        pickedSinceSearchChange = true
         // Symbols come from the SYM pages, so SYM's auto-close applies
         if (SettingsManager.getSymAutoClose(context) && SettingsManager.getSymAutoCloseOnTouch(context)) {
             onCloseRequested?.invoke()
@@ -1325,7 +1393,16 @@ class EmojiPickerView(
             return
         }
 
-        val results = EmojiSearchRepository.search(index, query, extraAvailable = extraAvailable)
+        val results = EmojiSearchRepository.search(index, query, extraAvailable = extraAvailable).let { found ->
+            // Recently used first (its setting); the rest keep their order
+            if (!SettingsManager.getRecentsFirstInSearch(context)) {
+                found
+            } else {
+                val rank = RecentEmojiManager.getRecentEmojis(context).withIndex()
+                    .associate { (index, emoji) -> emoji to index }
+                found.sortedBy { rank[it.entry.base] ?: Int.MAX_VALUE }
+            }
+        }
         lastSearchResults = results
         setSearchMode(true)
         searchAdapter.submitList(results)
@@ -1455,6 +1532,7 @@ class EmojiPickerView(
     }
 
     private fun onEmojiSelected(emoji: String, categoryId: String, closeAfterCommit: Boolean? = null) {
+        pickedSinceSearchChange = true
         val inputConnection = currentInputConnection
         // Recents persistence must survive the SYM auto-close: closing the picker evicts this
         // view from its container, which cancels coroutineScope; ATOMIC guarantees the write
@@ -2116,6 +2194,8 @@ class EmojiPickerView(
         // Shared by every picker: GIF previews decoding at the same time
         private val previewDecodes = Semaphore(2)
         private const val VIEW_TYPE_GIF = 100
+        private const val VIEW_TYPE_GIF_HEADER = 102
+        private const val GIF_COLUMNS = 3
         private const val VIEW_TYPE_SYMBOL = 101
 
         fun configuredHeightPx(context: Context): Int {
@@ -2133,53 +2213,161 @@ class EmojiPickerView(
     }
 
     /** GIF grid: animated previews, decoded per cell from cached bytes. */
-    private inner class GifAdapter : RecyclerView.Adapter<GifHolder>() {
-        private var items: List<GifResult> = emptyList()
+    /** GIF grid rows: a section title, or a GIF (marked when it's a favourite). */
+    private sealed class GifItem {
+        class Header(val title: String) : GifItem()
+        class Gif(val gif: GifResult, val favourite: Boolean) : GifItem()
+    }
 
-        fun submit(list: List<GifResult>) {
-            items = list
+    private inner class GifAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        private var items: List<GifItem> = emptyList()
+        private var results: List<GifResult> = emptyList()
+        private var query: String = ""
+
+        /**
+         * KLIPY's [list] for [forQuery]. With an empty search the user's favourite and recent
+         * GIFs come first, each in its own section; while searching (recently used first on),
+         * their GIFs whose titles match lead the results.
+         */
+        fun submit(list: List<GifResult>, forQuery: String = query) {
+            results = list
+            query = forQuery
+            items = buildItems()
             @Suppress("NotifyDataSetChanged")
             notifyDataSetChanged()
             redrawResults()
         }
 
-        fun ids(): List<String> = items.map { it.id }
+        /** A favourite was added or taken out: rebuild the sections and stars. */
+        fun refresh() = submit(results, query)
+
+        fun ids(): List<String> = results.map { it.id }
+
+        fun first(): GifResult? = items.firstNotNullOfOrNull { (it as? GifItem.Gif)?.gif }
+
+        fun isHeader(position: Int): Boolean = items.getOrNull(position) is GifItem.Header
+
+        private fun buildItems(): List<GifItem> {
+            val favourites = GifCollections.favourites(context)
+            val favouriteIds = favourites.map { it.id }.toSet()
+            val own = mutableListOf<GifItem>()
+            val shown = mutableSetOf<String>()
+            fun section(titleRes: Int, gifs: List<GifResult>) {
+                val fresh = gifs.filter { it.id !in shown }
+                if (fresh.isEmpty()) return
+                own += GifItem.Header(context.getString(titleRes))
+                fresh.forEach { gif ->
+                    shown += gif.id
+                    own += GifItem.Gif(gif, gif.id in favouriteIds)
+                }
+            }
+            if (query.isBlank()) {
+                if (SettingsManager.getGifShowFavourites(context)) section(R.string.gif_section_favourites, favourites)
+                if (SettingsManager.getGifShowRecents(context)) {
+                    section(R.string.gif_section_recent, GifCollections.recents(context))
+                }
+                if (own.isNotEmpty() && results.any { it.id !in shown }) {
+                    own += GifItem.Header(context.getString(R.string.gif_section_trending))
+                }
+            } else if (SettingsManager.getRecentsFirstInSearch(context)) {
+                GifCollections.matching(favourites + GifCollections.recents(context), query).forEach { gif ->
+                    if (shown.add(gif.id)) own += GifItem.Gif(gif, gif.id in favouriteIds)
+                }
+            }
+            return own + results.filter { it.id !in shown }.map { GifItem.Gif(it, it.id in favouriteIds) }
+        }
 
         override fun getItemCount(): Int = items.size
 
-        override fun getItemViewType(position: Int): Int = VIEW_TYPE_GIF
+        override fun getItemViewType(position: Int): Int =
+            if (items[position] is GifItem.Header) VIEW_TYPE_GIF_HEADER else VIEW_TYPE_GIF
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GifHolder {
-            val image = ImageView(parent.context).apply {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            if (viewType == VIEW_TYPE_GIF_HEADER) {
+                val title = TextView(parent.context).apply {
+                    layoutParams = RecyclerView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(4f))
+                    textSize = 12f
+                    setTypeface(typeface, Typeface.BOLD)
+                    alpha = 0.8f
+                }
+                return object : RecyclerView.ViewHolder(title) {}
+            }
+            val cell = FrameLayout(parent.context).apply {
                 layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(84f)).apply {
                     val margin = dpToPx(2f)
                     setMargins(margin, margin, margin, margin)
                 }
+            }
+            val image = ImageView(parent.context).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 background = createTabBackground(false)
                 clipToOutline = true
                 isClickable = true
                 isFocusable = true
             }
-            return GifHolder(image)
+            val star = TextView(parent.context).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    Gravity.TOP or Gravity.END
+                ).apply { setMargins(0, dpToPx(2f), dpToPx(4f), 0) }
+                text = "\u2605"
+                textSize = 14f
+                setTextColor(Color.rgb(0xFF, 0xD5, 0x4F))
+                setShadowLayer(3f, 0f, 1f, Color.BLACK)
+                visibility = View.GONE
+            }
+            cell.addView(image)
+            cell.addView(star)
+            return GifHolder(cell, image, star)
         }
 
-        override fun onBindViewHolder(holder: GifHolder, position: Int) {
-            holder.bind(items[position])
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            when (val item = items[position]) {
+                is GifItem.Header -> (holder.itemView as TextView).apply {
+                    text = item.title
+                    setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
+                }
+                is GifItem.Gif -> (holder as GifHolder).bind(item.gif, item.favourite)
+            }
         }
 
-        override fun onViewRecycled(holder: GifHolder) {
-            holder.clear()
+        override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+            (holder as? GifHolder)?.clear()
         }
     }
 
-    private inner class GifHolder(private val image: ImageView) : RecyclerView.ViewHolder(image) {
+    private inner class GifHolder(
+        cell: View,
+        private val image: ImageView,
+        private val star: TextView
+    ) : RecyclerView.ViewHolder(cell) {
         private var job: Job? = null
 
-        fun bind(gif: GifResult) {
+        fun bind(gif: GifResult, favourite: Boolean) {
             clear()
             image.contentDescription = gif.description
+            star.visibility = if (favourite) View.VISIBLE else View.GONE
             image.setOnClickListener { onGifChosen?.invoke(gif) }
+            // Long-press: add to the favourite GIFs, or take out
+            image.setOnLongClickListener {
+                val nowFavourite = GifCollections.toggleFavourite(context, gif)
+                Toast.makeText(
+                    context,
+                    if (nowFavourite) R.string.gif_favourite_added else R.string.gif_favourite_removed,
+                    Toast.LENGTH_SHORT
+                ).show()
+                gifAdapter.refresh()
+                true
+            }
             job = coroutineScope.launch {
                 val drawable = try {
                     val bytes = KlipyGifs.previewBytes(context, gif.previewUrl)
@@ -2219,6 +2407,8 @@ class EmojiPickerView(
             notifyDataSetChanged()
             redrawResults()
         }
+
+        fun first(): SymbolSearch.Entry? = items.firstOrNull()
 
         /** Drops a symbol the fonts turned out not to draw. */
         fun remove(entry: SymbolSearch.Entry) {

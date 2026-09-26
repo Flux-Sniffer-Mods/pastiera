@@ -170,8 +170,12 @@ class StatusBarController(
     private var pendingEmojiPickerSearch: Boolean = false
 
     /** The next time the emoji picker shows, open its search. */
-    fun requestEmojiPickerSearch() {
+    // Type to search: the letter that started it, typed into the search once it opens
+    private var pendingSearchText: String? = null
+
+    fun requestEmojiPickerSearch(initialText: String? = null) {
         pendingEmojiPickerSearch = true
+        pendingSearchText = initialText
     }
 
     /** The next time the emoji picker shows, open its GIF search. */
@@ -180,8 +184,9 @@ class StatusBarController(
     }
 
     /** The next time the emoji picker shows, open its symbol search. */
-    fun requestSymbolSearch() {
+    fun requestSymbolSearch(initialText: String? = null) {
         pendingSymbolSearch = true
+        pendingSearchText = initialText
     }
 
     /**
@@ -1240,10 +1245,21 @@ class StatusBarController(
         view.onSearchPanelVisibilityChanged = { visible ->
             onEmojiPickerSearchPanelToggled?.invoke(visible)
         }
+        val freshOpen = lastSymPageRendered != 4
+        val requested = pendingEmojiPickerSearch || pendingEmojiPickerGifs || pendingSymbolSearch
+        val searchText = pendingSearchText
+        pendingSearchText = null
         if (pendingEmojiPickerSearch) {
             // Opened from the emoji layer's search button: search once the picker is in place
             pendingEmojiPickerSearch = false
-            view.post { view.openSearch() }
+            view.post {
+                view.openSearch()
+                searchText?.let { view.handleSearchTextInput(it) }
+            }
+        } else if (freshOpen && !requested) {
+            // Opened by the emoji key: its search takes typing at once, or after a tap
+            val focus = SettingsManager.getEmojiPickerFocusSearch(context)
+            view.post { view.applyOpenFocus(focus) }
         }
         view.onGifChosen = { gif -> onGifChosen?.invoke(gif) }
         if (pendingEmojiPickerGifs) {
@@ -1254,7 +1270,10 @@ class StatusBarController(
         if (pendingSymbolSearch) {
             // Opened from a symbols page's search: symbol search once the picker is in place
             pendingSymbolSearch = false
-            view.post { view.openSymbols() }
+            view.post {
+                view.openSymbols()
+                searchText?.let { view.handleSearchTextInput(it) }
+            }
         }
         view.themeOverride = (if (
             mode == Mode.INPUT_VIEW &&
@@ -2913,7 +2932,9 @@ class StatusBarController(
         }
         
         val recentsKey = page == 1 && keyCode == SettingsManager.getEmojiLayerRecentsKey(context)
-        val gifKey = page == 1 && keyCode == SettingsManager.activeEmojiLayerGifKey(context)
+        // The GIF key only while it shows GIF (with recent emoji shown it holds one of them)
+        val gifKey = page == 1 && keyCode == SettingsManager.activeEmojiLayerGifKey(context) &&
+            content == it.palsoftware.pastiera.core.SymLayoutController.GIF_KEY_LABEL
         if (gifKey) {
             // Emoji layer's GIF key: GIF search
             keyButton.isClickable = true

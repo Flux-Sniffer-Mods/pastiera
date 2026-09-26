@@ -178,9 +178,9 @@ class CandidatesBarController(
         }
 
     /** The next time the emoji picker shows, open its symbol search. */
-    fun requestSymbolSearch() {
-        inputStatusBar.requestSymbolSearch()
-        candidatesStatusBar.requestSymbolSearch()
+    fun requestSymbolSearch(initialText: String? = null) {
+        inputStatusBar.requestSymbolSearch(initialText)
+        candidatesStatusBar.requestSymbolSearch(initialText)
     }
 
     /** The next time the emoji picker shows, open its GIF search. */
@@ -190,9 +190,9 @@ class CandidatesBarController(
     }
 
     /** The next time the emoji picker shows, open its search. */
-    fun requestEmojiPickerSearch() {
-        inputStatusBar.requestEmojiPickerSearch()
-        candidatesStatusBar.requestEmojiPickerSearch()
+    fun requestEmojiPickerSearch(initialText: String? = null) {
+        inputStatusBar.requestEmojiPickerSearch(initialText)
+        candidatesStatusBar.requestEmojiPickerSearch(initialText)
     }
 
     var onUndoRequested: (() -> Unit)? = null

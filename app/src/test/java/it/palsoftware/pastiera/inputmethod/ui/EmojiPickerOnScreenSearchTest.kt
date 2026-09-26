@@ -255,6 +255,67 @@ class EmojiPickerOnScreenSearchTest {
     }
 
     @Test
+    fun enterAfterAPickOnlyCloses() {
+        val events = mutableListOf<String>()
+        val view = EmojiPickerView(RuntimeEnvironment.getApplication()) { events.add("close") }
+        view.setPrivateField("isSearchPanelVisible", true)
+        view.setPrivateField("searchInputCaptureEnabled", true)
+        view.setPrivateField(
+            "lastSearchResults",
+            listOf(
+                EmojiSearchRepository.EmojiSearchResult(
+                    EmojiRepository.EmojiEntry("\uD83D\uDE80", emptyList()),
+                    "travel",
+                    1
+                )
+            )
+        )
+        view.setPrivateField("pickedSinceSearchChange", true)
+        val ic = RecordingInputConnection()
+        view.setInputConnection(ic)
+
+        view.handleSearchKeyDown(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+
+        // "Done": no second copy of the first result
+        assertTrue(ic.committedTexts.isEmpty())
+        assertEquals(listOf("close"), events)
+    }
+
+    @Test
+    fun symbolSearchEnterWithNothingFoundCloses() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setSymbolSearchEnterPicks(context, true)
+        val events = mutableListOf<String>()
+        val view = EmojiPickerView(context) { events.add("close") }
+        val ic = RecordingInputConnection()
+        view.setInputConnection(ic)
+        view.openSymbols()
+
+        view.handleSearchKeyDown(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+
+        assertTrue(ic.committedTexts.isEmpty())
+        assertEquals(listOf("close"), events)
+    }
+
+    @Test
+    fun enterLeavesSymbolSearchOpenWhenItsSettingIsOff() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setSymbolSearchEnterPicks(context, false)
+        try {
+            val events = mutableListOf<String>()
+            val view = EmojiPickerView(context) { events.add("close") }
+            view.setInputConnection(RecordingInputConnection())
+            view.openSymbols()
+
+            view.handleSearchKeyDown(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
+
+            assertTrue(events.isEmpty())
+        } finally {
+            SettingsManager.setSymbolSearchEnterPicks(context, true)
+        }
+    }
+
+    @Test
     fun enterKeyStaysNeutralWithoutSearchResults() {
         val events = mutableListOf<String>()
         val view = EmojiPickerView(RuntimeEnvironment.getApplication()) { events.add("close") }
