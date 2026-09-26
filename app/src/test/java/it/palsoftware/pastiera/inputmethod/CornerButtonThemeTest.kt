@@ -24,13 +24,16 @@ class CornerButtonThemeTest {
         host.themeOverride = StatusBarButtonStyles.ThemeOverride(Color.YELLOW, Color.MAGENTA, Color.BLACK)
         val hosted = requireNotNull(host.getOrCreateButton(StatusBarButtonId.Clipboard, 40, StatusBarCallbacks(), 80, 40))
         val badge = hosted.button.getTag(R.id.tag_badge_view) as TextView
-        assertEquals(Color.BLACK, badge.currentTextColor)
+        // The count is a pill in the accent colour, with text that reads on it
+        assertEquals(Color.MAGENTA, (badge.background as GradientDrawable).color!!.defaultColor)
+        assertEquals(Color.WHITE, badge.currentTextColor)
         val background = hosted.button.background.current as GradientDrawable
         assertEquals(Color.YELLOW, background.color!!.defaultColor)
         assertEquals(StatusBarButtonStyles.cornerRadiusForSize(40), background.cornerRadius)
 
         host.themeOverride = StatusBarButtonStyles.ThemeOverride(Color.BLUE, Color.CYAN, Color.WHITE)
-        assertEquals(Color.WHITE, badge.currentTextColor)
+        assertEquals(Color.CYAN, (badge.background as GradientDrawable).color!!.defaultColor)
+        assertEquals(Color.BLACK, badge.currentTextColor)
         assertEquals(Color.BLUE, (hosted.button.background.current as GradientDrawable).color!!.defaultColor)
     }
     @Test

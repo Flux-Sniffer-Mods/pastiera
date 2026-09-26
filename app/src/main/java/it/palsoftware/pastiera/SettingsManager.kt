@@ -73,9 +73,6 @@ object SettingsManager {
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
     private const val KEY_LANGUAGE_PER_APP = "language_per_app_enabled"
     private const val KEY_KEYBOARD_WALLPAPER_COLOURS = "keyboard_theme_wallpaper_colours"
-    private const val KEY_ONE_TIME_CODES = "one_time_codes_enabled"
-    private const val KEY_AUTO_SHIFT_FIELD_TYPES = "auto_shift_field_types"
-    private const val KEY_SEARCH_BAR_WAITS_FOR_TYPING = "search_bar_waits_for_typing"
     // Each app's last language, kept apart from settings (not in backups)
     private const val APP_LANGUAGES_PREFS = "app_languages"
     private const val KEY_CLEAN_PASTED_LINKS = "clean_pasted_links" // Strip tracking from pasted links
@@ -85,7 +82,6 @@ object SettingsManager {
     private const val KEY_SPEECH_KEEP_LISTENING = "speech_keep_listening" // Voice input carries on through pauses
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
-    private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
     private const val LED_COLOR_KEY_PREFIX = "led_color_"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
@@ -219,6 +215,11 @@ object SettingsManager {
     const val KEY_TITAN2_ELITE_MAX_ICON_SHRINK = "titan2_elite_max_icon_shrink"
     const val KEY_TITAN2_ELITE_TOP_CORNER_MULTIPLIER = "titan2_elite_top_corner_multiplier"
     const val KEY_TITAN2_ELITE_ROUNDED_CORNER_INSETS = "titan2_elite_rounded_corner_insets"
+    const val KEY_TITAN2_ELITE_FILL_CORNERS = "titan2_elite_fill_corners"
+    const val KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS = "titan2_elite_straight_outer_buttons"
+    const val KEY_TITAN2_ELITE_STATUS_BAR_LIFT = "titan2_elite_status_bar_lift_dp"
+    const val TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP = 16
+    const val TITAN2_ELITE_DEFAULT_LIFT_DP = 5
     private const val KEY_ACCESSIBILITY_LIVE_ANNOUNCEMENTS_ENABLED = "accessibility_live_announcements_enabled" // Whether status bar accessibility live announcements are enabled
     private const val KEY_ACCESSIBILITY_READ_SECOND_ROW_ENABLED = "accessibility_read_second_row_enabled" // Whether TalkBack should read quick settings/variations row
     private const val KEY_ACCESSIBILITY_SUGGESTIONS_ANNOUNCEMENT_DELAY_MS = "accessibility_suggestions_announcement_delay_ms" // Delay before suggestions become accessible again while typing
@@ -262,6 +263,7 @@ object SettingsManager {
     private const val KEY_STATUS_BAR_SLOTS_LEFT = "status_bar_slots_left"
     private const val KEY_STATUS_BAR_SLOTS_RIGHT = "status_bar_slots_right"
     private const val KEY_PASTIERINA_STATUS_BAR_SLOTS_LEFT = "pastierina_status_bar_slots_left"
+    private const val KEY_MENU_BAR_BUTTONS = "menu_bar_buttons" // The menu bar's buttons, in order
     private const val KEY_PASTIERINA_STATUS_BAR_SLOTS_RIGHT = "pastierina_status_bar_slots_right"
     private const val KEY_STATUS_BAR_VARIATIONS_VISIBLE = "status_bar_variations_visible"
     private const val KEY_DYNAMIC_VARIATION_BAR_SLOT_COUNT = "dynamic_variation_bar_slot_count"
@@ -1025,12 +1027,22 @@ object SettingsManager {
         locale: String?,
         layout: String?
     ): KeyboardThemeSettings {
-        findKeyboardThemeLayoutOverride(context, target, locale, layout)?.let { return it.theme }
-        return if (getKeyboardThemeAssignmentMode(context, target) == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
-            getKeyboardThemeSystemSlot(context, target, dark = isSystemDarkTheme(context))
-        } else {
-            getKeyboardTheme(context, target)
-        }
+        val theme = findKeyboardThemeLayoutOverride(context, target, locale, layout)?.theme
+            ?: if (getKeyboardThemeAssignmentMode(context, target) == KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
+                getKeyboardThemeSystemSlot(context, target, dark = isSystemDarkTheme(context))
+            } else {
+                getKeyboardTheme(context, target)
+            }
+        // Flux Keyboard: colours from the wallpaper, over whichever theme applies
+        return if (getKeyboardWallpaperColours(context)) WallpaperKeyboardColours.recolour(context, theme) else theme
+    }
+
+    /** Keyboard colours from the wallpaper (Material You, Android 12+). */
+    fun getKeyboardWallpaperColours(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_KEYBOARD_WALLPAPER_COLOURS, false)
+
+    fun setKeyboardWallpaperColours(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_KEYBOARD_WALLPAPER_COLOURS, enabled).apply()
     }
 
     fun getKeyboardThemeLayoutOverrides(
@@ -1509,6 +1521,45 @@ object SettingsManager {
             .putBoolean(KEY_TITAN2_ELITE_ROUNDED_CORNER_INSETS, enabled)
             .apply()
     }
+
+    /** Paint the keyboard background into the display's rounded corners instead of clipping to them. */
+    /** On by default on a Titan 2 Elite, like the rounded status bar. */
+    fun getTitan2EliteFillCorners(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, DeviceSpecific.isTitan2EliteDevice())
+
+    fun setTitan2EliteFillCorners(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, enabled).apply()
+    }
+
+    /**
+     * Rounded corners for sizing and spacing only: the outer bar buttons are plain buttons
+     * reaching straight down into the corners instead of shapes following the display curve.
+     */
+    /** On by default on a Titan 2 Elite. */
+    fun getTitan2EliteStraightOuterButtons(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, DeviceSpecific.isTitan2EliteDevice())
+
+    fun setTitan2EliteStraightOuterButtons(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, enabled).apply()
+    }
+
+    /** How far the status bar sits above the modifier LEDs, in dp (0 = LEDs hug the bar). */
+    /** A Titan 2 Elite starts with the bar lifted by [TITAN2_ELITE_DEFAULT_LIFT_DP]; other phones at 0. */
+    fun getTitan2EliteStatusBarLiftDp(context: Context): Int =
+        getPreferences(context).getInt(
+            KEY_TITAN2_ELITE_STATUS_BAR_LIFT,
+            if (DeviceSpecific.isTitan2EliteDevice()) TITAN2_ELITE_DEFAULT_LIFT_DP else 0
+        )
+            .coerceIn(0, TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP)
+
+    fun setTitan2EliteStatusBarLiftDp(context: Context, dp: Int) {
+        getPreferences(context).edit()
+            .putInt(KEY_TITAN2_ELITE_STATUS_BAR_LIFT, dp.coerceIn(0, TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP))
+            .apply()
+    }
+
+    fun getTitan2EliteStatusBarLiftPx(context: Context): Int =
+        Math.round(getTitan2EliteStatusBarLiftDp(context) * context.resources.displayMetrics.density)
 
     /**
      * Enables the calibrated rounded-corner layout once for Titan 2 Elite users receiving this
@@ -2825,14 +2876,6 @@ object SettingsManager {
 
     fun setLedIndividualColorsEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_LED_INDIVIDUAL_COLORS, enabled).apply()
-    }
-
-    /** Locked LEDs sweep a gradient of their colour (off: a steady colour). */
-    fun getLedLockedAnimationEnabled(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_LED_LOCKED_ANIMATION, false)
-
-    fun setLedLockedAnimationEnabled(context: Context, enabled: Boolean) {
-        getPreferences(context).edit().putBoolean(KEY_LED_LOCKED_ANIMATION, enabled).apply()
     }
 
     /** One LED's colour ([led]: shift, ctrl, alt or sym). */
@@ -6381,6 +6424,36 @@ object SettingsManager {
         setDynamicVariationBarSlotCount(context, DEFAULT_DYNAMIC_VARIATION_BAR_SLOT_COUNT)
         setDynamicVariationBarResizeToContent(context, DEFAULT_DYNAMIC_VARIATION_BAR_RESIZE_TO_CONTENT)
         return defaults
+    }
+
+    /** Buttons the menu bar (the ☰ button's row) can show, in their default order. */
+    val MENU_BAR_BUTTON_OPTIONS: List<String> = listOf(
+        STATUS_BAR_BUTTON_SYMBOLS,
+        STATUS_BAR_BUTTON_EMOJI,
+        STATUS_BAR_BUTTON_GIF,
+        STATUS_BAR_BUTTON_MICROPHONE,
+        STATUS_BAR_BUTTON_CLIPBOARD,
+        STATUS_BAR_BUTTON_UNDO,
+        STATUS_BAR_BUTTON_REDO,
+        STATUS_BAR_BUTTON_LANGUAGE,
+        STATUS_BAR_BUTTON_MINIMAL_UI,
+        STATUS_BAR_BUTTON_SOFTWARE_KEYBOARD_MODE,
+        STATUS_BAR_BUTTON_SETTINGS
+    )
+
+    /** The menu bar's buttons, in order (its close button always comes first). */
+    fun getMenuBarButtons(context: Context): List<String> {
+        val stored = getPreferences(context).getString(KEY_MENU_BAR_BUTTONS, null) ?: return MENU_BAR_BUTTON_OPTIONS
+        return stored.split(',').map { it.trim() }.filter { it in MENU_BAR_BUTTON_OPTIONS }.distinct()
+    }
+
+    fun setMenuBarButtons(context: Context, buttons: List<String>) {
+        val clean = buttons.filter { it in MENU_BAR_BUTTON_OPTIONS }.distinct()
+        getPreferences(context).edit().putString(KEY_MENU_BAR_BUTTONS, clean.joinToString(",")).apply()
+    }
+
+    fun resetMenuBarButtons(context: Context) {
+        getPreferences(context).edit().remove(KEY_MENU_BAR_BUTTONS).apply()
     }
 
     fun getStatusBarSlotsLeft(context: Context): List<String> {

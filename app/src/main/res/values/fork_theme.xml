@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_theme_wallpaper_colours_title">Colours from wallpaper</string>
+    <string name="keyboard_theme_wallpaper_colours_description">The keyboard takes its colours from your wallpaper, in light or dark mode. The theme\'s shape and sizes stay.</string>
+</resources>

@@ -14,6 +14,8 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import it.palsoftware.pastiera.R
+import it.palsoftware.pastiera.T2eCornerCalibration
+import it.palsoftware.pastiera.T2eCornerGeometry
 import it.palsoftware.pastiera.inputmethod.StatusBarController
 import kotlin.math.roundToInt
 
@@ -27,6 +29,7 @@ class LedStatusView(
         private val LED_COLOR_GRAY_OFF = Color.argb(100, 17, 17, 17)
         private val LED_COLOR_RED_LOCKED = Color.rgb(247, 99, 0)
         private val LED_COLOR_BLUE_ACTIVE = Color.rgb(100, 150, 255)
+        private const val CONTOUR_STEPS = 64
     }
 
     private val ledHeight: Int by lazy {
@@ -84,50 +87,6 @@ class LedStatusView(
             ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }
         }
 
-    // Locked LEDs' moving gradient (Status LED colours > Animate locked LEDs): 0..1, one sweep
-    private var lockPhase = 0f
-    private var lockAnimator: ValueAnimator? = null
-
-    private fun lockAnimationOn(): Boolean = LedColors.lockedAnimationEnabled(context)
-
-    /** Runs the sweep while an LED is locked and the option is on; stops it otherwise. */
-    private fun syncLockAnimation() {
-        val wanted = lockAnimationOn() && statePriority.values.any { it == 2 } && container?.isAttachedToWindow == true
-        if (wanted == (lockAnimator != null)) return
-        if (!wanted) {
-            lockAnimator?.cancel()
-            lockAnimator = null
-            invalidateAllLeds()
-            return
-        }
-        lockAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1800
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = android.view.animation.LinearInterpolator()
-            addUpdateListener {
-                lockPhase = it.animatedValue as Float
-                invalidateAllLeds()
-            }
-            start()
-        }
-    }
-
-    private fun invalidateAllLeds() {
-        container?.let { canvas -> for (index in 0 until canvas.childCount) canvas.getChildAt(index).invalidate() }
-    }
-
-    /** The gradient a locked LED sweeps: its colour, a more intense version, and back. */
-    private fun lockShader(color: Int, width: Float): android.graphics.Shader {
-        val intense = LedColors.intensify(color)
-        val span = width.coerceAtLeast(1f)
-        val offset = lockPhase * span * 2f
-        return android.graphics.LinearGradient(
-            offset - span, 0f, offset + span, 0f,
-            intArrayOf(color, intense, color), floatArrayOf(0f, 0.5f, 1f),
-            android.graphics.Shader.TileMode.MIRROR
-        )
-    }
-
     var onLongPressListener: (() -> Unit)? = null
     var themeOverride: KeyboardThemeColors? = null
 
@@ -176,7 +135,7 @@ class LedStatusView(
         ledsByState.clear()
         segmentsByView.clear()
         canvas.replaceSegments(layout.segments) { segment ->
-            createLedView(themeOverride?.ledInactive ?: LED_COLOR_GRAY_OFF, segment).also { led ->
+            createLedView(ledColor(segment.state, 0), segment).also { led ->
                 ledsByState.getOrPut(segment.state) { mutableListOf() }.add(led)
             }
         }
@@ -226,7 +185,6 @@ class LedStatusView(
                     // The colour of whichever modifier lights the shared LED
                     val shown = if (shiftPriority >= (statePriority[otherState] ?: 0)) ModifierLedState.SHIFT else otherState
                     paint.color = ledColor(shown, priority)
-                    if (lockAnimator != null && priority == 2) paint.shader = lockShader(paint.color, bounds.width().toFloat())
                 }
                 val width = bounds.width().toFloat()
                 val height = bounds.height().toFloat()
@@ -239,7 +197,7 @@ class LedStatusView(
                 val rightArc = rightRadius - inset
                 // One LED per modifier: spread along the corners and bottom edge only; the vertical
                 // side runs sit behind the bar and would swallow the outer LEDs.
-                val cornersAndBottomOnly = ModifierLedLayouts.isSplit(layout)
+                val cornersAndBottomOnly = layout == ModifierLedLayouts.TITAN_2_ELITE_SPLIT
                 val contour = straightContour() ?: liftedContour(radii) ?: Path().apply {
                     if (cornersAndBottomOnly) {
                         moveTo(inset, height - leftRadius)
@@ -256,7 +214,7 @@ class LedStatusView(
                         arcTo(width - rightRadius - rightArc, height - rightRadius - rightArc,
                             width - inset, height - inset, 90f, -90f, false)
                     }
-                    lineTo(width - inset, 0f)
+                    if (!cornersAndBottomOnly) lineTo(width - inset, 0f)
                 }
                 if (lockAnimator != null && statePriority[segment.state] == 2 && paint.shader == null &&
                     !(layout == ModifierLedLayouts.TITAN_2_ELITE && segment.state == ModifierLedState.SHIFT)
@@ -289,34 +247,106 @@ class LedStatusView(
         }
     }
 
-    private fun updateLeds(state: ModifierLedState, isLocked: Boolean, isActive: Boolean = false) {
-        statePriority[state] = if (isLocked) 2 else if (isActive) 1 else 0
-        val theme = themeOverride
-        val targetColor = when {
-            isLocked -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
-            isActive -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            else -> theme?.ledInactive ?: LED_COLOR_GRAY_OFF
+    /**
+     * Titan 2 Elite with the status bar lifted: the LEDs run in the band under the bar, on the
+     * calibrated display curve (the one the outer buttons use) raised by half the lift, so they
+     * stay clear of the physical corners. Null when the bar isn't lifted.
+     */
+    /**
+     * Straight outer buttons: the corner buttons fill the corners, so the LEDs run in a straight
+     * line through the band under the other buttons or keys, between the two corner buttons.
+     */
+    private fun straightContour(): Path? {
+        val canvasView = container ?: return null
+        var ancestor = canvasView.parent
+        while (ancestor != null && ancestor !is StatusBarController.ImeChromeLayout) ancestor = ancestor.parent
+        val chrome = ancestor as? StatusBarController.ImeChromeLayout ?: return null
+        val span = chrome.straightLedSpanPx ?: return null
+        // Top of the band under the buttons: the bar's row, or an emoji/SYM screen's bottom keys
+        val rowBottom = chrome.straightLedBandTopPx
+        if (rowBottom < 0 || rowBottom >= chrome.height) return null
+        val location = IntArray(2)
+        val chromeLocation = IntArray(2)
+        canvasView.getLocationInWindow(location)
+        chrome.getLocationInWindow(chromeLocation)
+        val lineY = (rowBottom + chrome.height) / 2f
+        return Path().apply {
+            moveTo(span.first.toFloat(), lineY)
+            lineTo(span.second.toFloat(), lineY)
+            // Chrome coordinates to this view's
+            offset((chromeLocation[0] - location[0]).toFloat(), (chromeLocation[1] - location[1]).toFloat())
         }
-        ledsByState[state].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
+    }
+
+    private fun liftedContour(radii: Pair<Int, Int>): Path? {
+        val canvasView = container ?: return null
+        var ancestor = canvasView.parent
+        while (ancestor != null && ancestor !is StatusBarController.ImeChromeLayout) ancestor = ancestor.parent
+        val chrome = ancestor as? StatusBarController.ImeChromeLayout ?: return null
+        val lift = chrome.nestedRowLiftPx
+        if (lift <= 0 || chrome.width <= 0 || chrome.height <= 0) return null
+        val location = IntArray(2)
+        val chromeLocation = IntArray(2)
+        canvasView.getLocationInWindow(location)
+        chrome.getLocationInWindow(chromeLocation)
+        val x = (location[0] - chromeLocation[0]).toFloat()
+        val y = (location[1] - chromeLocation[1]).toFloat()
+        val calibration = T2eCornerCalibration.read(context)
+        val width = chrome.width.toFloat()
+        val bottom = chrome.height - lift / 2f
+        val left = radii.first.toFloat().coerceIn(0f, width / 2f)
+        val right = radii.second.toFloat().coerceIn(0f, width / 2f)
+        fun point(radius: Float, step: Int): T2eCornerGeometry.Point =
+            T2eCornerGeometry.point(radius, bottom, Math.PI / 2 * step / CONTOUR_STEPS, calibration)
+        // Left arc, bottom, right arc; LED segments are spread over what shows below the bar
+        val points = (0..CONTOUR_STEPS).map { point(left, it) } +
+            (CONTOUR_STEPS downTo 0).map { point(right, it).let { p -> T2eCornerGeometry.Point(width - p.x, p.y) } }
+        val rowBottom = chrome.nestedRowBottomPx
+        val visibleTop = if (rowBottom >= 0) rowBottom + ledHeight / 2f - calibration.shiftYPx else Float.NEGATIVE_INFINITY
+        val visible = points.filter { it.y >= visibleTop }.takeIf { it.size >= 2 } ?: points
+        return Path().apply {
+            moveTo(visible.first().x, visible.first().y)
+            visible.drop(1).forEach { lineTo(it.x, it.y) }
+            // Chrome coordinates to this view's, plus the calibrated shift the buttons use
+            offset(calibration.shiftXPx - x, calibration.shiftYPx - y)
+        }
     }
 
     /**
-     * SYM: active while held, locked while it's sticky or a symbols page is open. The emoji key's
-     * LED, when shown, works the same way for the emoji layer and picker; without it, those
-     * pages show on the SYM LED as active.
+     * An LED's colour at [level] (0 off, 1 active, 2 locked): its own colour when each LED is
+     * coloured individually, otherwise the theme's shared LED colours.
      */
-    private fun updateSymLeds(snapshot: StatusBarController.StatusSnapshot) {
-        val symPage = snapshot.symPage
-        val emojiPage = symPage == 1 || symPage == 4
-        val emojiLed = ledsByState.containsKey(ModifierLedState.EMOJI)
-        val symLevel = when {
-            snapshot.symSticky || symPage == 2 || symPage == 5 -> 2
-            snapshot.symHeld -> 1
-            emojiPage && !emojiLed -> 1
-            else -> 0
+    private fun ledColor(state: ModifierLedState, level: Int): Int {
+        if (LedColors.enabled(context)) {
+            val base = LedColors.baseColor(context, LedColors.ledFor(state))
+            return LedColors.shade(base, when (level) {
+                2 -> LedColors.Level.LOCKED
+                1 -> LedColors.Level.ACTIVE
+                else -> LedColors.Level.OFF
+            })
         }
-        statePriority[ModifierLedState.SYM] = symLevel
-        val targetColor = ledColor(ModifierLedState.SYM, symLevel)
+        val theme = themeOverride
+        return when (level) {
+            2 -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
+            1 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
+            else -> theme?.ledInactive ?: LED_COLOR_GRAY_OFF
+        }
+    }
+
+    private fun updateLeds(state: ModifierLedState, isLocked: Boolean, isActive: Boolean = false) {
+        val level = if (isLocked) 2 else if (isActive) 1 else 0
+        statePriority[state] = level
+        val targetColor = ledColor(state, level)
+        ledsByState[state].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
+    }
+
+    private fun updateSymLeds(symPage: Int) {
+        statePriority[ModifierLedState.SYM] = if (symPage == 2) 2 else if (symPage > 0) 1 else 0
+        val targetColor = ledColor(ModifierLedState.SYM, when (symPage) {
+            2 -> 2
+            1, 3, 4 -> 1
+            else -> 0
+        })
         ledsByState[ModifierLedState.SYM].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
         if (emojiLed) {
             val emojiLevel = when {

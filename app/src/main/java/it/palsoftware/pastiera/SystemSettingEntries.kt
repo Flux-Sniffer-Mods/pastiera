@@ -5,8 +5,13 @@ internal fun systemSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry("advanced.hidden_keyboard_apps", R.string.hidden_keyboard_apps_title,
         summaryRes = R.string.hidden_keyboard_apps_description, route = SettingRoute(SettingsDestination.Advanced)),
     SettingEntry("advanced.corner_calibration", R.string.corner_calibration_title,
-        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.Advanced),
-        availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
+        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.FluxTitanScreen),
+        availabilityCheck = { context ->
+            SettingsManager.getDeveloperOptionsEnabled(context) &&
+                (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() ||
+                    SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context))
+        },
+        unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED),
     SettingEntry(
         id = "nav_mode.enabled",
         titleRes = R.string.nav_mode_enable_title,

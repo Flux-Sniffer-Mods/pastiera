@@ -98,4 +98,40 @@ class SettingsLayoutTest {
             assertTrue(id, SettingLinkRegistry.search(context, context.getString(title)).any { it.id == id })
         }
     }
+
+    @Test
+    fun developerToolsOnlyShowWithDeveloperOptions() {
+        val developerIds = listOf(
+            SettingLinkIds.TRACKPAD_DEBUG,
+            SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL,
+            SettingLinkIds.MAIN_DEVELOPER
+        )
+        developerIds.forEach { id ->
+            val entry = requireNotNull(SettingLinkRegistry.byId(id))
+            assertFalse(id, entry.isAvailable(context))
+            assertEquals(id, SettingLinkIds.DEVELOPER_OPTIONS_ENABLED, SettingLinkRegistry.visibleTarget(context, entry).id)
+        }
+        SettingsManager.setDeveloperOptionsEnabled(context, true)
+        developerIds.forEach { id ->
+            val entry = requireNotNull(SettingLinkRegistry.byId(id))
+            assertTrue(id, entry.isAvailable(context))
+            assertEquals(id, SettingsDestination.Developer, entry.route.destination)
+        }
+        // Corner calibration also needs developer options, and sits with the other Titan 2 Elite settings
+        assertEquals(SettingsDestination.FluxTitanScreen, route("advanced.corner_calibration").destination)
+        listOf("status_bar.rounded_corners", "status_bar.top_corner", "status_bar.max_icon_shrink").forEach { id ->
+            assertEquals(id, SettingsDestination.FluxTitanScreen, route(id).destination)
+        }
+    }
+
+    @Test
+    fun incognitoFollowsAppsUnlessAlwaysOn() {
+        val noLearning = android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+        assertFalse(SettingsManager.isIncognitoField(context, 0))
+        assertTrue(SettingsManager.isIncognitoField(context, noLearning))
+        SettingsManager.setIncognitoFollowApps(context, false)
+        assertFalse(SettingsManager.isIncognitoField(context, noLearning))
+        SettingsManager.setIncognitoAlways(context, true)
+        assertTrue(SettingsManager.isIncognitoField(context, 0))
+    }
 }
