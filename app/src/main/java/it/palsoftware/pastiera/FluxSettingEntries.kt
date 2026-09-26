@@ -38,6 +38,8 @@ internal fun fluxSettingEntries(): List<SettingEntry> {
             summaryRes = R.string.flux_type_to_search_layer_description, route = emoji),
         SettingEntry("flux_emoji.type_to_search_symbols", R.string.flux_type_to_search_symbols_title,
             summaryRes = R.string.flux_type_to_search_symbols_description, route = emoji),
+        SettingEntry("flux_emoji.search_key", R.string.search_key_title,
+            summaryRes = R.string.search_key_description, route = emoji),
         SettingEntry("flux_emoji.recents_first", R.string.flux_recents_first_title,
             summaryRes = R.string.flux_recents_first_description, route = emoji),
         SettingEntry("flux_emoji.gif_favourites", R.string.flux_gif_favourites_title,

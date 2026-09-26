@@ -2112,6 +2112,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             uiHandler.post { candidatesBarController.onEmojiLayerGifRequested?.invoke() }
         }
         // Type to search: the emoji layer's or a symbols page's search, already holding the letter
+        symLayoutController.onSearchKey = { target ->
+            uiHandler.post {
+                when (target) {
+                    SymLayoutController.SearchTarget.EMOJI_LAYER -> {
+                        candidatesBarController.requestEmojiPickerSearch()
+                        symLayoutController.openEmojiPickerPage()
+                    }
+                    SymLayoutController.SearchTarget.SYMBOLS -> {
+                        candidatesBarController.requestSymbolSearch()
+                        symLayoutController.openEmojiPickerPage()
+                    }
+                    SymLayoutController.SearchTarget.PICKER ->
+                        candidatesBarController.focusEmojiPickerSearch()
+                }
+                updateStatusBarText()
+            }
+        }
         symLayoutController.onTypeToSearch = { emoji, text ->
             uiHandler.post {
                 if (emoji) {

@@ -160,6 +160,7 @@ object SettingsManager {
     private const val KEY_GIF_SEARCH_ENTER_PICKS = "gif_search_enter_picks" // Enter: first GIF (closes)
     private const val KEY_RECENTS_FIRST_IN_SEARCH = "recents_first_in_search" // recently used first in searches
     private const val KEY_OFFLINE_MODE = "offline_mode" // nothing goes online (see OfflineMode)
+    private const val KEY_SEARCH_KEY = "search_key" // opens search on the emoji layer, symbols pages, picker
     private const val KEY_GIF_SHOW_FAVOURITES = "gif_show_favourites" // Favourites section in GIF search
     private const val KEY_GIF_SHOW_RECENTS = "gif_show_recents" // Recent section in GIF search
     private const val KEY_EMOJI_PICKER_FOCUS_SEARCH = "emoji_picker_focus_search" // typing searches on open
@@ -5415,6 +5416,25 @@ object SettingsManager {
         getPreferences(context).edit().putBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, enabled).apply()
     }
 
+    /**
+     * The key that opens search on the emoji layer and the symbols pages, and puts typing into
+     * the emoji and GIF picker's search: A unless changed (KEYCODE_UNKNOWN = off).
+     */
+    fun getSearchKey(context: Context): Int {
+        val keyCode = getPreferences(context).getInt(KEY_SEARCH_KEY, KeyEvent.KEYCODE_A)
+        return if (keyCode in EMOJI_LAYER_KEYS) keyCode else KeyEvent.KEYCODE_UNKNOWN
+    }
+
+    fun setSearchKey(context: Context, keyCode: Int): Boolean {
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN) {
+            if (keyCode !in EMOJI_LAYER_KEYS) return false
+            // One key, one job: not the Recents or GIF key
+            if (keyCode == getEmojiLayerRecentsKey(context) || keyCode == getEmojiLayerGifKey(context)) return false
+        }
+        getPreferences(context).edit().putInt(KEY_SEARCH_KEY, keyCode).apply()
+        return true
+    }
+
     /** Offline mode (see [OfflineMode]): nothing in Pastiera goes online. Off by default. */
     fun isOfflineMode(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_OFFLINE_MODE, false)
@@ -5486,8 +5506,9 @@ object SettingsManager {
 
     fun setEmojiLayerGifKey(context: Context, keyCode: Int): Boolean {
         if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode !in EMOJI_LAYER_KEYS) return false
-        // One key, one job: not the Recents key
+        // One key, one job: not the Recents key or the search key
         if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode == getEmojiLayerRecentsKey(context)) return false
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode == getSearchKey(context)) return false
         getPreferences(context).edit().putInt(KEY_EMOJI_LAYER_GIF_KEY, keyCode).apply()
         return true
     }
@@ -5530,8 +5551,9 @@ object SettingsManager {
 
     fun setEmojiLayerRecentsKey(context: Context, keyCode: Int): Boolean {
         if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode !in EMOJI_LAYER_KEYS) return false
-        // One key, one job: not the GIF key while GIF search is on
+        // One key, one job: not the GIF key while GIF search is on, nor the search key
         if (keyCode != KeyEvent.KEYCODE_UNKNOWN && getGifsEnabled(context) && keyCode == getEmojiLayerGifKey(context)) return false
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode == getSearchKey(context)) return false
         getPreferences(context).edit().putInt(KEY_EMOJI_LAYER_RECENTS_KEY, keyCode).apply()
         return true
     }

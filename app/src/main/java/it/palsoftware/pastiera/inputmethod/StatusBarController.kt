@@ -170,6 +170,11 @@ class StatusBarController(
     private var pendingEmojiPickerSearch: Boolean = false
 
     /** The next time the emoji picker shows, open its search. */
+    /** The picker is showing: its search takes typing (the search key). */
+    fun focusEmojiPickerSearch() {
+        emojiPickerView?.focusSearch()
+    }
+
     // Type to search: the letter that started it, typed into the search once it opens
     private var pendingSearchText: String? = null
 
@@ -2935,7 +2940,18 @@ class StatusBarController(
         // The GIF key only while it shows GIF (with recent emoji shown it holds one of them)
         val gifKey = page == 1 && keyCode == SettingsManager.activeEmojiLayerGifKey(context) &&
             content == it.palsoftware.pastiera.core.SymLayoutController.GIF_KEY_LABEL
-        if (gifKey) {
+        val searchKey = (page == 1 || page == 2 || page == 5) &&
+            keyCode == SettingsManager.getSearchKey(context) &&
+            content == it.palsoftware.pastiera.core.SymLayoutController.SEARCH_KEY_LABEL
+        if (searchKey) {
+            // The search key: this screen's search
+            keyButton.isClickable = true
+            keyButton.isFocusable = true
+            keyButton.contentDescription = context.getString(R.string.search_key_title)
+            keyButton.setOnClickListener {
+                if (page == 1) onEmojiLayerSearchRequested?.invoke() else onSymbolSearchRequested?.invoke()
+            }
+        } else if (gifKey) {
             // Emoji layer's GIF key: GIF search
             keyButton.isClickable = true
             keyButton.isFocusable = true

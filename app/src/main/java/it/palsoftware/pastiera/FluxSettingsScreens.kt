@@ -261,6 +261,8 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var showGifKeyDialog by remember { mutableStateOf(false) }
     var enterPicksEmoji by remember { mutableStateOf(SettingsManager.getEmojiSearchEnterPicks(context)) }
     var recentsFirst by remember { mutableStateOf(SettingsManager.getRecentsFirstInSearch(context)) }
+    var searchKey by remember { mutableStateOf(SettingsManager.getSearchKey(context)) }
+    var showSearchKeyDialog by remember { mutableStateOf(false) }
     var gifFavourites by remember { mutableStateOf(SettingsManager.getGifShowFavourites(context)) }
     var gifRecents by remember { mutableStateOf(SettingsManager.getGifShowRecents(context)) }
     var enterPicksSymbol by remember { mutableStateOf(SettingsManager.getSymbolSearchEnterPicks(context)) }
@@ -558,6 +560,18 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             }
         )
 
+        FluxActionRow(
+            linkId = "flux_emoji.search_key",
+            title = stringResource(R.string.search_key_title),
+            description = stringResource(R.string.search_key_description) + "\n" +
+                if (searchKey == KeyEvent.KEYCODE_UNKNOWN) {
+                    stringResource(R.string.emoji_layer_recents_key_off)
+                } else {
+                    stringResource(R.string.emoji_layer_recents_key_current, getLetterFromKeyCode(searchKey))
+                },
+            onClick = { showSearchKeyDialog = true }
+        )
+
         SettingsSectionDivider(stringResource(R.string.flux_section_enter))
         FluxSwitchRow(
             linkId = "flux_emoji.enter_emoji",
@@ -621,6 +635,24 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 SettingsManager.setGifShowRecents(context, enabled)
             }
         )
+
+        // The search key: press the letter key to use, like the Recents and GIF keys
+        if (showSearchKeyDialog) {
+            EmojiLayerKeyDialog(
+                title = stringResource(R.string.search_key_title),
+                description = stringResource(R.string.search_key_description),
+                currentKey = searchKey,
+                letterFor = ::getLetterFromKeyCode,
+                onKeyPressed = { keyCode ->
+                    SettingsManager.setSearchKey(context, keyCode).also { if (it) searchKey = keyCode }
+                },
+                onTurnOff = {
+                    SettingsManager.setSearchKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                    searchKey = KeyEvent.KEYCODE_UNKNOWN
+                },
+                onDismiss = { showSearchKeyDialog = false }
+            )
+        }
 
         // Dedicated emoji picker key: press the key to use (works with whatever keys the device has)
         if (showEmojiPickerKeyDialog) {

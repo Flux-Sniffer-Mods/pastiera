@@ -25,6 +25,8 @@ class SymLayoutController(
          */
         const val RECENTS_KEY_LABEL = "\u21BA"         // ↺
         const val RECENTS_BACK_LABEL = "\u21A9\uFE0E"  // ↩ (text presentation)
+        /** Label of the search key on the emoji layer and the symbols pages. */
+        const val SEARCH_KEY_LABEL = "\uD83D\uDD0D"
         /** Label of the emoji layer's GIF key. */
         const val GIF_KEY_LABEL = "GIF"
     }
@@ -51,6 +53,12 @@ class SymLayoutController(
      */
     var openedByEmojiKey: Boolean = false
         private set
+
+    /** Where the search key was pressed. */
+    enum class SearchTarget { EMOJI_LAYER, SYMBOLS, PICKER }
+
+    /** The search key was pressed: the input method opens that screen's search. */
+    var onSearchKey: ((SearchTarget) -> Unit)? = null
 
     /** The emoji layer's GIF key was pressed: the input method opens GIF search. */
     var onEmojiLayerGifKey: (() -> Unit)? = null
@@ -159,13 +167,24 @@ class SymLayoutController(
      * The emoji layer's keys: its own emoji, or the recent ones (most recent on Q, then along the
      * rows) while Recents is shown. The Recents key keeps its toggle label either way.
      */
+    /** A symbols page's keys, with the search key showing its label. */
+    private fun withSearchKey(mappings: Map<Int, String>?): Map<Int, String>? {
+        val searchKey = SettingsManager.getSearchKey(context)
+        if (mappings == null || searchKey == KeyEvent.KEYCODE_UNKNOWN) return mappings
+        return mappings.toMutableMap().apply { put(searchKey, SEARCH_KEY_LABEL) }
+    }
+
     private fun emojiLayerMappings(): Map<Int, String> {
         val base = alternateCharacterManager.getSymMappings()
         val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
         val showingRecents = emojiLayerShowsRecents && recentsKey != KeyEvent.KEYCODE_UNKNOWN
         // While the layer shows recent emoji, the GIF key holds one of them too
         val gifKey = if (showingRecents) KeyEvent.KEYCODE_UNKNOWN else SettingsManager.activeEmojiLayerGifKey(context)
-        if (recentsKey == KeyEvent.KEYCODE_UNKNOWN && gifKey == KeyEvent.KEYCODE_UNKNOWN) return base
+        // The search key too, except while the layer shows recent emoji (every key holds one then)
+        val searchKey = if (showingRecents) KeyEvent.KEYCODE_UNKNOWN else SettingsManager.getSearchKey(context)
+        if (recentsKey == KeyEvent.KEYCODE_UNKNOWN && gifKey == KeyEvent.KEYCODE_UNKNOWN &&
+            searchKey == KeyEvent.KEYCODE_UNKNOWN
+        ) return base
         val shown = if (showingRecents) {
             val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey }
             keys.zip(RecentEmojiManager.getRecentEmojis(context, keys.size)).toMap().toMutableMap()
@@ -176,6 +195,7 @@ class SymLayoutController(
             shown[recentsKey] = if (emojiLayerShowsRecents) RECENTS_BACK_LABEL else RECENTS_KEY_LABEL
         }
         if (gifKey != KeyEvent.KEYCODE_UNKNOWN) shown[gifKey] = GIF_KEY_LABEL
+        if (searchKey != KeyEvent.KEYCODE_UNKNOWN) shown[searchKey] = SEARCH_KEY_LABEL
         return shown
     }
 
@@ -238,9 +258,9 @@ class SymLayoutController(
 
     fun currentSymMappings(): Map<Int, String>? {
         return when (currentPageType()) {
-            SymPage.DEVICE -> alternateCharacterManager.getDeviceSymMappings()
+            SymPage.DEVICE -> withSearchKey(alternateCharacterManager.getDeviceSymMappings())
             SymPage.EMOJI -> emojiLayerMappings()
-            SymPage.SYMBOLS -> alternateCharacterManager.getSymMappings2()
+            SymPage.SYMBOLS -> withSearchKey(alternateCharacterManager.getSymMappings2())
             SymPage.CLIPBOARD -> null // Clipboard doesn't use mappings
             SymPage.EMOJI_PICKER -> null // Emoji picker doesn't use mappings
             else -> null
@@ -370,6 +390,24 @@ class SymLayoutController(
                 updateStatusBar()
             }
             return SymKeyResult.CONSUME
+        }
+
+        // The search key: that screen's search (the picker's only reaches here when its search
+        // isn't taking typing)
+        val searchKey = SettingsManager.getSearchKey(context)
+        if (searchKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == searchKey &&
+            event?.isAltPressed != true && event?.isCtrlPressed != true && !altLatchActive && !ctrlLatchActive
+        ) {
+            val target = when (page) {
+                SymPage.EMOJI -> if (emojiLayerShowsRecents) null else SearchTarget.EMOJI_LAYER
+                SymPage.SYMBOLS, SymPage.DEVICE -> SearchTarget.SYMBOLS
+                SymPage.EMOJI_PICKER -> SearchTarget.PICKER
+                else -> null
+            }
+            if (target != null) {
+                if ((event?.repeatCount ?: 0) == 0) onSearchKey?.invoke(target)
+                return SymKeyResult.CONSUME
+            }
         }
 
         // Type to search (its settings): a plain letter starts emoji or symbol search with it

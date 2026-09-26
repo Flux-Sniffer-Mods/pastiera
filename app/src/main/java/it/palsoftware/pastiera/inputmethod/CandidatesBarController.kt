@@ -189,6 +189,12 @@ class CandidatesBarController(
         candidatesStatusBar.requestEmojiPickerGifs()
     }
 
+    /** The emoji picker is showing: its search (or GIF/symbol search) takes typing. */
+    fun focusEmojiPickerSearch() {
+        inputStatusBar.focusEmojiPickerSearch()
+        candidatesStatusBar.focusEmojiPickerSearch()
+    }
+
     /** The next time the emoji picker shows, open its search. */
     fun requestEmojiPickerSearch(initialText: String? = null) {
         inputStatusBar.requestEmojiPickerSearch(initialText)

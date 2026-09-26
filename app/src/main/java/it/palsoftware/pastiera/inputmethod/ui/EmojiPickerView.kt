@@ -1347,6 +1347,11 @@ class EmojiPickerView(
         redrawResults()
     }
 
+    /** The search key: whatever the picker shows (emoji, GIFs, symbols), its search takes typing. */
+    fun focusSearch() {
+        setSearchPanelVisible(true)
+    }
+
     /** Opens the search, focused for typing (e.g. from the emoji layer's search button). */
     fun openSearch() {
         setSearchPanelVisible(true)
