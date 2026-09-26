@@ -36,7 +36,8 @@ object SubtypeCycler {
         context: Context,
         imeServiceClass: Class<*>,
         assets: AssetManager,
-        showToast: Boolean = true
+        showToast: Boolean = true,
+        backwards: Boolean = false
     ): Boolean {
         return try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -82,12 +83,8 @@ object SubtypeCycler {
                 subtype.extraValue == currentSubtype?.extraValue
             }
             
-            // Get next subtype (cycle to first if at end)
-            val nextIndex = if (currentIndex >= 0 && currentIndex < enabledSubtypes.size - 1) {
-                currentIndex + 1
-            } else {
-                0 // Cycle back to first
-            }
+            // Next subtype, or the previous one going backwards; wraps round either way
+            val nextIndex = cycleIndex(currentIndex, enabledSubtypes.size, backwards)
             
             val nextSubtype = enabledSubtypes[nextIndex]
             val nextLayout = resolveSubtypeCycleLayout(assets, context, nextSubtype)
@@ -116,6 +113,14 @@ object SubtypeCycler {
         }
     }
     
+    /** Where cycling goes from [current] (-1: unknown) among [count] subtypes, forwards or backwards. */
+    internal fun cycleIndex(current: Int, count: Int, backwards: Boolean): Int = when {
+        count <= 0 -> 0
+        current !in 0 until count -> if (backwards) count - 1 else 0
+        backwards -> (current - 1 + count) % count
+        else -> (current + 1) % count
+    }
+
     /**
      * Attempts to switch to the specified subtype using setInputMethodAndSubtype.
      * This method requires the IME window token, which may not always be available.

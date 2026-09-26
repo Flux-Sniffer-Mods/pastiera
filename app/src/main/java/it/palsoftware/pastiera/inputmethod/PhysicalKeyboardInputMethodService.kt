@@ -5658,9 +5658,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 shouldUpdateStatusBar = true
             }
 
-            // Cycle to next subtype
+            // Cycle to the next subtype; with Shift too (Ctrl+Shift+Space), to the previous one
+            // (palsoftware/pastiera#267)
+            val backwards = event?.isShiftPressed == true || shiftPhysicallyPressed
+            if (backwards) modifierStateController.clearShiftState(resetPressedState = true)
             val showToast = SettingsManager.isToastOnLayoutSwitchEnabled(this)
-            if (SubtypeCycler.cycleToNextSubtype(this, PhysicalKeyboardInputMethodService::class.java, assets, showToast = showToast)) {
+            if (SubtypeCycler.cycleToNextSubtype(this, PhysicalKeyboardInputMethodService::class.java, assets, showToast = showToast, backwards = backwards)) {
                 shouldUpdateStatusBar = true
             }
 

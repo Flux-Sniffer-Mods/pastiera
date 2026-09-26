@@ -405,7 +405,7 @@
     <string name="alt_enter_layout_switch_title">Alt+Enter Layout Switch</string>
     <string name="alt_enter_layout_switch_description">Cycle languages/layouts with Alt+Enter.</string>
     <string name="ctrl_space_layout_switch_title">Ctrl+Space Layout Switch</string>
-    <string name="ctrl_space_layout_switch_description">Cycle languages/layouts with Ctrl+Space.</string>
+    <string name="ctrl_space_layout_switch_description">Cycle languages/layouts with Ctrl+Space; Ctrl+Shift+Space goes back.</string>
     <string name="layout_switch_shortcuts_title">Layout Switch Shortcuts</string>
     <string name="toast_on_layout_switch_title">Layout Switch Toast</string>
     <string name="toast_on_layout_switch_description">Show a toast when switching languages/layouts.</string>
