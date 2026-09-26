@@ -274,6 +274,12 @@ class CandidatesBarController(
         return bounds
     }
 
+    /** Hidden app with "Show status LEDs only": both surfaces draw only the LED strip. */
+    fun setLedsOnlyMode(active: Boolean) {
+        inputStatusBar.ledsOnlyMode = active
+        candidatesStatusBar.ledsOnlyMode = active
+    }
+
     fun setPastierinaModeActive(active: Boolean) {
         inputStatusBar.setPastierinaModeActive(active)
         candidatesStatusBar.setPastierinaModeActive(active)

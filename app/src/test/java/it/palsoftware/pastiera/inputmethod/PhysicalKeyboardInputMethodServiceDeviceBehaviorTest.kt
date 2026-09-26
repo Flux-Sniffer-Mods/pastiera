@@ -972,6 +972,59 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun hiddenApp_keysGoStraightToTheAppAndNothingOpens() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        setField(service, "keyboardHiddenForApp", true)
+
+        val (emojiKeyDown, emojiKeyUp) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 11_000L)
+        val (letterDown, _) = pressKey(KeyEvent.KEYCODE_A, 11_500L)
+
+        assertFalse(emojiKeyDown)
+        assertFalse(emojiKeyUp)
+        assertFalse(letterDown)
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun hiddenApp_withPanels_emojiKeyOpensPickerAndClosesItAgain() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        SettingsManager.setHiddenAppsAllowPanels(context, true)
+        setField(service, "keyboardHiddenForApp", true)
+
+        val (openDown, openUp) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 12_000L)
+        assertTrue(openDown)
+        assertTrue(openUp)
+        assertEquals(4, symLayout().currentSymPage())
+
+        pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 12_500L)
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun hiddenApp_withPanels_keyPressedBeforeThePanelReleasesToTheApp() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        SettingsManager.setHiddenAppsAllowPanels(context, true)
+        setField(service, "keyboardHiddenForApp", true)
+
+        val shiftDown = service.onKeyDown(
+            KeyEvent.KEYCODE_SHIFT_LEFT,
+            KeyEvent(13_000L, 13_000L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, 0)
+        )
+        pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 13_100L)
+        assertEquals(4, symLayout().currentSymPage())
+        val shiftUp = service.onKeyUp(
+            KeyEvent.KEYCODE_SHIFT_LEFT,
+            KeyEvent(13_000L, 13_300L, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, 0)
+        )
+
+        assertFalse(shiftDown)
+        assertFalse(shiftUp)
+    }
+
+    @Test
     fun emojiPickerKey_off_rightShiftDoesNotOpenPicker() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)

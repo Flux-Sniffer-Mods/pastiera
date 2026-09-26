@@ -1059,4 +1059,14 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="titan2_elite_status_bar_lift_title">Alza la barra di stato sopra i LED</string>
     <string name="titan2_elite_status_bar_lift_description">Alza la barra di stato così i LED dei modificatori scorrono in una fascia libera sotto di essa, seguendo gli angoli del display. 0 lascia i LED attorno alla barra.</string>
     <string name="titan2_elite_status_bar_lift_value">%1$d dp</string>
+    <string name="hidden_keyboard_apps_title">Nascondi la tastiera in queste app</string>
+    <string name="hidden_keyboard_apps_description">Pastiera resta nascosta nelle app elencate e lascia loro tutti i tasti. Utile per i desktop Termux:X11.</string>
+    <string name="hidden_keyboard_apps_search">Cerca app</string>
+    <string name="hidden_keyboard_apps_done">Fatto</string>
+    <string name="hidden_keyboard_apps_leds_only_title">Mostra solo i LED di stato</string>
+    <string name="hidden_keyboard_apps_leds_only_description">Mantiene visibili i LED dei modificatori in queste app, disegnati sopra l’app. Non compare nient’altro e non occupa spazio sullo schermo.</string>
+    <string name="hidden_keyboard_apps_panels_title">Tasto emoji e Sym aprono Pastiera</string>
+    <string name="hidden_keyboard_apps_panels_description">Il tasto del selettore emoji apre le emoji, Sym apre la pagina dei simboli. Mentre una è aperta, i tasti vanno a Pastiera. In Termux:X11, Sym non arriva più a X.</string>
+    <string name="hidden_keyboard_apps_accessibility_hint">Le app che leggono direttamente la tastiera, come Termux:X11, richiedono il servizio di accessibilità di Pastiera per queste opzioni.</string>
+    <string name="hidden_keyboard_apps_open_accessibility">Apri impostazioni di accessibilità</string>
 </resources>

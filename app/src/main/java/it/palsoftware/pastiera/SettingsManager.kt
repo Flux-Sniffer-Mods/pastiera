@@ -142,6 +142,9 @@ object SettingsManager {
     private const val KEY_ALT_LATCH_STAYS_ON_SPACE = "alt_latch_stays_on_space"
     private const val KEY_CTRL_LATCH_STAYS_ON_SPACE = "ctrl_latch_stays_on_space"
     private const val KEY_EMOJI_PICKER_EXPANDED_HEIGHT = "emoji_picker_expanded_height"
+    private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
+    private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
+    private const val KEY_HIDDEN_APPS_ALLOW_PANELS = "hidden_keyboard_apps_allow_panels"
     private const val KEY_EMOJI_PICKER_KEY = "emoji_picker_key" // Physical key that toggles the emoji picker (KEYCODE_UNKNOWN = off)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
     private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed" // Whether the first-run tutorial has been completed
@@ -5229,6 +5232,48 @@ object SettingsManager {
         } else {
             DEFAULT_EMOJI_PICKER_KEY
         }
+    }
+
+    private val PACKAGE_NAME_REGEX = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
+
+    /** Package names from free text (one per line, or separated by spaces, commas or semicolons). */
+    fun parsePackageList(text: String): List<String> =
+        text.split(Regex("[\\s,;]+"))
+            .map { it.trim() }
+            .filter { PACKAGE_NAME_REGEX.matches(it) }
+            .distinct()
+
+    /**
+     * Apps where Pastiera shows nothing and leaves every key to the app, e.g. an X11 desktop
+     * such as Termux:X11 that handles the keyboard itself.
+     */
+    fun getHiddenKeyboardApps(context: Context): List<String> =
+        parsePackageList(getPreferences(context).getString(KEY_HIDDEN_KEYBOARD_APPS, "") ?: "")
+
+    fun setHiddenKeyboardApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit()
+            .putString(KEY_HIDDEN_KEYBOARD_APPS, clean.joinToString("\n"))
+            .apply()
+    }
+
+    fun isKeyboardHiddenForApp(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() && packageName in getHiddenKeyboardApps(context)
+
+    /** In hidden apps, keep the modifier LEDs visible instead of hiding everything. */
+    fun getHiddenAppsShowLeds(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, false)
+
+    fun setHiddenAppsShowLeds(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, enabled).apply()
+    }
+
+    /** In hidden apps, the emoji picker key and Sym still open Pastiera's emoji and symbols. */
+    fun getHiddenAppsAllowPanels(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, false)
+
+    fun setHiddenAppsAllowPanels(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, enabled).apply()
     }
 
     /** Stores [keyCode] (KEYCODE_UNKNOWN turns the feature off). Returns false if not allowed. */

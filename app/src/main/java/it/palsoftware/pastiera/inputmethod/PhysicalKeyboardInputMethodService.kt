@@ -163,6 +163,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    // The focused app is on the "hide keyboard in these apps" list: no UI, keys go to the app
+    private var keyboardHiddenForApp: Boolean = false
+    // ...but with "Show status LEDs only": the LED strip stays, following observed modifiers
+    private var hiddenAppShowsLeds: Boolean = false
+    private val observedModifierLeds = ObservedModifierLeds()
+    // Hidden app with the panels option: Pastiera's surface is up for an emoji/symbols panel
+    private var hiddenAppPanelShown: Boolean = false
+    // Keys whose press went to the hidden app / to Pastiera (their release goes the same way)
+    private val hiddenAppPassedThroughKeys = mutableSetOf<Int>()
+    private val hiddenAppPastieraKeys = mutableSetOf<Int>()
+    // Keys the accessibility service handed to Pastiera (their release follows)
+    private val hiddenAppInterceptedKeys = mutableSetOf<Int>()
     // Key-up of the dedicated emoji picker key still to be swallowed (KEYCODE_UNKNOWN = none)
     private var emojiPickerKeyUpPending: Int = KeyEvent.KEYCODE_UNKNOWN
     private var dispatchingSoftwareKeyboardKey: Boolean = false
@@ -2090,7 +2102,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             refreshStatusBar = {
                 invalidateRenderedStatusSnapshot()
                 refreshStatusBar()
-            }
+            },
+            isHiddenForApp = { hiddenAppSurfaceBlocked() }
         )
         inputManager = getSystemService(InputManager::class.java)
         InputDevice.getDeviceIds().forEach { deviceId ->
@@ -2749,6 +2762,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        HiddenAppKeyObserver.sink = null
+        HiddenAppKeyObserver.interceptor = null
         ClicksAccessibilityKeyBridge.unregister(this)
         clicksPowerShiftTapFilter.reset()
         accidentalKeyPressFilter.reset()
@@ -2863,6 +2878,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
      * Only the experimental hardware backend uses Android's separate candidates lifecycle.
      */
     override fun onEvaluateInputViewShown(): Boolean {
+        if (hiddenAppSurfaceBlocked()) {
+            requestedInputViewShown = false
+            return false
+        }
         val systemShouldShowInputView = super.onEvaluateInputViewShown()
         val resolvedShowInputView =
             keyboardVisibilityController.onEvaluateInputViewShown(systemShouldShowInputView)
@@ -2872,6 +2891,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     override fun onShowInputRequested(flags: Int, configChange: Boolean): Boolean {
         val accepted = super.onShowInputRequested(flags, configChange)
+        if (hiddenAppSurfaceBlocked()) return false
         if (::keyboardVisibilityController.isInitialized) {
             keyboardVisibilityController.onExplicitShowRequested()
         }
@@ -2883,6 +2903,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         super.onComputeInsets(outInsets)
         val decor = window?.window?.decorView ?: return
         outInsets ?: return
+        if (keyboardHiddenForApp && !hiddenAppPanelOpen()) {
+            // Nothing (or only the LEDs) is shown: the app keeps the whole screen and every touch
+            ImeInsetsPolicy.applyRenderedContentInsets(outInsets, null, decor.height)
+            return
+        }
         if (!isFullscreenMode && ::candidatesBarController.isInitialized) {
             // Content and touch geometry come from the same attached, visible child. Neither
             // a requested surface nor Android's cached candidates-started flag is sufficient.
@@ -2912,6 +2937,82 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun requestKeyboardInputView() = requestShowSelf(0)
+
+    /** Hidden app with the panels option and an emoji or symbols panel open. */
+    private fun hiddenAppPanelOpen(): Boolean =
+        keyboardHiddenForApp && symPage > 0 && SettingsManager.getHiddenAppsAllowPanels(this)
+
+    /** Hidden apps keep Pastiera's surface closed, except for the status LEDs or an open panel. */
+    private fun hiddenAppSurfaceBlocked(): Boolean =
+        keyboardHiddenForApp && !hiddenAppShowsLeds && !hiddenAppPanelOpen()
+
+    /** In a hidden app with the panels option: its panel keys, and every key while a panel is open. */
+    private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
+        if (!SettingsManager.getHiddenAppsAllowPanels(this)) return false
+        if (symPage > 0) return true
+        val emojiKey = SettingsManager.getEmojiPickerKey(this)
+        return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
+    }
+
+    /** Show Pastiera while a panel is open in a hidden app; hide it (or back to LEDs) afterwards. */
+    private fun syncHiddenAppPanel() {
+        if (!keyboardHiddenForApp) return
+        val panelOpen = hiddenAppPanelOpen()
+        if (::candidatesBarController.isInitialized) {
+            candidatesBarController.setLedsOnlyMode(hiddenAppShowsLeds && !panelOpen)
+        }
+        if (panelOpen == hiddenAppPanelShown) return
+        hiddenAppPanelShown = panelOpen
+        invalidateRenderedStatusSnapshot()
+        if (panelOpen) {
+            ensureImeSurfaceVisible()
+        } else {
+            hideSurfaceIfHiddenForApp()
+        }
+        // Re-render in the new mode once the current pass is over
+        uiHandler.post { updateStatusBarText() }
+    }
+
+    /**
+     * Accessibility path for hidden apps that read keys before any input method (Termux:X11):
+     * hands the panel keys, and every key while a panel is open, to Pastiera.
+     */
+    private fun interceptHiddenAppKey(event: KeyEvent): Boolean {
+        if (!keyboardHiddenForApp || currentInputConnection == null) return false
+        val keyCode = event.keyCode
+        if (keyCode in HIDDEN_APP_SYSTEM_KEYS) return false
+        val take = when (event.action) {
+            KeyEvent.ACTION_DOWN -> hiddenAppKeyGoesToPastiera(keyCode).also { taken ->
+                if (taken && event.repeatCount == 0) hiddenAppInterceptedKeys += keyCode
+            }
+            // Only releases of presses Pastiera took; others belong to the app
+            KeyEvent.ACTION_UP -> hiddenAppInterceptedKeys.remove(keyCode)
+            else -> false
+        }
+        if (!take) return false
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> onKeyDown(keyCode, event)
+            KeyEvent.ACTION_UP -> onKeyUp(keyCode, event)
+        }
+        return true
+    }
+
+    /** Hidden app with status LEDs: mirror modifier keys the app receives, never consume them. */
+    private fun observeHiddenAppKey(event: KeyEvent?) {
+        if (!hiddenAppShowsLeds || event == null) return
+        val changed = observedModifierLeds.onKey(
+            event.keyCode, event.action, event.repeatCount, event.downTime, event.eventTime
+        )
+        if (changed) updateStatusBarText()
+    }
+
+    /** Close any Pastiera surface once the framework's start/show pass is over. */
+    private fun hideSurfaceIfHiddenForApp() {
+        if (!hiddenAppSurfaceBlocked() || !::keyboardVisibilityController.isInitialized) return
+        uiHandler.post {
+            if (hiddenAppSurfaceBlocked()) keyboardVisibilityController.hideForApp()
+        }
+    }
 
     /**
      * Evaluates whether the IME should run in fullscreen mode.
@@ -3023,6 +3124,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
      * Aggiorna la status bar delegando al controller dedicato.
      */
     private fun updateStatusBarText() {
+        syncHiddenAppPanel()
         val totalStart = ImePerfLogger.mark()
         var variationMs = 0L
         var suggestionsMs = 0L
@@ -3087,7 +3189,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             softwareAltPreviewActive = shouldShowSoftwareAltPreview(modifierSnapshot),
             // Legacy flag for backward compatibility
             shouldDisableSmartFeatures = shouldDisableSmartFeatures
-        )
+        ).let { if (hiddenAppShowsLeds && !hiddenAppPanelOpen()) observedModifierLeds.applyTo(it) else it }
         updateSystemStatusModifierIcon(snapshot, effectiveSoftwareKeyboardMode)
         val modifierIndicators = SettingsManager.getModifierIndicators(this)
         // Passa anche la mappa emoji quando SYM è attivo (solo pagina 1)
@@ -3355,6 +3457,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         pendingKeyboardSurfaceTransition = null
         super.onStartInput(info, restarting)
         EmojiCompatSupport.onStartInput(info)
+        keyboardHiddenForApp = SettingsManager.isKeyboardHiddenForApp(this, info?.packageName)
+        val showLeds = keyboardHiddenForApp && SettingsManager.getHiddenAppsShowLeds(this)
+        if (showLeds != hiddenAppShowsLeds || !restarting) observedModifierLeds.reset()
+        hiddenAppShowsLeds = showLeds
+        if (::candidatesBarController.isInitialized) candidatesBarController.setLedsOnlyMode(showLeds)
+        HiddenAppKeyObserver.sink = if (showLeds) ::observeHiddenAppKey else null
+        hiddenAppPanelShown = false
+        hiddenAppPassedThroughKeys.clear()
+        hiddenAppPastieraKeys.clear()
+        hiddenAppInterceptedKeys.clear()
+        if (keyboardHiddenForApp && ::symLayoutController.isInitialized && symLayoutController.isSymActive()) {
+            symLayoutController.closeSymPage()
+        }
+        HiddenAppKeyObserver.interceptor =
+            if (keyboardHiddenForApp && SettingsManager.getHiddenAppsAllowPanels(this)) ::interceptHiddenAppKey else null
+        hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
             !restarting ||
@@ -3452,6 +3570,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         updateDebugImeContextSnapshot(info)
         attachTrackpadDecorViewMotionHook("onStartInputView")
@@ -4314,6 +4433,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyLongPress(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyboardHiddenForApp && !hiddenAppKeyGoesToPastiera(keyCode_)) return super.onKeyLongPress(keyCode_, event_)
         if (!replayingProtectedNumberKey) {
             val accidentalInput = accidentalKeyInput(keyCode_, event_)
             accidentalKeyPressFilter.shouldConsumeKeyDown(
@@ -4351,6 +4471,21 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyboardHiddenForApp) {
+            val firstPress = (event_?.repeatCount ?: 0) == 0
+            if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
+                if (firstPress) hiddenAppPassedThroughKeys += keyCode_
+                observeHiddenAppKey(event_)
+                return super.onKeyDown(keyCode_, event_)
+            }
+            if (firstPress) hiddenAppPastieraKeys += keyCode_
+        }
+        val handled = handleKeyDown(keyCode_, event_)
+        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        return handled
+    }
+
+    private fun handleKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
         val perfStart = ImePerfLogger.mark()
         try {
         if (!replayingProtectedNumberKey) {
@@ -5063,6 +5198,24 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyboardHiddenForApp) {
+            // A release follows its press, so neither side is left with a stuck key
+            val toPastiera = when {
+                hiddenAppPastieraKeys.remove(keyCode_) -> true
+                hiddenAppPassedThroughKeys.remove(keyCode_) -> false
+                else -> hiddenAppKeyGoesToPastiera(keyCode_)
+            }
+            if (!toPastiera) {
+                observeHiddenAppKey(event_)
+                return super.onKeyUp(keyCode_, event_)
+            }
+        }
+        val handled = handleKeyUp(keyCode_, event_)
+        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        return handled
+    }
+
+    private fun handleKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
         if (!replayingProtectedNumberKey) {
             when (val result = accidentalKeyPressFilter.onKeyUp(keyCode_, event_)) {
                 is AccidentalKeyPressFilter.KeyUpResult.Suppressed -> {
@@ -5901,3 +6054,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         LEFT
     }
 }
+
+/** Keys that always belong to Android, even while a hidden app's Pastiera panel is open. */
+private val HIDDEN_APP_SYSTEM_KEYS = setOf(
+    KeyEvent.KEYCODE_BACK,
+    KeyEvent.KEYCODE_HOME,
+    KeyEvent.KEYCODE_APP_SWITCH,
+    KeyEvent.KEYCODE_POWER,
+    KeyEvent.KEYCODE_VOLUME_UP,
+    KeyEvent.KEYCODE_VOLUME_DOWN,
+    KeyEvent.KEYCODE_VOLUME_MUTE
+)

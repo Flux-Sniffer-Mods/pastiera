@@ -15,6 +15,10 @@ class ClicksLauncherButtonAccessibilityService : AccessibilityService() {
     private val mapper = ClicksLauncherAccessibilityKeyMapper()
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
+        // Hidden apps: keys for Pastiera's emoji/symbols panels go to Pastiera, not the app
+        if (HiddenAppKeyObserver.intercept(event)) return true
+        // Hidden apps with status LEDs: let the LEDs follow keys the app reads before any IME
+        HiddenAppKeyObserver.observe(event)
         val device = event.device
         val result = mapper.map(
             event = event,

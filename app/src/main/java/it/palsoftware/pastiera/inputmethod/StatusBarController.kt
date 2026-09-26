@@ -327,6 +327,9 @@ class StatusBarController(
     private var emojiPickerView: EmojiPickerView? = null
     // Pastierina: the picker's search field sits in the middle of the compact bar
     private var emojiSearchInBar: Boolean = false
+
+    /** Hidden app with "Show status LEDs only": draw nothing but the LED strip, over the app. */
+    var ledsOnlyMode: Boolean = false
     private var emojiPickerSearchPopup: PopupWindow? = null
     private var emojiPickerSearchPopupShowPending: Boolean = false
     private var softwareKeyboardView: AospKeyboardView? = null
@@ -1278,6 +1281,31 @@ class StatusBarController(
             view.scrollToTop() // View was just added (happens when reopening after being removed)
         }
         lastSymPageRendered = 4
+    }
+
+    private fun renderLedsOnly(
+        snapshot: StatusSnapshot,
+        layout: LinearLayout,
+        emojiKeyboardView: View,
+        symSurfaceView: FrameLayout
+    ) {
+        ledStatusView.getView()?.visibility = View.VISIBLE
+        ledStatusView.update(snapshot)
+        hideHamburgerMenu()
+        releaseEmojiSearchFromBar()
+        fullSuggestionsBar?.ensureView()?.visibility = View.GONE
+        variationBarView?.hideImmediate()
+        variationsWrapper?.visibility = View.GONE
+        emojiKeyboardView.visibility = View.GONE
+        setSurfaceCloseVisible(false)
+        resetSymSurfaceToLedOnly(symSurfaceView)
+        // Only the LEDs are drawn; the app stays visible (and touchable) around them
+        layout.setBackgroundColor(Color.TRANSPARENT)
+        symSurfaceStack?.setBackgroundColor(Color.TRANSPARENT)
+        symSurfaceContainer?.setBackgroundColor(Color.TRANSPARENT)
+        symShown = false
+        wasSymActive = false
+        lastSymPageRendered = 0
     }
 
     private fun releaseEmojiSearchFromBar() {
@@ -3156,6 +3184,10 @@ class StatusBarController(
         ledStatusView.getView()?.visibility = if (showLedStrip) View.VISIBLE else View.GONE
         if (showLedStrip) {
             ledStatusView.update(snapshot)
+        }
+        if (ledsOnlyMode) {
+            renderLedsOnly(snapshot, layout, emojiKeyboardView, symSurfaceView)
+            return
         }
         val showSecondRow = !pastierinaModeActive
         val variationsBar = if (showSecondRow) variationBarView else null

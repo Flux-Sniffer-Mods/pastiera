@@ -635,6 +635,45 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        var hiddenKeyboardApps by remember {
+                            mutableStateOf(SettingsManager.getHiddenKeyboardApps(context))
+                        }
+                        var showHiddenAppsDialog by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .settingRow("advanced.hidden_keyboard_apps") { showHiddenAppsDialog = true }
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(stringResource(R.string.hidden_keyboard_apps_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium)
+                                val hiddenAppNames = remember(hiddenKeyboardApps) {
+                                    val installed = AppListHelper.getCachedInstalledApps()
+                                        ?.associateBy { app -> app.packageName }
+                                    hiddenKeyboardApps.map { pkg -> installed?.get(pkg)?.appName ?: pkg }
+                                }
+                                Text(
+                                    text = if (hiddenKeyboardApps.isEmpty()) {
+                                        stringResource(R.string.hidden_keyboard_apps_description)
+                                    } else {
+                                        hiddenAppNames.joinToString(", ")
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        if (showHiddenAppsDialog) {
+                            HiddenKeyboardAppsDialog(onDismiss = {
+                                showHiddenAppsDialog = false
+                                hiddenKeyboardApps = SettingsManager.getHiddenKeyboardApps(context)
+                            })
+                        }
+
                         if (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() ||
                             SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)) {
                             Surface(modifier = Modifier.fillMaxWidth()
