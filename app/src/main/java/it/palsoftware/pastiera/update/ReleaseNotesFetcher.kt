@@ -159,6 +159,44 @@ private fun parseReleaseNotesJson(body: String, expectedVersion: String): Releas
     }.getOrNull()
 }
 
+private val FORK_VERSION = Regex("""^(\d+(?:\.\d+)*)-flux\.(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$""")
+
+/** "0.86-flux.202609260416" → "0.86"; other versions as they are. */
+fun shortVersion(version: String): String = FORK_VERSION.find(version.trim())?.groupValues?.get(1) ?: version.trim()
+
+/**
+ * A version as people read it: "0.86-flux.202609260416" → "0.86 · 26 Sep 2026, 04:16" (the build
+ * time, UTC). Other versions come back as they are.
+ */
+fun friendlyVersion(version: String, locale: java.util.Locale = java.util.Locale.getDefault()): String {
+    val m = FORK_VERSION.find(version.trim()) ?: return version.trim()
+    val (base, y, mo, d, h, mi) = m.destructured
+    val month = runCatching {
+        java.time.Month.of(mo.toInt()).getDisplayName(java.time.format.TextStyle.SHORT, locale)
+    }.getOrDefault(mo)
+    return "$base · ${d.toInt()} $month $y, $h:$mi"
+}
+
+/**
+ * Release notes shipped inside the app (assets/fork/whats_new.json), used instead of the online
+ * notes when present: a fork build describes its own changes, offline.
+ */
+fun bundledReleaseNotes(context: android.content.Context, version: String): ReleaseNotesSummary? = runCatching {
+    val body = context.assets.open("fork/whats_new.json").bufferedReader().use { it.readText() }
+    val json = JSONObject(body)
+    val highlights = parseStringArray(json, "highlights", 12)
+    if (highlights.isEmpty()) return@runCatching null
+    ReleaseNotesSummary(
+        version = version,
+        title = json.optString("title").takeIf(String::isNotBlank)?.let { "$it ${shortVersion(version)}" }
+            ?: "Pastiera ${shortVersion(version)}",
+        highlights = highlights,
+        improvements = parseStringArray(json, "improvements", 12),
+        bugFixes = parseStringArray(json, "bugFixes", 12),
+        docsUrl = json.optString("docsUrl").takeIf { it.startsWith("https://") } ?: "https://pastiera.eu/"
+    )
+}.getOrNull()
+
 private fun parseStringArray(json: JSONObject, key: String, limit: Int): List<String> {
     val array = json.optJSONArray(key) ?: return emptyList()
     return buildList {

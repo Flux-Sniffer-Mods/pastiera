@@ -185,12 +185,14 @@ fun TutorialScreen(
     val lastSeenWhatsNewVersion = remember {
         SettingsManager.getLastSeenWhatsNewVersion(context)
     }
+    // Notes bundled with the build (a fork's own changes) win over the online ones
+    val bundledNotes = remember { it.palsoftware.pastiera.update.bundledReleaseNotes(context, BuildConfig.VERSION_NAME) }
     var releaseNotes by remember {
-        mutableStateOf(ReleaseNotesSummary.fallback(BuildConfig.VERSION_NAME, releaseNotesLanguageTag))
+        mutableStateOf(bundledNotes ?: ReleaseNotesSummary.fallback(BuildConfig.VERSION_NAME, releaseNotesLanguageTag))
     }
 
     LaunchedEffect(updateTutorial) {
-        if (updateTutorial) {
+        if (updateTutorial && bundledNotes == null) {
             fetchReleaseNotesForVersion(
                 version = BuildConfig.VERSION_NAME,
                 languageTag = releaseNotesLanguageTag
@@ -1327,10 +1329,12 @@ private fun buildReleaseRangeLabel(previousVersion: String?, currentVersion: Str
     val normalizedPrevious = previousVersion
         ?.trim()
         ?.takeIf { it.isNotBlank() && it != normalizedCurrent }
+    // Versions as people read them (a build's date rather than its timestamp)
+    val current = it.palsoftware.pastiera.update.friendlyVersion(normalizedCurrent)
     return if (normalizedPrevious != null) {
-        "$normalizedPrevious → $normalizedCurrent"
+        "${it.palsoftware.pastiera.update.friendlyVersion(normalizedPrevious)} → $current"
     } else {
-        normalizedCurrent
+        current
     }
 }
 

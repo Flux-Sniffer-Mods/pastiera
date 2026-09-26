@@ -1,0 +1,28 @@
+{
+  "title": "Pastiera Flux",
+  "highlights": [
+    "Exact typing: in the apps you pick (SSH, code, AI agents) nothing rewrites what you type.",
+    "Pick suggestions from the keyboard with Ctrl+Shift+Q, W or E.",
+    "A dedicated emoji picker key, emoji layer profiles that follow the app, and GIF and symbol search.",
+    "App shortcuts in every app, Enter per app, terminal mode and hidden-keyboard apps.",
+    "A status bar fitted to the Titan 2 Elite, per-LED colours and a customisable menu bar.",
+    "Recommended settings apply a configuration made on a Titan 2 Elite."
+  ],
+  "improvements": [
+    "Spell checker, emoji suggestions and inline autofill in the suggestion bar.",
+    "Paste suggestion for what you just copied, with tracking cleaned from pasted links.",
+    "Snippets fill in the date, time and clipboard.",
+    "Backspace undoes an auto-replace and keeps the space.",
+    "Voice input keeps listening through pauses.",
+    "Smart Alt and Ctrl, incognito typing and an offline mode.",
+    "Ctrl+Shift+Space switches language backwards; bold suggestions option.",
+    "Settings grouped by task and searchable; settings for hardware you don't have stay hidden.",
+    "The QuickLauncher opens from other apps and the app icon."
+  ],
+  "bugFixes": [
+    "No automatic Shift in scripts without capitals, such as Thai.",
+    "Indicators are text symbols, never emoji.",
+    "Letters on the emoji layer and symbols pages type their mappings."
+  ],
+  "docsUrl": "https://github.com/Flux-Sniffer-Mods/pastiera/blob/pastiera-flux/FORK_CHANGES.md"
+}

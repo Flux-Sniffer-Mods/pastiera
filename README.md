@@ -26,6 +26,20 @@ For everyone who sees an IBAN and quietly gives up:
 
 Input method for physical keyboards android devices (e.g. Unihertz Titan 2), designed to make typing faster through shortcuts, gestures, and customization.
 
+## Pastiera Flux (this fork)
+
+This is **Pastiera Flux**, a fork tuned for the Unihertz Titan 2 Elite that installs alongside
+Pastiera. Highlights:
+
+- **Exact typing** per app, and picking suggestions from the keyboard (Ctrl+Shift+Q/W/E)
+- A dedicated **emoji picker key**, emoji layer profiles, and **GIF and symbol search**
+- **App shortcuts**, Enter per app, **terminal mode** and hidden-keyboard apps
+- A status bar fitted to the Titan 2 Elite, **per-LED colours** and a customisable menu bar
+- Spell checker, emoji suggestions, inline autofill, clean pasted links and snippet placeholders
+- Settings grouped by task, with **recommended settings** from a Titan 2 Elite configuration
+
+Everything it adds is listed in [FORK_CHANGES.md](FORK_CHANGES.md).
+
 ## Quick overview
 - Compact status bar with LED indicators for Shift/SYM/Ctrl/Alt, variants/suggestions bar, and swipe-pad gestures to move the cursor.
 - Multiple layouts (QWERTY/AZERTY/QWERTZ, Greek, Cyrillic, Arabic, translit, etc.) fully configurable; JSON import/export directly from the app. A web frontend for editing layouts is available at https://pastierakeyedit.vercel.app/

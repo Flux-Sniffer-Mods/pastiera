@@ -1,0 +1,209 @@
+name: Fork build and test
+
+# Two jobs side by side: the APK is ready (and installable) as soon as it's built,
+# while the tests carry on; pastiera-flux.sh reports them and won't release a build
+# whose tests failed.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version name, e.g. 0.86-flux.202609251200"
+        required: true
+        type: string
+      version_code:
+        description: "Version code"
+        required: true
+        default: "86"
+        type: string
+      tests:
+        description: "Tests: quick (emoji, keys, settings), full, or none"
+        required: true
+        default: quick
+        type: choice
+        options: [quick, full, none]
+
+env:
+  # --build-cache: reuse task outputs from earlier runs (kept by setup-gradle)
+  GRADLE_ARGS: --build-cache -PPASTIERA_VERSION_CODE=${{ inputs.version_code }} -PPASTIERA_VERSION_NAME=${{ inputs.version_name }}
+
+jobs:
+  apk:
+    name: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Built-in KLIPY key for GIF search (empty when the secret isn't set)
+      KLIPY_API_KEY: ${{ secrets.KLIPY_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (caches dependencies and build outputs between runs)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Skip lint on the release build (personal builds)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/skip-lint-vital.gradle <<'EOF'
+          gradle.allprojects { project ->
+              project.tasks.matching { it.name.startsWith("lintVital") }.configureEach { enabled = false }
+          }
+          EOF
+
+      - name: Signing config
+        env:
+          PASTIERA_KEYSTORE_B64: ${{ secrets.PASTIERA_KEYSTORE_B64 }}
+          PASTIERA_KEYSTORE_PASSWORD: ${{ secrets.PASTIERA_KEYSTORE_PASSWORD }}
+          PASTIERA_KEY_ALIAS: ${{ secrets.PASTIERA_KEY_ALIAS }}
+          PASTIERA_KEY_PASSWORD: ${{ secrets.PASTIERA_KEY_PASSWORD }}
+        run: |
+          mkdir -p release
+          echo "$PASTIERA_KEYSTORE_B64" | base64 -d > release/pastiera-release.jks
+          cat > release/keystore.properties <<EOF
+          storeFile=pastiera-release.jks
+          storePassword=$PASTIERA_KEYSTORE_PASSWORD
+          keyAlias=$PASTIERA_KEY_ALIAS
+          keyPassword=$PASTIERA_KEY_PASSWORD
+          EOF
+
+      - name: Build signed APK
+        run: ./gradlew :app:assembleStableRelease $GRADLE_ARGS
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/stable/release/app-stable-release.apk "out/pastiera-flux-${{ inputs.version_name }}.apk"
+          # Release notes ship with the APK: this build's version and commit, then the fork's changes
+          {
+            echo "# Pastiera Flux ${{ inputs.version_name }}"
+            echo
+            echo "Built from ${GITHUB_SHA::7} on ${GITHUB_REF_NAME}."
+            echo
+            tail -n +2 FORK_CHANGES.md
+          } > out/RELEASE_NOTES.md
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: |
+            out/*.apk
+            out/RELEASE_NOTES.md
+
+      # Optional: also put the APK in Google Drive (a "Pastiera builds" folder), when the three
+      # GDRIVE_* secrets are set. Uses the drive.file scope: it only sees files it creates.
+      - name: Upload APK to Google Drive
+        env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$GDRIVE_REFRESH_TOKEN" ]; then
+            echo "No Google Drive secrets set; skipping the Drive upload."
+            exit 0
+          fi
+          set -euo pipefail
+          apk=$(ls out/*.apk | head -1)
+          name=$(basename "$apk")
+          token=$(curl -sS --fail https://oauth2.googleapis.com/token \
+            -d client_id="$GDRIVE_CLIENT_ID" -d client_secret="$GDRIVE_CLIENT_SECRET" \
+            -d refresh_token="$GDRIVE_REFRESH_TOKEN" -d grant_type=refresh_token | jq -r .access_token)
+          api=https://www.googleapis.com/drive/v3/files
+          # The folder this workflow made before, or a new one
+          query="name='Pastiera builds' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+          folder=$(curl -sS --fail -G "$api" -H "Authorization: Bearer $token" \
+            --data-urlencode "q=$query" --data-urlencode "fields=files(id)" | jq -r '.files[0].id // empty')
+          if [ -z "$folder" ]; then
+            folder=$(curl -sS --fail -X POST "$api?fields=id" -H "Authorization: Bearer $token" \
+              -H "Content-Type: application/json" \
+              -d '{"name":"Pastiera builds","mimeType":"application/vnd.google-apps.folder"}' | jq -r .id)
+          fi
+          # Resumable upload: fine for any APK size
+          session=$(curl -sS --fail -D - -o /dev/null -X POST \
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink" \
+            -H "Authorization: Bearer $token" -H "Content-Type: application/json; charset=UTF-8" \
+            -H "X-Upload-Content-Type: application/vnd.android.package-archive" \
+            -d "{\"name\":\"$name\",\"parents\":[\"$folder\"]}" | grep -i '^location:' | cut -d' ' -f2 | tr -d '\r')
+          link=$(curl -sS --fail -X PUT "$session" -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"$apk" | jq -r .webViewLink)
+          echo "Uploaded $name to Google Drive: $link"
+          echo "### Google Drive" >> "$GITHUB_STEP_SUMMARY"
+          echo "[$name]($link)" >> "$GITHUB_STEP_SUMMARY"
+
+  tests:
+    name: tests
+    if: ${{ inputs.tests != 'none' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (caches dependencies and build outputs between runs)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('gradle/libs.versions.toml', 'app/build.gradle*') }}
+          restore-keys: robolectric-
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Quick tests (emoji, keys, settings)
+        if: ${{ inputs.tests == 'quick' }}
+        run: >
+          ./gradlew :app:testStableDebugUnitTest $GRADLE_ARGS
+          --tests 'it.palsoftware.pastiera.data.emoji.*'
+          --tests 'it.palsoftware.pastiera.data.gif.*'
+          --tests 'it.palsoftware.pastiera.data.symbols.*'
+          --tests 'it.palsoftware.pastiera.data.desktop.*'
+          --tests 'it.palsoftware.pastiera.inputmethod.PhysicalKeyboardInputMethodServiceDeviceBehaviorTest'
+          --tests 'it.palsoftware.pastiera.SettingLinkCoverageTest'
+          --tests 'it.palsoftware.pastiera.SettingLinkRegistryTest'
+          --tests 'it.palsoftware.pastiera.InputDeviceSettingLinkTest'
+          --tests 'it.palsoftware.pastiera.CustomizationSettingLinkTest'
+          --tests 'it.palsoftware.pastiera.OfflineModeTest'
+          --tests 'it.palsoftware.pastiera.EmojiPickerKeySettingsTest'
+          --tests 'it.palsoftware.pastiera.Titan2EliteChromeSettingsTest'
+          --tests 'it.palsoftware.pastiera.HiddenKeyboardAppsTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.KeyboardVisibilityControllerTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.ObservedModifierLedsTest'
+          --tests 'it.palsoftware.pastiera.core.EmojiKeyScreensTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.ui.*'
+          --tests 'it.palsoftware.pastiera.backup.*'
+
+      - name: Full unit test suite
+        if: ${{ inputs.tests == 'full' }}
+        run: ./gradlew :app:testStableDebugUnitTest $GRADLE_ARGS
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            app/build/test-results/
+            app/build/reports/tests/
+          if-no-files-found: ignore
