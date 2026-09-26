@@ -36,6 +36,10 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.RoundedCorner
+import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -72,7 +76,11 @@ enum class SettingsDestination {
     CustomInputStyles,
     AppLanguage,
     DeviceSymLayerEditor,
-    Modifiers
+    Modifiers,
+    FluxEmojiGifs,
+    FluxTitanScreen,
+    FluxHiddenApps,
+    FluxLinuxDesktop
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -228,6 +236,10 @@ fun SettingsScreen(
                     },
                     onAdvancedClick = { navigateTo(SettingsDestination.Advanced) },
                     onAboutClick = { navigateTo(SettingsDestination.About) },
+                    onFluxEmojiGifsClick = { navigateTo(SettingsDestination.FluxEmojiGifs) },
+                    onFluxTitanScreenClick = { navigateTo(SettingsDestination.FluxTitanScreen) },
+                    onFluxHiddenAppsClick = { navigateTo(SettingsDestination.FluxHiddenApps) },
+                    onFluxLinuxDesktopClick = { navigateTo(SettingsDestination.FluxLinuxDesktop) },
                     onBackClick = { navigateBack() },
                     onCustomInputStylesClick = { navigateTo(SettingsDestination.CustomInputStyles) },
                     onAppLanguageClick = { navigateTo(SettingsDestination.AppLanguage) }
@@ -295,6 +307,18 @@ fun SettingsScreen(
                     onBack = { navigateBack() }
                 )
             }
+            SettingsDestination.FluxEmojiGifs -> {
+                FluxEmojiGifsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxTitanScreen -> {
+                FluxTitanScreenSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxHiddenApps -> {
+                FluxHiddenAppsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.FluxLinuxDesktop -> {
+                FluxLinuxDesktopScreen(modifier = modifier, onBack = { navigateBack() })
+            }
             SettingsDestination.About -> {
                 AboutScreen(
                     modifier = modifier,
@@ -360,6 +384,10 @@ private fun SettingsMainScreen(
     onEnterBehaviorClick: () -> Unit,
     onAdvancedClick: () -> Unit,
     onAboutClick: () -> Unit,
+    onFluxEmojiGifsClick: () -> Unit,
+    onFluxTitanScreenClick: () -> Unit,
+    onFluxHiddenAppsClick: () -> Unit,
+    onFluxLinuxDesktopClick: () -> Unit,
     onBackClick: () -> Unit,
     onCustomInputStylesClick: () -> Unit,
     onAppLanguageClick: () -> Unit,
@@ -539,6 +567,39 @@ private fun SettingsMainScreen(
                 description = stringResource(R.string.app_enter_behaviour_description),
                 linkId = SettingLinkIds.MAIN_APP_ENTER_BEHAVIOR,
                 onClick = onEnterBehaviorClick
+            )
+
+            SettingsGroupDivider(stringResource(R.string.settings_group_flux))
+
+            SettingsCategoryRow(
+                icon = Icons.Filled.EmojiEmotions,
+                title = stringResource(R.string.flux_emoji_gifs_title),
+                description = stringResource(R.string.flux_emoji_gifs_description),
+                linkId = SettingLinkIds.MAIN_FLUX_EMOJI_GIFS,
+                onClick = onFluxEmojiGifsClick
+            )
+            if (fluxTitanScreenAvailable(context)) {
+                SettingsCategoryRow(
+                    icon = Icons.Filled.RoundedCorner,
+                    title = stringResource(R.string.flux_titan_screen_title),
+                    description = stringResource(R.string.flux_titan_screen_description),
+                    linkId = SettingLinkIds.MAIN_FLUX_TITAN_SCREEN,
+                    onClick = onFluxTitanScreenClick
+                )
+            }
+            SettingsCategoryRow(
+                icon = Icons.Filled.VisibilityOff,
+                title = stringResource(R.string.flux_hidden_apps_title),
+                description = stringResource(R.string.flux_hidden_apps_description),
+                linkId = SettingLinkIds.MAIN_FLUX_HIDDEN_APPS,
+                onClick = onFluxHiddenAppsClick
+            )
+            SettingsCategoryRow(
+                icon = Icons.Filled.DesktopWindows,
+                title = stringResource(R.string.flux_linux_desktop_title),
+                description = stringResource(R.string.flux_linux_desktop_description),
+                linkId = SettingLinkIds.MAIN_FLUX_LINUX_DESKTOP,
+                onClick = onFluxLinuxDesktopClick
             )
 
             SettingsGroupDivider(stringResource(R.string.settings_group_system))

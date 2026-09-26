@@ -2,19 +2,8 @@ package it.palsoftware.pastiera
 
 /** Entries for system controls whose screens also expose the same stable IDs. */
 internal fun systemSettingEntries(): List<SettingEntry> = listOf(
-    SettingEntry("advanced.hidden_keyboard_apps", R.string.hidden_keyboard_apps_title,
-        summaryRes = R.string.hidden_keyboard_apps_description, route = SettingRoute(SettingsDestination.Advanced)),
     SettingEntry("advanced.corner_calibration", R.string.corner_calibration_title,
-        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.Advanced),
-        availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
-    SettingEntry("advanced.corner_fill", R.string.titan2_elite_fill_corners_title,
-        summaryRes = R.string.titan2_elite_fill_corners_description, route = SettingRoute(SettingsDestination.Advanced),
-        availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
-    SettingEntry("advanced.straight_outer_buttons", R.string.titan2_elite_straight_outer_buttons_title,
-        summaryRes = R.string.titan2_elite_straight_outer_buttons_description, route = SettingRoute(SettingsDestination.Advanced),
-        availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
-    SettingEntry("advanced.status_bar_lift", R.string.titan2_elite_status_bar_lift_title,
-        summaryRes = R.string.titan2_elite_status_bar_lift_description, route = SettingRoute(SettingsDestination.Advanced),
+        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.FluxTitanScreen),
         availabilityCheck = { context -> it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() || SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) }),
     SettingEntry(
         id = "nav_mode.enabled",

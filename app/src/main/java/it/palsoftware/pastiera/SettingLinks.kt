@@ -25,6 +25,10 @@ object SettingLinkIds {
     const val MAIN_ADVANCED = "main.advanced"
     const val MAIN_ACCESSIBILITY = "main.accessibility"
     const val MAIN_ABOUT = "main.about"
+    const val MAIN_FLUX_EMOJI_GIFS = "main.flux_emoji_gifs"
+    const val MAIN_FLUX_TITAN_SCREEN = "main.flux_titan_screen"
+    const val MAIN_FLUX_HIDDEN_APPS = "main.flux_hidden_apps"
+    const val MAIN_FLUX_LINUX_DESKTOP = "main.flux_linux_desktop"
 
     // Text input screen
     const val TEXT_INPUT_TEXT_EXPANSION = "text_input.text_expansion"
@@ -893,7 +897,7 @@ object SettingLinkRegistry {
             R.string.modifier_indicators_status_bar_description,
             destination = SettingsDestination.Modifiers
         )
-    ) + customizationSettingEntries() + inputDeviceSettingEntries() + systemSettingEntries()
+    ) + customizationSettingEntries() + inputDeviceSettingEntries() + systemSettingEntries() + fluxSettingEntries()
 
     private val entriesById: Map<String, SettingEntry> =
         entries.associateBy { it.id }
@@ -1008,7 +1012,11 @@ object SettingLinkRegistry {
         SettingsDestination.About to R.string.about_title,
         SettingsDestination.CustomInputStyles to R.string.custom_input_styles_title,
         SettingsDestination.AppLanguage to R.string.app_language_title,
-        SettingsDestination.Modifiers to R.string.modifiers_title
+        SettingsDestination.Modifiers to R.string.modifiers_title,
+        SettingsDestination.FluxEmojiGifs to R.string.flux_emoji_gifs_title,
+        SettingsDestination.FluxTitanScreen to R.string.flux_titan_screen_title,
+        SettingsDestination.FluxHiddenApps to R.string.flux_hidden_apps_title,
+        SettingsDestination.FluxLinuxDesktop to R.string.flux_linux_desktop_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(
