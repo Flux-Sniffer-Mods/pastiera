@@ -104,6 +104,8 @@ class EmojiPickerView(
     // Emoji beyond the system font that the current field renders via EmojiCompat (null = none)
     private var extraAvailable: ((String) -> Boolean)? = null
     private var loadedCompatGeneration: Int = -1
+    // Where the search field lives when not in the picker's own panel (e.g. the Pastierina bar)
+    private var searchFieldHost: ViewGroup? = null
     private var searchQuery: String = ""
     private var searchJob: Job? = null
     private var isSearchMode: Boolean = false
@@ -305,7 +307,13 @@ class EmojiPickerView(
                 marginEnd = spacing
             }
             setOnClickListener {
-                setSearchPanelVisible(!isSearchPanelVisible)
+                if (searchFieldHost != null) {
+                    // Field is always visible in the host: switch typing between it and the app
+                    setSearchInputCaptureEnabled(!searchInputCaptureEnabled)
+                    if (searchInputCaptureEnabled) searchField.requestFocus()
+                } else {
+                    setSearchPanelVisible(!isSearchPanelVisible)
+                }
             }
         }
         tabRow = LinearLayout(context).apply {
@@ -909,7 +917,7 @@ class EmojiPickerView(
 
     private fun setSearchPanelVisible(visible: Boolean) {
         isSearchPanelVisible = visible
-        searchPanel.visibility = if (visible) View.VISIBLE else View.GONE
+        searchPanel.visibility = if (visible && searchFieldHost == null) View.VISIBLE else View.GONE
         searchToggleButton.background = createTabBackground(visible)
         applyEdgeControlAppearance()
         setSearchInputCaptureEnabled(visible)
@@ -1376,6 +1384,55 @@ class EmojiPickerView(
             block()
         } finally {
             containerReordering = false
+        }
+    }
+
+    /**
+     * Shows the search field in [host] (e.g. the middle of the Pastierina bar, above the grid)
+     * instead of the picker's own search panel; null moves it back. While hosted the field is
+     * always visible and typing goes into it; the search button switches typing back to the app.
+     * Quiet: no onSearchPanelVisibilityChanged, since this runs while the status bar renders.
+     */
+    fun setSearchFieldHost(host: ViewGroup?) {
+        if (host !== searchFieldHost) {
+            searchFieldHost = host
+            (searchField.parent as? ViewGroup)?.removeView(searchField)
+            val padH = dpToPx(8f)
+            if (host != null) {
+                host.removeAllViews()
+                searchField.setPadding(padH, 0, padH, 0)
+                searchField.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                val marginH = dpToPx(4f)
+                val marginV = dpToPx(3f)
+                host.addView(
+                    searchField,
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    ).apply { setMargins(marginH, marginV, marginH, marginV) }
+                )
+            } else {
+                searchField.setPadding(padH, dpToPx(5f), padH, dpToPx(5f))
+                searchField.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                searchPanel.addView(
+                    searchField,
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        Gravity.BOTTOM
+                    )
+                )
+                resetSearchStateQuietly()
+                return
+            }
+        }
+        if (host != null && !isSearchPanelVisible) {
+            isSearchPanelVisible = true
+            searchPanel.visibility = View.GONE
+            searchToggleButton.background = createTabBackground(true)
+            applyEdgeControlAppearance()
+            setSearchInputCaptureEnabled(true)
+            searchField.requestFocus()
         }
     }
 

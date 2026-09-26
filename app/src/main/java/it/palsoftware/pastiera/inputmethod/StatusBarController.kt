@@ -325,6 +325,8 @@ class StatusBarController(
     private var lastClipboardCountRendered: Int = -1
     private var lastClipboardAccessibleRendered: Boolean? = null
     private var emojiPickerView: EmojiPickerView? = null
+    // Pastierina: the picker's search field sits in the middle of the compact bar
+    private var emojiSearchInBar: Boolean = false
     private var emojiPickerSearchPopup: PopupWindow? = null
     private var emojiPickerSearchPopupShowPending: Boolean = false
     private var softwareKeyboardView: AospKeyboardView? = null
@@ -1246,6 +1248,14 @@ class StatusBarController(
         view.configureRoundedControls(roundedControls, hardwareSymKeyHeightPx(colors), iconSize)
         (statusBarLayout as? ImeChromeLayout)?.expandedPickerButtons = if (roundedControls) view.edgeControls else null
         view.setInputConnection(inputConnection)
+        val bar = fullSuggestionsBar
+        val barHost = bar?.centerAccessoryHost()
+        if (emojiSearchInBar && !pickerShownAboveSoftwareKeyboard && bar != null && barHost != null) {
+            bar.setCenterAccessoryActive(true)
+            view.setSearchFieldHost(barHost)
+        } else {
+            releaseEmojiSearchFromBar()
+        }
 
         // Only scroll to top when view is just added (first open or switching pages)
         // Don't scroll if view is already in container (user is browsing)
@@ -1256,6 +1266,11 @@ class StatusBarController(
             view.scrollToTop() // View was just added (happens when reopening after being removed)
         }
         lastSymPageRendered = 4
+    }
+
+    private fun releaseEmojiSearchFromBar() {
+        emojiPickerView?.setSearchFieldHost(null)
+        fullSuggestionsBar?.setCenterAccessoryActive(false)
     }
 
     private fun showEmojiPickerSearchPopup(
@@ -3116,6 +3131,9 @@ class StatusBarController(
                 (snapshot.symPage == 0 || isSoftwareKeyboardOverlayPage) &&
                 !snapshot.clipboardOverlay
             )
+        emojiSearchInBar = pastierinaModeActive && !isFullSoftwareKeyboardMode &&
+            snapshot.symPage == 4 && !snapshot.clipboardOverlay
+        if (!emojiSearchInBar) releaseEmojiSearchFromBar()
         val suggestionsAnnouncementDelayMs = SettingsManager.getAccessibilitySuggestionsAnnouncementDelayMs(context)
         fullSuggestionsBar?.setAccessibilityAnnouncementConfig(
             liveAnnouncementsEnabled = isAccessibilityLiveAnnouncementsEnabled(),
