@@ -1,7 +1,12 @@
 name: Flux Keyboard build
-# Each run is named by its version, not a running number
-run-name: Flux Keyboard ${{ inputs.version_name }}
+# Each run is named by its version (or its kind, when the version is worked out), not a running number
+run-name: Flux Keyboard ${{ inputs.version_name || (github.ref_name == 'flux-release' && 'release' || 'dev build') }}
 
+# Pick the branch to pick the kind of build:
+#   flux-release -> a full release (0.92): the newest version in whats_new.json's "releases"
+#   flux-dev     -> a dev build (0.93-flux.<yyyyMMddHHmm>) numbered after that release
+# The version is worked out from the branch unless one is given.
+#
 # Two jobs side by side: the APK is ready (and installable) as soon as it's built,
 # while the tests carry on; the build script reports them and won't release a build
 # whose tests failed.
@@ -9,13 +14,14 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: "Version name, e.g. 0.90-flux.202609251200"
-        required: true
+        description: "Version name (leave empty to work it out from the branch)"
+        required: false
+        default: ""
         type: string
       version_code:
-        description: "Version code"
-        required: true
-        default: "90"
+        description: "Version code (leave empty to work it out from the version)"
+        required: false
+        default: ""
         type: string
       tests:
         description: "Tests: quick (emoji, keys, settings), full, or none"
@@ -24,18 +30,41 @@ on:
         type: choice
         options: [quick, full, none]
 
-env:
-  # --build-cache: reuse task outputs from earlier runs (kept by setup-gradle)
-  GRADLE_ARGS: --build-cache -PPASTIERA_VERSION_CODE=${{ inputs.version_code }} -PPASTIERA_VERSION_NAME=${{ inputs.version_name }}
-
 jobs:
+  version:
+    name: version
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.version.outputs.kind }}
+      name: ${{ steps.version.outputs.name }}
+      code: ${{ steps.version.outputs.code }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Work out the version
+        id: version
+        env:
+          GIVEN: ${{ inputs.version_name }}
+          GIVEN_CODE: ${{ inputs.version_code }}
+        run: |
+          python3 .github/scripts/flux_release.py version "$GITHUB_REF_NAME" "$GIVEN" > version.txt
+          if [ -n "$GIVEN_CODE" ]; then
+            [[ "$GIVEN_CODE" =~ ^[0-9]+$ ]] || { echo "Version code must be a number"; exit 1; }
+            sed -i "s/^code=.*/code=$GIVEN_CODE/" version.txt
+          fi
+          cat version.txt | tee -a "$GITHUB_OUTPUT"
+
   apk:
     name: apk
+    needs: version
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: write
     env:
+      # --build-cache: reuse task outputs from earlier runs (kept by setup-gradle)
+      GRADLE_ARGS: --build-cache -PPASTIERA_VERSION_CODE=${{ needs.version.outputs.code }} -PPASTIERA_VERSION_NAME=${{ needs.version.outputs.name }}
       # Built-in KLIPY key for GIF search (empty when the secret isn't set)
       KLIPY_API_KEY: ${{ secrets.KLIPY_API_KEY }}
     steps:
@@ -85,14 +114,18 @@ jobs:
         run: ./gradlew :app:assembleStableRelease $GRADLE_ARGS
 
       - name: Collect APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.name }}
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/stable/release/app-stable-release.apk "out/flux-keyboard-${{ inputs.version_name }}.apk"
-          # Release notes ship with the APK: this build's version and commit, then the fork's changes
-          {
-            echo "Version \`${{ inputs.version_name }}\` · built from ${GITHUB_SHA::7} on \`${GITHUB_REF_NAME}\` · the APK is under **Assets** below."
-            tail -n +2 FORK_CHANGES.md
-          } > out/RELEASE_NOTES.md
+          cp app/build/outputs/apk/stable/release/app-stable-release.apk "out/flux-keyboard-${{ needs.version.outputs.name }}.apk"
+          # Release notes list what changed since the build before: for a full release the
+          # previous full release, for a dev build the previous build of either kind
+          previous=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName,createdAt,isDraft \
+            --jq "[.[] | select(.isDraft | not) | select(.tagName | startswith(\"flux/v\")) | select(.tagName != \"flux/v$VERSION\")] | sort_by(.createdAt) | last | .tagName // \"\"")
+          python3 .github/scripts/flux_release.py notes "$VERSION" "$previous" "$GITHUB_SHA" > out/RELEASE_NOTES.md
+          cat out/RELEASE_NOTES.md
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -108,9 +141,9 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
-          VERSION: ${{ inputs.version_name }}
+          VERSION: ${{ needs.version.outputs.name }}
         run: |
-          # Dev builds (0.92-flux.<yyyyMMddHHmm>) carry their build time; releases (0.91) don't
+          # Dev builds (0.93-flux.<yyyyMMddHHmm>) carry their build time; releases (0.91) don't
           # Dev builds are pre-releases, so GitHub's "latest" is always the latest full release
           case "$VERSION" in
             *-flux.*)
@@ -128,51 +161,15 @@ jobs:
             --notes-file out/RELEASE_NOTES.md \
             $kind
 
-  # Only the latest build is kept: once this APK is uploaded and released, every earlier workflow
-  # run in the repository is deleted with its artifacts and logs, and so is every earlier dev
-  # build's release (flux/v<version>-flux.<time>) with its tag. Real releases (flux/v0.91) stay.
-  tidy:
-    name: keep only the latest build
-    needs: apk
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      contents: write
-    steps:
-      - name: Delete earlier workflow runs
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          CURRENT: ${{ github.run_id }}
-        run: |
-          gh api --paginate "repos/$REPO/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.status == "completed") | .id' |
-            while read -r id; do
-              if [ "$id" != "$CURRENT" ]; then
-                gh api -X DELETE "repos/$REPO/actions/runs/$id" && echo "Deleted run $id"
-              fi
-            done
-
-      - name: Delete earlier Flux Keyboard releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          CURRENT: flux/v${{ inputs.version_name }}
-        run: |
-          gh release list --repo "$REPO" --limit 200 --json tagName --jq '.[].tagName' |
-            while read -r tag; do
-              case "$tag" in
-                flux/*-flux.*) if [ "$tag" != "$CURRENT" ]; then
-                          gh release delete "$tag" --repo "$REPO" --cleanup-tag --yes && echo "Deleted release $tag"
-                        fi ;;
-              esac
-            done
-
-
   tests:
     name: tests
+    needs: version
     if: ${{ inputs.tests != 'none' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      # --build-cache: reuse task outputs from earlier runs (kept by setup-gradle)
+      GRADLE_ARGS: --build-cache -PPASTIERA_VERSION_CODE=${{ needs.version.outputs.code }} -PPASTIERA_VERSION_NAME=${{ needs.version.outputs.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

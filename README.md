@@ -150,9 +150,14 @@ Keyboard), then uninstall Pastiera Flux.
   - `./scripts/build-nightly-debug.sh 0.86 --install --device <adb-serial>`
 
 ## Flux Keyboard builds
-- `.github/workflows/fork-build.yml` is run by hand with a version name (for example `0.86-flux.202609261200`) and version code.
-- It builds and signs the stable APK with the fork's own key, names the run after the version, and publishes a GitHub release tagged `flux/v<version>` with notes made from [FORK_CHANGES.md](FORK_CHANGES.md). The app's update check reads that release.
-- After a successful build it deletes earlier runs and earlier `flux/` releases, so only the latest build remains.
+- There are two kinds of build, picked by the branch `.github/workflows/fork-build.yml` is run on:
+  - **`flux-release` (the default branch): full releases** such as `0.92`, published as the repository's latest release and tagged `flux/v0.92`. The version is the newest one in the `"releases"` list of `app/src/main/assets/fork/whats_new.json`, which also records when it was built.
+  - **`flux-dev`: dev builds** such as `0.93-flux.202609262100`, the next version after the latest release plus the build time, published as pre-releases.
+- The version and version code are worked out from the branch; a version given by hand has to be of the branch's kind.
+- Each release lists only what changed since the build before it: a full release since the previous full release, a dev build since the previous build of either kind. The list comes from the What's new entries (`"after"` is the build each entry is new since), followed by the whole [changelog](FORK_CHANGES.md).
+- The app's update check reads these releases: Stable offers full releases only, Dev offers both.
+- To make a full release: add it to `"releases"` on `flux-dev`, move `flux-release` up to that commit, and run the workflow on `flux-release`. Commits below `flux-release` are never rewritten.
+- Builds never delete earlier ones: every run, artifact and release (full or dev) stays.
 
 The sections below describe upstream Pastiera's workflows and release channels. They need upstream's signing secrets and don't apply to Flux Keyboard builds.
 
