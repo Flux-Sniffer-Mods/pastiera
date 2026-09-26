@@ -259,6 +259,19 @@
             android:noHistory="true"
             android:finishOnTaskLaunch="true" />
 
+        <!-- Opens the QuickLauncher from other apps: key mappers, side buttons, Tasker, the app
+             icon's long-press shortcut (palsoftware/pastiera#292) -->
+        <activity-alias
+            android:name=".QuickLauncherEntry"
+            android:targetActivity=".inputmethod.QuickLauncherActivity"
+            android:exported="true"
+            android:label="@string/quick_launcher_title">
+            <intent-filter>
+                <action android:name="it.palsoftware.pastiera.action.QUICK_LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- Shizuku provider -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
