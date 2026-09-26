@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.ShortText
 import androidx.compose.material.icons.filled.SmartButton
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
@@ -224,6 +225,13 @@ fun AppsHubScreen(
             linkId = SettingLinkIds.MAIN_FLUX_LINUX_DESKTOP,
             onClick = { onNavigate(SettingsDestination.FluxLinuxDesktop) }
         )
+        SettingsCategoryRow(
+            icon = Icons.Filled.Terminal,
+            title = stringResource(R.string.terminal_mode_title),
+            description = stringResource(R.string.terminal_mode_description),
+            linkId = SettingLinkIds.MAIN_TERMINAL_MODE,
+            onClick = { onNavigate(SettingsDestination.TerminalMode) }
+        )
         FluxSwitchRow(
             linkId = SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
             title = stringResource(R.string.auto_show_keyboard_title),
@@ -422,5 +430,65 @@ fun DeveloperOptionsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+/**
+ * Terminal mode (Settings > Apps): in Termux and other terminals, Alt and SYM type Pastiera's
+ * symbols and Ctrl reaches the shell as a real Ctrl.
+ */
+@Composable
+fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var enabled by remember { mutableStateOf(SettingsManager.getTerminalModeEnabled(context)) }
+    var apps by remember { mutableStateOf(SettingsManager.getTerminalModeApps(context)) }
+    var showPicker by remember { mutableStateOf(false) }
+    val installed = remember { AppListHelper.getInstalledApps(context).associate { it.packageName to it.appName } }
+    FluxScreenScaffold(stringResource(R.string.terminal_mode_title), onBack, modifier) {
+        FluxNote(stringResource(R.string.terminal_mode_note))
+        FluxSwitchRow(
+            linkId = SettingLinkIds.TERMINAL_MODE_ENABLED,
+            title = stringResource(R.string.terminal_mode_enabled_title),
+            description = stringResource(R.string.terminal_mode_enabled_description),
+            checked = enabled,
+            onCheckedChange = {
+                enabled = it
+                SettingsManager.setTerminalModeEnabled(context, it)
+            }
+        )
+        SettingsSectionDivider(stringResource(R.string.terminal_mode_apps))
+        apps.forEach { packageName ->
+            FluxActionRow(
+                linkId = null,
+                title = installed[packageName] ?: packageName,
+                description = stringResource(R.string.terminal_mode_remove_app, packageName),
+                onClick = {
+                    apps = apps - packageName
+                    SettingsManager.setTerminalModeApps(context, apps)
+                }
+            )
+        }
+        FluxActionRow(
+            linkId = null,
+            title = stringResource(R.string.terminal_mode_add_app),
+            description = stringResource(R.string.terminal_mode_add_app_description),
+            onClick = { showPicker = true }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+    if (showPicker) {
+        AppPickerDialog(
+            excludePackages = remember {
+                val ime = context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+                    as? android.view.inputmethod.InputMethodManager
+                (ime?.inputMethodList?.map { it.packageName }.orEmpty() + apps).toSet()
+            },
+            onAppSelected = { app ->
+                showPicker = false
+                apps = apps + app.packageName
+                SettingsManager.setTerminalModeApps(context, apps)
+            },
+            onDismiss = { showPicker = false }
+        )
     }
 }

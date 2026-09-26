@@ -43,5 +43,11 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.developer_options_row_description,
         route = SettingRoute(SettingsDestination.Developer),
         availabilityCheck = { SettingsManager.getDeveloperOptionsEnabled(it) },
-        unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED)
+        unavailableFallbackId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED),
+    SettingEntry(SettingLinkIds.MAIN_TERMINAL_MODE, R.string.terminal_mode_title,
+        summaryRes = R.string.terminal_mode_description,
+        route = SettingRoute(SettingsDestination.TerminalMode)),
+    SettingEntry(SettingLinkIds.TERMINAL_MODE_ENABLED, R.string.terminal_mode_enabled_title,
+        summaryRes = R.string.terminal_mode_enabled_description,
+        route = SettingRoute(SettingsDestination.TerminalMode))
 )

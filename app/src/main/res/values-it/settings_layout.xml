@@ -58,4 +58,13 @@
     <string name="developer_options_description">Mostra strumenti di calibrazione, debug e anteprima</string>
     <string name="developer_options_row_description">Calibrazione degli angoli, debug del trackpad, anteprima delle novità</string>
     <string name="developer_options_note">Strumenti per calibrare, fare il debug e provare Pastiera in anteprima. Alla maggior parte delle persone non servono.</string>
+    <string name="terminal_mode_title">Modalità terminale</string>
+    <string name="terminal_mode_description">Termux e altri terminali: Alt e SYM digitano simboli, Ctrl resta Ctrl</string>
+    <string name="terminal_mode_note">Un terminale dice alle tastiere di non avere un campo di testo, quindi Alt e SYM andrebbero al terminale e i simboli di Pastiera non funzionerebbero. In modalità terminale Pastiera ci scrive come in un campo di testo senza suggerimenti, correzioni o maiuscole automatiche: Alt e SYM digitano i simboli di Pastiera e Ctrl, tenuto, toccato o bloccato, arriva al terminale come un vero Ctrl (Ctrl+C, Ctrl+D…). Invio, Backspace, Tab, Esc e le frecce arrivano al terminale così come sono.</string>
+    <string name="terminal_mode_enabled_title">Modalità terminale</string>
+    <string name="terminal_mode_enabled_description">Nelle app qui sotto: Alt e SYM digitano i simboli di Pastiera, Ctrl resta Ctrl</string>
+    <string name="terminal_mode_apps">App terminale</string>
+    <string name="terminal_mode_remove_app">%1$s · Tocca per rimuovere</string>
+    <string name="terminal_mode_add_app">Aggiungi un’app terminale</string>
+    <string name="terminal_mode_add_app_description">Client SSH e altri terminali</string>
 </resources>

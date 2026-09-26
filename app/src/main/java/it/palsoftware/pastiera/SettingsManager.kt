@@ -146,6 +146,9 @@ object SettingsManager {
     private const val KEY_CTRL_LATCH_STAYS_ON_SPACE = "ctrl_latch_stays_on_space"
     private const val KEY_EMOJI_PICKER_EXPANDED_HEIGHT = "emoji_picker_expanded_height"
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
+    private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
+    private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
+    const val TERMUX_PACKAGE = "com.termux"
     // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
     private const val KEY_HIDDEN_APPS_ALLOW_PANELS = "hidden_keyboard_apps_allow_panels"
@@ -5306,6 +5309,35 @@ object SettingsManager {
             .putString(KEY_HIDDEN_KEYBOARD_APPS, clean.joinToString("\n"))
             .apply()
     }
+
+    /**
+     * Terminal mode: in these apps (Termux unless changed) the terminal is typed into like a
+     * text field without smart features, so Alt and SYM type Pastiera's symbols, and every Ctrl
+     * (held, tapped or latched) reaches the terminal as a real Ctrl.
+     */
+    fun getTerminalModeEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TERMINAL_MODE_ENABLED, true)
+
+    fun setTerminalModeEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_ENABLED, enabled).apply()
+    }
+
+    fun getTerminalModeApps(context: Context): List<String> {
+        val stored = getPreferences(context).getString(KEY_TERMINAL_MODE_APPS, null) ?: return listOf(TERMUX_PACKAGE)
+        return parsePackageList(stored)
+    }
+
+    fun setTerminalModeApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit().putString(KEY_TERMINAL_MODE_APPS, clean.joinToString("\n")).apply()
+    }
+
+    /** Terminal mode applies to [packageName] (never while Pastiera is hidden for it). */
+    fun isTerminalModeApp(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            getTerminalModeEnabled(context) &&
+            packageName in getTerminalModeApps(context) &&
+            !isKeyboardHiddenForApp(context, packageName)
 
     fun isKeyboardHiddenForApp(context: Context, packageName: String?): Boolean =
         !packageName.isNullOrBlank() && packageName in getHiddenKeyboardApps(context)

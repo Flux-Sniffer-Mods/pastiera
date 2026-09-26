@@ -37,6 +37,8 @@ object SettingLinkIds {
     const val MAIN_APPS = "main.apps"
     const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
     const val MAIN_DEVELOPER = "main.developer"
+    const val MAIN_TERMINAL_MODE = "main.terminal_mode"
+    const val TERMINAL_MODE_ENABLED = "terminal_mode.enabled"
     const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"
 
     // App shortcuts screen
@@ -1055,7 +1057,8 @@ object SettingLinkRegistry {
         SettingsDestination.TrackpadGestures to R.string.settings_trackpad_gestures_title,
         SettingsDestination.Apps to R.string.settings_apps_title,
         SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
-        SettingsDestination.Developer to R.string.developer_options_title
+        SettingsDestination.Developer to R.string.developer_options_title,
+        SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

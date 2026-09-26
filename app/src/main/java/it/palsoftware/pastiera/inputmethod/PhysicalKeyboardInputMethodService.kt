@@ -3682,6 +3682,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        terminalModeActive = SettingsManager.isTerminalModeApp(this, info?.packageName) && TerminalMode.apply(info)
+        terminalCtrlKeysDown.clear()
+        terminalCtrlSent.clear()
+        terminalRawKeysDown.clear()
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onStartInput(info, restarting)
@@ -3811,6 +3815,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        if (terminalModeActive) TerminalMode.apply(info)
         super.onStartInputView(info, restarting)
         hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
@@ -4681,6 +4686,59 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
     }
 
+    // Terminal mode (Termux): see TerminalMode
+    private var terminalModeActive = false
+    // Keys sent to the terminal with Ctrl: their release goes the same way
+    private val terminalCtrlKeysDown = mutableSetOf<Int>()
+    // Terminal keys (Enter, Backspace, arrows...) passed to the terminal as pressed
+    private val terminalRawKeysDown = mutableSetOf<Int>()
+    // Pressed key -> (key sent, meta state sent)
+    private val terminalCtrlSent = mutableMapOf<Int, Pair<Int, Int>>()
+
+    /**
+     * In a terminal, any Ctrl (held, tapped or latched; not Nav Mode's) sends the key as a real
+     * Ctrl combo, with Alt and Shift if they are held too, so Ctrl+C, Ctrl+D and the rest reach
+     * the shell instead of Pastiera's cursor and copy keys.
+     */
+    private fun sendTerminalCtrlCombo(pressedKeyCode: Int, event: KeyEvent?): Boolean {
+        if (event == null || event.action != KeyEvent.ACTION_DOWN) return false
+        val keyCode = event.keyCode
+        if (KeyEvent.isModifierKey(keyCode) || keyCode == KEYCODE_SYM || keyCode == KeyEvent.KEYCODE_BACK) return false
+        if (event.repeatCount > 0 && pressedKeyCode !in terminalCtrlKeysDown) return false
+        if (event.repeatCount == 0) {
+            val ctrl = event.isCtrlPressed || ctrlPressed || ctrlPhysicallyPressed || ctrlOneShot ||
+                (ctrlLatchActive && !ctrlLatchFromNavMode)
+            if (!ctrl) return false
+            var meta = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+            if (event.isAltPressed || altPhysicallyPressed) meta = meta or KeyEvent.META_ALT_ON or KeyEvent.META_ALT_LEFT_ON
+            if (event.isShiftPressed || modifierStateController.shiftPhysicallyPressed) {
+                meta = meta or KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON
+            }
+            terminalCtrlSent[pressedKeyCode] = keyCode to meta
+            terminalCtrlKeysDown += pressedKeyCode
+            if (ctrlOneShot) {
+                ctrlOneShot = false
+                updateStatusBarText()
+            }
+        }
+        sendTerminalCtrlKey(event, KeyEvent.ACTION_DOWN, pressedKeyCode)
+        return true
+    }
+
+    private fun sendTerminalCtrlKey(source: KeyEvent, action: Int, pressedKeyCode: Int) {
+        val (keyCode, meta) = (if (action == KeyEvent.ACTION_UP) terminalCtrlSent.remove(pressedKeyCode)
+            else terminalCtrlSent[pressedKeyCode]) ?: return
+        val ic = currentInputConnection ?: return
+        ic.sendKeyEvent(
+            KeyEvent(
+                source.downTime, source.eventTime, action, keyCode,
+                if (action == KeyEvent.ACTION_DOWN) source.repeatCount else 0, meta,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE
+            )
+        )
+    }
+
     // Keys (as pressed) whose press was sent to the app as its own shortcut; their release is dropped
     private val appShortcutKeysDown = mutableSetOf<Int>()
 
@@ -4870,6 +4928,15 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         if (remapAppShortcut(keyCode_, event, hasEditableField)) {
             return true
+        }
+        if (terminalModeActive && sendTerminalCtrlCombo(keyCode_, event)) {
+            return true
+        }
+        if (terminalModeActive && TerminalMode.isTerminalKey(keyCode) && symPage == 0 &&
+            event?.isAltPressed != true && !altLatchActive && !altOneShot
+        ) {
+            terminalRawKeysDown += keyCode_
+            return super.onKeyDown(keyCode, event)
         }
         if (hasEditableField && ::candidatesBarController.isInitialized) {
             candidatesBarController.resetSuggestionActionMode()
@@ -5540,8 +5607,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun handleKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
-        // The release of a key sent to the app as its own shortcut
+        // The release of a key sent to the app as its own shortcut, or to a terminal with Ctrl
         if (appShortcutKeysDown.remove(keyCode_)) return true
+        if (terminalRawKeysDown.remove(keyCode_)) return super.onKeyUp(keyCode_, event_)
+        if (terminalCtrlKeysDown.remove(keyCode_)) {
+            event_?.let { sendTerminalCtrlKey(it, KeyEvent.ACTION_UP, keyCode_) }
+            return true
+        }
         if (!replayingProtectedNumberKey) {
             when (val result = accidentalKeyPressFilter.onKeyUp(keyCode_, event_)) {
                 is AccidentalKeyPressFilter.KeyUpResult.Suppressed -> {

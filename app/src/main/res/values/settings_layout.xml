@@ -59,4 +59,13 @@
     <string name="developer_options_description">Show calibration, debugging and preview tools</string>
     <string name="developer_options_row_description">Display corner calibration, trackpad debug, release notes preview</string>
     <string name="developer_options_note">Tools for calibrating, debugging and previewing Pastiera. Most people never need them.</string>
+    <string name="terminal_mode_title">Terminal mode</string>
+    <string name="terminal_mode_description">Termux and other terminals: Alt and SYM type symbols, Ctrl stays Ctrl</string>
+    <string name="terminal_mode_note">A terminal tells keyboards it has no text field, so Alt and SYM would go to the terminal and Pastiera’s symbols wouldn’t work. In terminal mode Pastiera types into it like a text field without suggestions, corrections or automatic capitals: Alt and SYM type Pastiera’s symbols, and Ctrl, held, tapped or latched, reaches the terminal as a real Ctrl (Ctrl+C, Ctrl+D…). Enter, Backspace, Tab, Esc and the arrows go to the terminal as they are.</string>
+    <string name="terminal_mode_enabled_title">Terminal mode</string>
+    <string name="terminal_mode_enabled_description">In the apps below: Alt and SYM type Pastiera’s symbols, Ctrl stays Ctrl</string>
+    <string name="terminal_mode_apps">Terminal apps</string>
+    <string name="terminal_mode_remove_app">%1$s · Tap to remove</string>
+    <string name="terminal_mode_add_app">Add a terminal app</string>
+    <string name="terminal_mode_add_app_description">SSH clients and other terminals</string>
 </resources>
