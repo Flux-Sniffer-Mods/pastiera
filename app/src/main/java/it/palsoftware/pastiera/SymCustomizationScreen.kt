@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -69,6 +70,10 @@ fun SymCustomizationScreen(
     var emojiPickerExpandedHeight by remember {
         mutableStateOf(SettingsManager.getEmojiPickerExpandedHeight(context))
     }
+    var emojiPickerKey by remember {
+        mutableStateOf(SettingsManager.getEmojiPickerKey(context))
+    }
+    var showEmojiPickerKeyDialog by remember { mutableStateOf(false) }
 
     val titan2LayoutEnabled = remember {
         SettingsManager.isTitan2LayoutEnabled(context)
@@ -716,6 +721,87 @@ fun SymCustomizationScreen(
 
         HorizontalDivider()
 
+        Surface(
+            modifier = Modifier.settingRow("sym.emoji_key")
+                .fillMaxWidth()
+                .height(64.dp)
+                .clickable { showEmojiPickerKeyDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.EmojiEmotions,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_picker_key_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = stringResource(emojiPickerKeyLabelRes(emojiPickerKey)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        }
+
+        // Dedicated emoji picker key chooser
+        if (showEmojiPickerKeyDialog) {
+            AlertDialog(
+                onDismissRequest = { showEmojiPickerKeyDialog = false },
+                title = { Text(stringResource(R.string.emoji_picker_key_title)) },
+                text = {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.emoji_picker_key_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        SettingsManager.EMOJI_PICKER_KEY_CHOICES.forEach { choice ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        emojiPickerKey = choice
+                                        SettingsManager.setEmojiPickerKey(context, choice)
+                                        showEmojiPickerKeyDialog = false
+                                    }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = emojiPickerKey == choice,
+                                    onClick = null
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(emojiPickerKeyLabelRes(choice)))
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showEmojiPickerKeyDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
 
         // Emoji picker dialog
@@ -834,4 +920,12 @@ fun SymCustomizationScreen(
         }
         }
     }
+}
+
+private fun emojiPickerKeyLabelRes(keyCode: Int): Int = when (keyCode) {
+    KeyEvent.KEYCODE_SHIFT_RIGHT -> R.string.emoji_picker_key_right_shift
+    KeyEvent.KEYCODE_SHIFT_LEFT -> R.string.emoji_picker_key_left_shift
+    KeyEvent.KEYCODE_ALT_RIGHT -> R.string.emoji_picker_key_right_alt
+    KeyEvent.KEYCODE_CTRL_RIGHT -> R.string.emoji_picker_key_right_ctrl
+    else -> R.string.emoji_picker_key_off
 }

@@ -200,6 +200,13 @@
     <string name="sym_enable_emoji_picker_page_description">Mostra il selettore emoji completo durante il ciclo.</string>
     <string name="emoji_picker_expanded_height_title">Selettore emoji più grande</string>
     <string name="emoji_picker_expanded_height_description">Usa circa 1,5 volte l\'altezza per la pagina di ricerca emoji; le altre pagine SYM mantengono l\'altezza normale.</string>
+    <string name="emoji_picker_key_title">Tasto selettore emoji</string>
+    <string name="emoji_picker_key_description">Premi questo tasto in un campo di testo per aprire o chiudere il selettore emoji. Durante la scrittura non svolge più la sua funzione abituale; fuori dai campi di testo resta invariato.</string>
+    <string name="emoji_picker_key_off">Disattivato</string>
+    <string name="emoji_picker_key_right_shift">Shift destro</string>
+    <string name="emoji_picker_key_left_shift">Shift sinistro</string>
+    <string name="emoji_picker_key_right_alt">Alt destro</string>
+    <string name="emoji_picker_key_right_ctrl">Ctrl destro</string>
     <string name="sym_swap_pages_title">Scambia Ordine Pagine SYM</string>
     <string name="sym_swap_pages_description">Scegli quale pagina SYM appare per prima quando si alterna.</string>
     <string name="sym_order_emoji_first">Emoji prima</string>

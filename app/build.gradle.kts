@@ -139,8 +139,10 @@ android {
     productFlavors {
         create("stable") {
             dimension = "channel"
-            manifestPlaceholders["appLabel"] = "Pastiera"
-            manifestPlaceholders["imeLabel"] = "Pastiera"
+            // Flux-Sniffer-Mods fork: own app ID so it installs next to official Pastiera
+            applicationIdSuffix = ".flux"
+            manifestPlaceholders["appLabel"] = "Pastiera Flux"
+            manifestPlaceholders["imeLabel"] = "Pastiera Flux"
             buildConfigField("String", "RELEASE_CHANNEL", "\"stable\"")
             buildConfigField("boolean", "IS_FDROID_BUILD", if (isFdroidBuild) "true" else "false")
             buildConfigField("boolean", "ENABLE_GITHUB_UPDATE_CHECKS", if (isFdroidBuild) "false" else "true")

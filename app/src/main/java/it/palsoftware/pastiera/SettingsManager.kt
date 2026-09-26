@@ -142,6 +142,7 @@ object SettingsManager {
     private const val KEY_ALT_LATCH_STAYS_ON_SPACE = "alt_latch_stays_on_space"
     private const val KEY_CTRL_LATCH_STAYS_ON_SPACE = "ctrl_latch_stays_on_space"
     private const val KEY_EMOJI_PICKER_EXPANDED_HEIGHT = "emoji_picker_expanded_height"
+    private const val KEY_EMOJI_PICKER_KEY = "emoji_picker_key" // Physical key that toggles the emoji picker (KEYCODE_UNKNOWN = off)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
     private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed" // Whether the first-run tutorial has been completed
     private const val KEY_LAST_SEEN_WHATS_NEW_VERSION = "last_seen_whats_new_version"
@@ -383,6 +384,7 @@ object SettingsManager {
     private const val DEFAULT_BOUNCE_KEYS_BACKSPACE_ENABLED = true
     private const val DEFAULT_OVERLAPPING_KEYS_ENABLED = false
     private const val DEFAULT_EMOJI_PICKER_EXPANDED_HEIGHT = true
+    private const val DEFAULT_EMOJI_PICKER_KEY = KeyEvent.KEYCODE_SHIFT_RIGHT // fork default
     private val DEFAULT_SYM_PAGES_CONFIG = SymPagesConfig()
     private const val SYM_PAGES_SCHEMA_VERSION = 2
     private const val DEFAULT_STATIC_VARIATION_BAR_MODE = false
@@ -5147,6 +5149,27 @@ object SettingsManager {
     fun setEmojiPickerExpandedHeight(context: Context, enabled: Boolean) {
         getPreferences(context).edit()
             .putBoolean(KEY_EMOJI_PICKER_EXPANDED_HEIGHT, enabled)
+            .apply()
+    }
+
+    /** Keys that can be dedicated to toggling the emoji picker. KEYCODE_UNKNOWN means off. */
+    val EMOJI_PICKER_KEY_CHOICES: List<Int> = listOf(
+        KeyEvent.KEYCODE_UNKNOWN,
+        KeyEvent.KEYCODE_SHIFT_RIGHT,
+        KeyEvent.KEYCODE_SHIFT_LEFT,
+        KeyEvent.KEYCODE_ALT_RIGHT,
+        KeyEvent.KEYCODE_CTRL_RIGHT
+    )
+
+    fun getEmojiPickerKey(context: Context): Int {
+        val keyCode = getPreferences(context).getInt(KEY_EMOJI_PICKER_KEY, DEFAULT_EMOJI_PICKER_KEY)
+        return if (keyCode in EMOJI_PICKER_KEY_CHOICES) keyCode else DEFAULT_EMOJI_PICKER_KEY
+    }
+
+    fun setEmojiPickerKey(context: Context, keyCode: Int) {
+        val sanitized = if (keyCode in EMOJI_PICKER_KEY_CHOICES) keyCode else DEFAULT_EMOJI_PICKER_KEY
+        getPreferences(context).edit()
+            .putInt(KEY_EMOJI_PICKER_KEY, sanitized)
             .apply()
     }
 

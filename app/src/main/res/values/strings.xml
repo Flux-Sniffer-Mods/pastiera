@@ -274,6 +274,13 @@
     <string name="sym_enable_emoji_picker_page_description">Show the full emoji picker when cycling.</string>
     <string name="emoji_picker_expanded_height_title">Larger emoji picker</string>
     <string name="emoji_picker_expanded_height_description">Use about 1.5x height for the emoji search page; other SYM pages keep their normal height.</string>
+    <string name="emoji_picker_key_title">Emoji picker key</string>
+    <string name="emoji_picker_key_description">Press this key in a text field to open or close the emoji picker. While typing it no longer works as its usual key; outside text fields it is unchanged.</string>
+    <string name="emoji_picker_key_off">Off</string>
+    <string name="emoji_picker_key_right_shift">Right Shift</string>
+    <string name="emoji_picker_key_left_shift">Left Shift</string>
+    <string name="emoji_picker_key_right_alt">Right Alt</string>
+    <string name="emoji_picker_key_right_ctrl">Right Ctrl</string>
     <string name="sym_swap_pages_title">Arrange SYM pages order</string>
     <string name="sym_swap_pages_description">Drag or use the arrows to set the cycle order. The switch only controls whether an item appears in the cycle.</string>
     <string name="sym_cycle_device_layer">Device SYM Layer</string>

@@ -10,6 +10,7 @@ import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.SymPagesConfig
 import it.palsoftware.pastiera.core.InputContextState
 import it.palsoftware.pastiera.core.ModifierStateController
+import it.palsoftware.pastiera.core.SymLayoutController
 import it.palsoftware.pastiera.data.layout.LayoutMappingRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -28,6 +29,10 @@ import java.lang.reflect.Proxy
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
+
+    private companion object {
+        const val EMOJI_PICKER_PAGE = 4
+    }
 
     private lateinit var service: PhysicalKeyboardInputMethodService
     private lateinit var recorder: RecordingInputConnection
@@ -916,6 +921,87 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
         assertTrue("Telex rewrite should not delete text", recorder.deleteSurroundingTextCalls.isEmpty())
         assertFalse("Telex rewrite should not commit transformed text", recorder.committedTexts.contains("câ"))
     }
+
+    @Test
+    fun emojiPickerKey_rightShiftTogglesPickerWithoutTouchingShiftState() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        val shiftOneShotBefore = modifierController().shiftOneShot
+
+        assertTrue(pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 7_000L).first)
+        assertEquals(EMOJI_PICKER_PAGE, symLayout().currentSymPage())
+        assertEquals(shiftOneShotBefore, modifierController().shiftOneShot)
+        assertFalse(modifierController().shiftPressed)
+
+        val (downHandled, upHandled) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 7_500L)
+        assertTrue(downHandled)
+        assertTrue(upHandled)
+        assertEquals(0, symLayout().currentSymPage())
+        assertEquals(shiftOneShotBefore, modifierController().shiftOneShot)
+    }
+
+    @Test
+    fun emojiPickerKey_autoRepeatDoesNotRetoggle() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+
+        service.onKeyDown(
+            KeyEvent.KEYCODE_SHIFT_RIGHT,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_RIGHT, 8_000L, 8_000L)
+        )
+        val repeatHandled = service.onKeyDown(
+            KeyEvent.KEYCODE_SHIFT_RIGHT,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_RIGHT, 8_000L, 8_500L, repeatCount = 1)
+        )
+        service.onKeyUp(
+            KeyEvent.KEYCODE_SHIFT_RIGHT,
+            keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_RIGHT, 8_000L, 8_600L)
+        )
+
+        assertTrue(repeatHandled)
+        assertEquals(EMOJI_PICKER_PAGE, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun emojiPickerKey_off_rightShiftDoesNotOpenPicker() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)
+
+        pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 9_000L)
+
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun emojiPickerKey_leftShiftUnaffectedWhenRightShiftIsDedicated() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+
+        tapShift(9_500L)
+
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun emojiPickerKey_passesThroughOutsideTextFields() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        val nonEditable = EditorInfo().apply { inputType = InputType.TYPE_NULL }
+        setField(service, "mInputEditorInfo", nonEditable)
+        setField(service, "inputContextState", InputContextState.fromEditorInfo(nonEditable))
+
+        pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 10_000L)
+
+        assertEquals(0, symLayout().currentSymPage())
+    }
+
+    private fun pressKey(keyCode: Int, start: Long): Pair<Boolean, Boolean> {
+        val down = service.onKeyDown(keyCode, keyEvent(KeyEvent.ACTION_DOWN, keyCode, start, start))
+        val up = service.onKeyUp(keyCode, keyEvent(KeyEvent.ACTION_UP, keyCode, start, start + 30L))
+        return down to up
+    }
+
+    private fun symLayout(): SymLayoutController = getField(service, "symLayoutController")
 
     private fun tapAlt(start: Long) {
         service.onKeyDown(

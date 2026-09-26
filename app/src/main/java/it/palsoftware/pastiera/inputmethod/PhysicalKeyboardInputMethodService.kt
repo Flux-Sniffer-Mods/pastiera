@@ -162,6 +162,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    // Key-up of the dedicated emoji picker key still to be swallowed (KEYCODE_UNKNOWN = none)
+    private var emojiPickerKeyUpPending: Int = KeyEvent.KEYCODE_UNKNOWN
     private var dispatchingSoftwareKeyboardKey: Boolean = false
     
     // Aggiungi per Power Shortcuts
@@ -4533,6 +4535,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             return true
         }
 
+        // User-selected dedicated emoji picker key (SYM settings > Emoji picker key).
+        // Consumed entirely so it never reaches the modifier state machine; outside text
+        // fields the key keeps its normal role.
+        val emojiPickerKey = SettingsManager.getEmojiPickerKey(this)
+        if (
+            hasEditableField &&
+            emojiPickerKey != KeyEvent.KEYCODE_UNKNOWN &&
+            keyCode == emojiPickerKey
+        ) {
+            if ((event?.repeatCount ?: 0) == 0) {
+                toggleEmojiPicker()
+            }
+            emojiPickerKeyUpPending = keyCode
+            return true
+        }
+
         if (
             hasEditableField &&
             (symTogglePendingOnKeyUp || event?.isSymPressed == true) &&
@@ -5067,6 +5085,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val event = remapped.event
         if (keyCode == KeyEvent.KEYCODE_ENTER && consumeAltEnterUntilKeyUp) {
             consumeAltEnterUntilKeyUp = false
+            return true
+        }
+        if (emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiPickerKeyUpPending) {
+            emojiPickerKeyUpPending = KeyEvent.KEYCODE_UNKNOWN
             return true
         }
         clicksPowerShiftTapFilter.shouldConsumeKeyUp(keyCode, event)?.let { suppressed ->
