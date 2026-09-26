@@ -345,7 +345,7 @@ fun SettingsScreen(
                 LedColorsScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.DeviceSymLayerEditor -> {
-                DeviceSymLayerEditorStubScreen(modifier = modifier, onBack = { navigateBack() })
+                DeviceSymLayerEditorScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.Modifiers -> {
                 ModifierSettingsScreen(

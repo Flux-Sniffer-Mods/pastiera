@@ -87,6 +87,51 @@ class LedStatusView(
             ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }
         }
 
+    // Locked LEDs' moving gradient (Status LED colours > Animate locked LEDs): 0..1, one sweep
+    private var lockPhase = 0f
+    private var lockAnimator: ValueAnimator? = null
+
+    private fun lockAnimationOn(): Boolean = LedColors.lockedAnimationEnabled(context)
+
+    /** Runs the sweep while an LED is locked and the option is on; stops it otherwise. */
+    private fun syncLockAnimation() {
+        val wanted = lockAnimationOn() && statePriority.values.any { it == 2 } && container?.isAttachedToWindow == true
+        if (wanted == (lockAnimator != null)) return
+        if (!wanted) {
+            lockAnimator?.cancel()
+            lockAnimator = null
+            invalidateAllLeds()
+            return
+        }
+        lockAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1800
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+            addUpdateListener {
+                lockPhase = it.animatedValue as Float
+                invalidateAllLeds()
+            }
+            start()
+        }
+    }
+
+    private fun invalidateAllLeds() {
+        container?.let { canvas -> for (index in 0 until canvas.childCount) canvas.getChildAt(index).invalidate() }
+    }
+
+    /** The gradient a locked LED sweeps: its colour, a more intense version, and back. */
+    private fun lockShader(color: Int, width: Float): android.graphics.Shader {
+        val intense = LedColors.intensify(color)
+        val deep = LedColors.deepen(color)
+        val span = width.coerceAtLeast(1f)
+        val offset = lockPhase * span * 2f
+        return android.graphics.LinearGradient(
+            offset - span, 0f, offset + span, 0f,
+            intArrayOf(deep, intense, deep), floatArrayOf(0f, 0.5f, 1f),
+            android.graphics.Shader.TileMode.MIRROR
+        )
+    }
+
     var onLongPressListener: (() -> Unit)? = null
     var themeOverride: KeyboardThemeColors? = null
 
@@ -126,7 +171,7 @@ class LedStatusView(
         val altActive = (snapshot.altPhysicallyPressed || snapshot.altOneShot) && !altLocked
         updateLeds(ModifierLedState.ALT, altLocked, altActive)
 
-        updateSymLeds(snapshot.symPage)
+        updateSymLeds(snapshot)
         syncLockAnimation()
     }
 
@@ -185,6 +230,7 @@ class LedStatusView(
                     // The colour of whichever modifier lights the shared LED
                     val shown = if (shiftPriority >= (statePriority[otherState] ?: 0)) ModifierLedState.SHIFT else otherState
                     paint.color = ledColor(shown, priority)
+                    if (lockAnimator != null && priority == 2) paint.shader = lockShader(paint.color, bounds.width().toFloat())
                 }
                 val width = bounds.width().toFloat()
                 val height = bounds.height().toFloat()
@@ -197,7 +243,7 @@ class LedStatusView(
                 val rightArc = rightRadius - inset
                 // One LED per modifier: spread along the corners and bottom edge only; the vertical
                 // side runs sit behind the bar and would swallow the outer LEDs.
-                val cornersAndBottomOnly = layout == ModifierLedLayouts.TITAN_2_ELITE_SPLIT
+                val cornersAndBottomOnly = ModifierLedLayouts.isSplit(layout)
                 val contour = straightContour() ?: liftedContour(radii) ?: Path().apply {
                     if (cornersAndBottomOnly) {
                         moveTo(inset, height - leftRadius)
@@ -340,13 +386,23 @@ class LedStatusView(
         ledsByState[state].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
     }
 
-    private fun updateSymLeds(symPage: Int) {
-        statePriority[ModifierLedState.SYM] = if (symPage == 2) 2 else if (symPage > 0) 1 else 0
-        val targetColor = ledColor(ModifierLedState.SYM, when (symPage) {
-            2 -> 2
-            1, 3, 4 -> 1
+    /**
+     * SYM: active while held, locked while it's sticky or a symbols page is open. The emoji key's
+     * LED, when shown, works the same way for the emoji layer and picker; without it, those
+     * pages show on the SYM LED as active.
+     */
+    private fun updateSymLeds(snapshot: StatusBarController.StatusSnapshot) {
+        val symPage = snapshot.symPage
+        val emojiPage = symPage == 1 || symPage == 4
+        val emojiLed = ledsByState.containsKey(ModifierLedState.EMOJI)
+        val symLevel = when {
+            snapshot.symSticky || symPage == 2 || symPage == 5 -> 2
+            snapshot.symHeld -> 1
+            emojiPage && !emojiLed -> 1
             else -> 0
-        })
+        }
+        statePriority[ModifierLedState.SYM] = symLevel
+        val targetColor = ledColor(ModifierLedState.SYM, symLevel)
         ledsByState[ModifierLedState.SYM].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
         if (emojiLed) {
             val emojiLevel = when {

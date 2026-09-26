@@ -91,7 +91,9 @@ fun ModifierSettingsScreen(
         AltModifierBinding.DeviceSymProfile("clicks_razr") to stringResource(R.string.keyboard_profile_option_clicks_razr),
         AltModifierBinding.DeviceSymProfile("clicks_pixel") to stringResource(R.string.keyboard_profile_option_clicks_pixel),
         AltModifierBinding.DeviceSymProfile("clicks_power") to stringResource(R.string.clicks_power_keyboard_title)
-    )
+    ) + remember {
+        it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.all(context)
+    }.map { profile -> AltModifierBinding.DeviceSymProfile(profile.profileRef) to profile.name }
 
     Scaffold(
         topBar = {

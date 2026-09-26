@@ -1852,12 +1852,6 @@ fun TutorialFeatureStatusesPageContent(
         )
         Spacer(modifier = Modifier.height(28.dp))
         TutorialFeatureStatusCard(
-            status = FeatureStatus.Construction,
-            title = stringResource(R.string.tutorial_feature_status_construction_title),
-            description = stringResource(R.string.tutorial_feature_status_construction_description)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        TutorialFeatureStatusCard(
             status = FeatureStatus.Experimental,
             title = stringResource(R.string.tutorial_feature_status_experimental_title),
             description = stringResource(R.string.tutorial_feature_status_experimental_description)
