@@ -31,6 +31,7 @@ class HamburgerMenuView(
         private const val MIN_BUTTON_HEIGHT_DP = 28f
     }
 
+    // Every button the menu can show; which ones and in what order is a setting
     private val menuButtonIds = listOf(
         StatusBarButtonId.Symbols,
         StatusBarButtonId.Emoji,
@@ -211,8 +212,9 @@ class HamburgerMenuView(
         rowView.addView(closeButtonView)
         val fallbackWidth = buttonHeight
         val hostedButtons = mutableListOf<StatusBarButtonHost.HostedButton>()
-        // GIF only when GIFs are on and the keyboard isn't offline
-        shownButtonIds = menuButtonIds.filter {
+        // The buttons chosen in Settings, in their order; GIF only when GIFs are on and online
+        val byKey = menuButtonIds.associateBy { it.key }
+        shownButtonIds = SettingsManager.getMenuBarButtons(context).mapNotNull { byKey[it] }.filter {
             it != StatusBarButtonId.Gif || SettingsManager.gifsAvailable(context)
         }
         shownButtonIds.forEach { id ->

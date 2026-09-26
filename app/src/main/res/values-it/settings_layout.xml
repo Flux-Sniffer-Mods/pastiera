@@ -213,4 +213,9 @@
     <string name="exact_typing_apps">App</string>
     <string name="exact_typing_add_app">Aggiungi un\'app</string>
     <string name="exact_typing_add_app_description">Scegli un\'app in cui ogni carattere deve restare com\'è</string>
+    <string name="menu_bar_section">Barra del menu</string>
+    <string name="menu_bar_description">La riga che si apre con ☰. Attiva o disattiva i pulsanti; più in alto è un pulsante in questo elenco, più a sinistra si trova. Il pulsante di chiusura resta sempre per primo.</string>
+    <string name="menu_bar_move_up">Sposta su (più a sinistra nella barra)</string>
+    <string name="menu_bar_move_down">Sposta giù (più a destra nella barra)</string>
+    <string name="menu_bar_reset">Ripristina la barra del menu</string>
 </resources>

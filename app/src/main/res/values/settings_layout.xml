@@ -218,4 +218,9 @@
     <string name="exact_typing_apps">Apps</string>
     <string name="exact_typing_add_app">Add an app</string>
     <string name="exact_typing_add_app_description">Choose an app where every character should stay as typed</string>
+    <string name="menu_bar_section">Menu bar</string>
+    <string name="menu_bar_description">The row that opens with ☰. Switch buttons on or off; the higher a button is in this list, the further left it sits. The close button always comes first.</string>
+    <string name="menu_bar_move_up">Move up (further left in the bar)</string>
+    <string name="menu_bar_move_down">Move down (further right in the bar)</string>
+    <string name="menu_bar_reset">Reset the menu bar</string>
 </resources>

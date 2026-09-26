@@ -273,6 +273,7 @@ object SettingsManager {
     private const val KEY_STATUS_BAR_SLOTS_LEFT = "status_bar_slots_left"
     private const val KEY_STATUS_BAR_SLOTS_RIGHT = "status_bar_slots_right"
     private const val KEY_PASTIERINA_STATUS_BAR_SLOTS_LEFT = "pastierina_status_bar_slots_left"
+    private const val KEY_MENU_BAR_BUTTONS = "menu_bar_buttons" // The menu bar's buttons, in order
     private const val KEY_PASTIERINA_STATUS_BAR_SLOTS_RIGHT = "pastierina_status_bar_slots_right"
     private const val KEY_STATUS_BAR_VARIATIONS_VISIBLE = "status_bar_variations_visible"
     private const val KEY_DYNAMIC_VARIATION_BAR_SLOT_COUNT = "dynamic_variation_bar_slot_count"
@@ -6447,6 +6448,36 @@ object SettingsManager {
         setDynamicVariationBarSlotCount(context, DEFAULT_DYNAMIC_VARIATION_BAR_SLOT_COUNT)
         setDynamicVariationBarResizeToContent(context, DEFAULT_DYNAMIC_VARIATION_BAR_RESIZE_TO_CONTENT)
         return defaults
+    }
+
+    /** Buttons the menu bar (the ☰ button's row) can show, in their default order. */
+    val MENU_BAR_BUTTON_OPTIONS: List<String> = listOf(
+        STATUS_BAR_BUTTON_SYMBOLS,
+        STATUS_BAR_BUTTON_EMOJI,
+        STATUS_BAR_BUTTON_GIF,
+        STATUS_BAR_BUTTON_MICROPHONE,
+        STATUS_BAR_BUTTON_CLIPBOARD,
+        STATUS_BAR_BUTTON_UNDO,
+        STATUS_BAR_BUTTON_REDO,
+        STATUS_BAR_BUTTON_LANGUAGE,
+        STATUS_BAR_BUTTON_MINIMAL_UI,
+        STATUS_BAR_BUTTON_SOFTWARE_KEYBOARD_MODE,
+        STATUS_BAR_BUTTON_SETTINGS
+    )
+
+    /** The menu bar's buttons, in order (its close button always comes first). */
+    fun getMenuBarButtons(context: Context): List<String> {
+        val stored = getPreferences(context).getString(KEY_MENU_BAR_BUTTONS, null) ?: return MENU_BAR_BUTTON_OPTIONS
+        return stored.split(',').map { it.trim() }.filter { it in MENU_BAR_BUTTON_OPTIONS }.distinct()
+    }
+
+    fun setMenuBarButtons(context: Context, buttons: List<String>) {
+        val clean = buttons.filter { it in MENU_BAR_BUTTON_OPTIONS }.distinct()
+        getPreferences(context).edit().putString(KEY_MENU_BAR_BUTTONS, clean.joinToString(",")).apply()
+    }
+
+    fun resetMenuBarButtons(context: Context) {
+        getPreferences(context).edit().remove(KEY_MENU_BAR_BUTTONS).apply()
     }
 
     fun getStatusBarSlotsLeft(context: Context): List<String> {

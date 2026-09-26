@@ -891,12 +891,17 @@ class StatusBarController(
         val menu = hamburgerMenuView ?: return
         val callbacks = statusBarCallbacks().copy(onHamburgerMenuRequested = null)
         menu.show(callbacks) { hideHamburgerMenu() }
+        // The menu has the row to itself: no status LEDs under its buttons (space kept, no jump)
+        ledStatusView.getView()?.let { if (it.visibility == View.VISIBLE) it.visibility = View.INVISIBLE }
     }
 
     private fun hideHamburgerMenu() {
         hamburgerMenuView?.hide()
         fullSuggestionsBar?.hideHamburgerMenu()
+        ledStatusView.getView()?.let { if (it.visibility == View.INVISIBLE) it.visibility = View.VISIBLE }
     }
+
+    private fun menuBarOpen(): Boolean = hamburgerMenuView?.isVisible() == true
 
     fun resetSuggestionActionMode() {
         fullSuggestionsBar?.resetActionMode()
@@ -3491,7 +3496,11 @@ class StatusBarController(
         } else {
             showHardwareBottomIndicators
         }
-        ledStatusView.getView()?.visibility = if (showLedStrip) View.VISIBLE else View.GONE
+        ledStatusView.getView()?.visibility = when {
+            !showLedStrip -> View.GONE
+            menuBarOpen() -> View.INVISIBLE
+            else -> View.VISIBLE
+        }
         if (showLedStrip) {
             ledStatusView.update(snapshot)
         }

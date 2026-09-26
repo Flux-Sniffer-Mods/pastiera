@@ -2,6 +2,7 @@ package it.palsoftware.pastiera
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.foundation.clickable
@@ -474,7 +478,126 @@ fun StatusBarButtonsScreen(
             )
         }
 
+        SettingsSectionDivider(stringResource(R.string.menu_bar_section))
+        MenuBarEditor()
+
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+/** The menu bar (opened with ☰): which buttons it shows and in what order. */
+@Composable
+private fun MenuBarEditor() {
+    val context = LocalContext.current
+    var shown by remember { mutableStateOf(SettingsManager.getMenuBarButtons(context)) }
+    val hidden = SettingsManager.MENU_BAR_BUTTON_OPTIONS.filter { it !in shown }
+    fun save(buttons: List<String>) {
+        shown = buttons
+        SettingsManager.setMenuBarButtons(context, buttons)
+    }
+    Text(
+        text = stringResource(R.string.menu_bar_description),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).settingRow("status_bar.menu_bar")
+    )
+    // The menu bar as it will look: close first, then your buttons, sharing the width equally
+    // like the real bar
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
+            .padding(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        @Composable
+        fun RowScope.PreviewKey(content: @Composable () -> Unit) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f, matchHeightConstraintsFirst = false)
+                    .heightIn(max = 40.dp)
+                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small),
+                contentAlignment = Alignment.Center
+            ) { content() }
+        }
+        PreviewKey {
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxSize(0.6f)
+            )
+        }
+        shown.forEach { buttonId ->
+            PreviewKey {
+                Icon(
+                    painter = painterResource(getButtonIconRes(buttonId)),
+                    contentDescription = getButtonDisplayName(buttonId),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxSize(0.6f)
+                )
+            }
+        }
+    }
+    (shown + hidden).forEach { buttonId ->
+        val index = shown.indexOf(buttonId)
+        Row(
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val on = index >= 0
+            // Explicit colours: these rows aren't inside a Surface, so nothing else sets them
+            val textColor = if (on) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            Icon(
+                painter = painterResource(getButtonIconRes(buttonId)),
+                contentDescription = null,
+                tint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = getButtonDisplayName(buttonId),
+                style = MaterialTheme.typography.bodyLarge,
+                color = textColor,
+                modifier = Modifier.weight(1f)
+            )
+            if (on) {
+                val arrowColors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                )
+                IconButton(
+                    onClick = { save(shown.toMutableList().also { it.add(index - 1, it.removeAt(index)) }) },
+                    enabled = index > 0,
+                    colors = arrowColors
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.menu_bar_move_up))
+                }
+                IconButton(
+                    onClick = { save(shown.toMutableList().also { it.add(index + 1, it.removeAt(index)) }) },
+                    enabled = index < shown.size - 1,
+                    colors = arrowColors
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.menu_bar_move_down))
+                }
+            }
+            Switch(
+                checked = index >= 0,
+                onCheckedChange = { on -> save(if (on) shown + buttonId else shown - buttonId) }
+            )
+        }
+    }
+    TextButton(
+        onClick = {
+            SettingsManager.resetMenuBarButtons(context)
+            shown = SettingsManager.getMenuBarButtons(context)
+        },
+        modifier = Modifier.padding(horizontal = 8.dp)
+    ) {
+        Text(stringResource(R.string.menu_bar_reset))
     }
 }
 @Composable
