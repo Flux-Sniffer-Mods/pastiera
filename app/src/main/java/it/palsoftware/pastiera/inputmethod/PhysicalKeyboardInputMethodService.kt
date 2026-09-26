@@ -3957,6 +3957,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onFinishInput() {
+        clearInlineAutofill()
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onFinishInput()
@@ -4783,6 +4784,44 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             updateStatusBarText()
         }
         updateStatusBarText()
+    }
+
+    // Inline autofill (Android 11+): the password manager's chips in the suggestion bar
+    private var inlineAutofillGeneration = 0
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    override fun onCreateInlineSuggestionsRequest(uiExtras: android.os.Bundle): android.view.inputmethod.InlineSuggestionsRequest? {
+        if (!SettingsManager.getInlineAutofillEnabled(this) || terminalModeActive || keyboardHiddenForApp) return null
+        return InlineAutofill.request(this)
+    }
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    override fun onInlineSuggestionsResponse(response: android.view.inputmethod.InlineSuggestionsResponse): Boolean {
+        val suggestions = response.inlineSuggestions
+        val generation = ++inlineAutofillGeneration
+        if (suggestions.isEmpty() || !::candidatesBarController.isInitialized) {
+            clearInlineAutofill()
+            return false
+        }
+        InlineAutofill.inflate(this, suggestions) { views ->
+            // A newer response (another field) replaced this one while it was inflating
+            if (generation != inlineAutofillGeneration) return@inflate
+            if (views.isEmpty()) {
+                clearInlineAutofill()
+            } else {
+                candidatesBarController.showInlineAutofill(views)
+            }
+            updateStatusBarText()
+        }
+        return true
+    }
+
+    private fun clearInlineAutofill() {
+        inlineAutofillGeneration++
+        if (::candidatesBarController.isInitialized) {
+            candidatesBarController.clearInlineAutofill()
+            updateStatusBarText()
+        }
     }
 
     private fun clearPasteSuggestion() {

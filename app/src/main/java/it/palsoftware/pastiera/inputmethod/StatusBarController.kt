@@ -905,6 +905,60 @@ class StatusBarController(
         onExpansionSuggestionSelected = null
     }
 
+    // Inline autofill: chips drawn by the password manager, shown in the middle of the bar
+    private var inlineAutofillViews: List<View> = emptyList()
+    private var inlineAutofillStrip: android.widget.HorizontalScrollView? = null
+
+    fun showInlineAutofill(views: List<View>) {
+        inlineAutofillViews = views
+    }
+
+    fun clearInlineAutofill() {
+        if (inlineAutofillViews.isEmpty() && inlineAutofillStrip?.parent == null) return
+        inlineAutofillViews = emptyList()
+        renderInlineAutofill(false)
+    }
+
+    private fun renderInlineAutofill(active: Boolean) {
+        val bar = fullSuggestionsBar ?: return
+        val host = bar.centerAccessoryHost() ?: return
+        val strip = inlineAutofillStrip
+        if (!active) {
+            if (strip?.parent != null) {
+                (strip.parent as? ViewGroup)?.removeView(strip)
+                if (!emojiSearchInBar) bar.setCenterAccessoryActive(false)
+            }
+            return
+        }
+        val scroller = strip ?: android.widget.HorizontalScrollView(context).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(
+                android.widget.LinearLayout(context).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                },
+                ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            )
+        }.also { inlineAutofillStrip = it }
+        val row = scroller.getChildAt(0) as android.widget.LinearLayout
+        if (row.childCount != inlineAutofillViews.size || inlineAutofillViews.withIndex().any { (i, v) -> row.getChildAt(i) !== v }) {
+            row.removeAllViews()
+            val gap = (4 * context.resources.displayMetrics.density).toInt()
+            inlineAutofillViews.forEach { chip ->
+                (chip.parent as? ViewGroup)?.removeView(chip)
+                row.addView(chip, android.widget.LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { marginStart = gap; marginEnd = gap })
+            }
+        }
+        if (scroller.parent !== host) {
+            (scroller.parent as? ViewGroup)?.removeView(scroller)
+            host.removeAllViews()
+            host.addView(scroller, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+        bar.setCenterAccessoryActive(true)
+    }
+
     fun cancelSoftwareKeyboardTouchState() {
         // The software keyboard can also sit below the emoji picker while its search is
         // active, so prefer the cached instance over the container's first child.
@@ -1450,7 +1504,8 @@ class StatusBarController(
 
     private fun releaseEmojiSearchFromBar() {
         emojiPickerView?.setSearchFieldHost(null)
-        fullSuggestionsBar?.setCenterAccessoryActive(false)
+        // Autofill chips keep the middle of the bar while they're shown
+        if (inlineAutofillStrip?.parent == null) fullSuggestionsBar?.setCenterAccessoryActive(false)
     }
 
     private fun showEmojiPickerSearchPopup(
@@ -3417,7 +3472,8 @@ class StatusBarController(
         val suggestionsEnabledSetting = SettingsManager.getSuggestionsEnabled(context)
         // Keep the suggestion/status row stable in both full-status-bar and Pastierina mode.
         val expansionActive = expansionSuggestions.isNotEmpty()
-        val showFullBar = expansionActive || (
+        val autofillActive = inlineAutofillViews.isNotEmpty() && snapshot.symPage == 0 && !snapshot.clipboardOverlay
+        val showFullBar = expansionActive || autofillActive || (
             suggestionsEnabledSetting &&
                 (experimentalEnabled || isFullSoftwareKeyboardMode) &&
                 (isFullSoftwareKeyboardMode || !snapshot.shouldDisableSuggestions) &&
@@ -3466,6 +3522,7 @@ class StatusBarController(
             canDeleteUserSuggestion,
             if (expansionActive) { _, suggestion -> onExpansionSuggestionSelected?.invoke(suggestion) } else null
         )
+        renderInlineAutofill(autofillActive && !emojiSearchInBar)
         val shouldShowSoftwareKeyboard =
             isFullSoftwareKeyboardMode &&
                 !snapshot.clipboardOverlay

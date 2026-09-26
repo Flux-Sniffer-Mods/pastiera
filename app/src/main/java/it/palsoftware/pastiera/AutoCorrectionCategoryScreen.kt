@@ -56,6 +56,9 @@ fun AutoCorrectionCategoryScreen(
     var suggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getSuggestionsEnabled(context))
     }
+    var inlineAutofillEnabled by remember {
+        mutableStateOf(SettingsManager.getInlineAutofillEnabled(context))
+    }
     var emojiSuggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getEmojiSuggestionsEnabled(context))
     }
@@ -317,6 +320,19 @@ fun AutoCorrectionCategoryScreen(
                                 SettingsManager.setEmojiSuggestionsEnabled(context, enabled)
                             }
                         )
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            FluxSwitchRow(
+                                linkId = SettingLinkIds.AUTO_CORRECTION_INLINE_AUTOFILL,
+                                title = stringResource(R.string.inline_autofill_title),
+                                description = stringResource(R.string.inline_autofill_description),
+                                checked = inlineAutofillEnabled,
+                                onCheckedChange = { enabled ->
+                                    inlineAutofillEnabled = enabled
+                                    SettingsManager.setInlineAutofillEnabled(context, enabled)
+                                }
+                            )
+                        }
 
                         SettingsSectionDivider(stringResource(R.string.autocorrect_section_dictionary))
                         Surface(
