@@ -1,0 +1,33 @@
+package it.palsoftware.pastiera
+
+/**
+ * The main screen's groups (Keyboards & layouts, Typing, Look & sound, Apps) and the
+ * screens that only exist since the settings were grouped by task. Their rows use
+ * the same stable IDs.
+ */
+internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
+    SettingEntry(SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS, R.string.settings_keyboards_layouts_title,
+        summaryRes = R.string.settings_keyboards_layouts_description,
+        route = SettingRoute(SettingsDestination.KeyboardsLayouts)),
+    SettingEntry(SettingLinkIds.MAIN_TYPING, R.string.settings_typing_title,
+        summaryRes = R.string.settings_typing_description,
+        route = SettingRoute(SettingsDestination.Typing)),
+    SettingEntry(SettingLinkIds.MAIN_EDITING_KEYS, R.string.settings_editing_keys_title,
+        summaryRes = R.string.settings_editing_keys_description,
+        route = SettingRoute(SettingsDestination.EditingKeys)),
+    SettingEntry(SettingLinkIds.MAIN_LOOK_SOUND, R.string.settings_look_sound_title,
+        summaryRes = R.string.settings_look_sound_description,
+        route = SettingRoute(SettingsDestination.LookSound)),
+    SettingEntry(SettingLinkIds.MAIN_APPS, R.string.settings_apps_title,
+        summaryRes = R.string.settings_apps_description,
+        route = SettingRoute(SettingsDestination.Apps)),
+    SettingEntry(SettingLinkIds.MAIN_APP_SHORTCUTS, R.string.app_shortcuts_title,
+        summaryRes = R.string.app_shortcuts_description,
+        route = SettingRoute(SettingsDestination.AppShortcuts)),
+    SettingEntry(SettingLinkIds.APP_SHORTCUTS_ENABLED, R.string.app_shortcuts_enabled_title,
+        summaryRes = R.string.app_shortcuts_enabled_description,
+        route = SettingRoute(SettingsDestination.AppShortcuts)),
+    SettingEntry(SettingLinkIds.APP_SHORTCUTS_SUGGESTIONS, R.string.app_shortcuts_suggestions_title,
+        summaryRes = R.string.app_shortcuts_suggestions_description,
+        route = SettingRoute(SettingsDestination.AppShortcuts))
+)

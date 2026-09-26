@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
@@ -89,7 +91,8 @@ import androidx.compose.material.icons.filled.Warning
 @Composable
 fun AdvancedSettingsScreen(
     modifier: Modifier = Modifier,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigate: (SettingsDestination) -> Unit = {}
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -98,15 +101,9 @@ fun AdvancedSettingsScreen(
     val scope = rememberCoroutineScope()
     val prefs = remember { SettingsManager.getPreferences(context) }
 
-    // Store the actual value (3 to 25), but display it inverted in the slider (25 to 3)
-    var swipeIncrementalThreshold by remember {
-        mutableStateOf(SettingsManager.getSwipeIncrementalThreshold(context))
-    }
     var clipboardRetentionTime by remember {
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
-    var shizukuStatus by remember { mutableStateOf(ShizukuStatus.NotConnected) }
-    var trackpadProvider by remember { mutableStateOf(SettingsManager.getTrackpadProvider(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -123,14 +120,8 @@ fun AdvancedSettingsScreen(
     DisposableEffect(prefs) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             when (key) {
-                "swipe_incremental_threshold" -> {
-                    swipeIncrementalThreshold = SettingsManager.getSwipeIncrementalThreshold(context)
-                }
                 "clipboard_retention_time" -> {
                     clipboardRetentionTime = SettingsManager.getClipboardRetentionTime(context).toString()
-                }
-                "trackpad_provider" -> {
-                    trackpadProvider = SettingsManager.getTrackpadProvider(context)
                 }
                 "experimental_candidates_view_enabled" -> {
                     experimentalCandidatesViewEnabled = SettingsManager.getExperimentalCandidatesViewEnabled(context)
@@ -143,13 +134,6 @@ fun AdvancedSettingsScreen(
         }
     }
 
-    // Check Shizuku connection and authorization status periodically
-    LaunchedEffect(Unit) {
-        while (true) {
-            shizukuStatus = resolveShizukuStatus()
-            delay(2000) // Check every 2 seconds
-        }
-    }
 
     fun navigateTo(destination: AdvancedDestination) {
         openSettingsChild(context, "advanced", when (destination) { AdvancedDestination.Main -> "Main"; AdvancedDestination.ImeTest -> "ImeTest"; AdvancedDestination.TrackpadGestures -> "TrackpadGestures" })
@@ -194,7 +178,6 @@ fun AdvancedSettingsScreen(
             kotlinx.coroutines.delay(100)
 
             // Explicitly reload values after restore to ensure UI is updated
-            swipeIncrementalThreshold = SettingsManager.getSwipeIncrementalThreshold(context)
             clipboardRetentionTime = SettingsManager.getClipboardRetentionTime(context).toString()
         }
     }
@@ -286,7 +269,7 @@ fun AdvancedSettingsScreen(
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.settings_category_advanced),
+                                    text = stringResource(R.string.settings_privacy_system_title),
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = 8.dp)
@@ -302,95 +285,18 @@ fun AdvancedSettingsScreen(
                             .padding(paddingValues)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // Trackpad Gesture Settings
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .settingRow(SettingLinkIds.ADVANCED_TRACKPAD_GESTURES) {
-                                    navigateTo(AdvancedDestination.TrackpadGestures)
-                                }
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.TouchApp,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.trackpad_gestures_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.trackpad_gestures_description),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1
-                                        )
-                                    }
-                                    FeatureStatusIcon(FeatureStatus.Experimental)
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                // Trackpad provider status row
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 36.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> Icons.Filled.CheckCircle
-                                            shizukuStatus == ShizukuStatus.Connected -> Icons.Filled.CheckCircle
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> Icons.Filled.Warning
-                                            else -> Icons.Filled.Error
-                                        },
-                                        contentDescription = null,
-                                        tint = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.Connected -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> MaterialTheme.colorScheme.tertiary
-                                            else -> MaterialTheme.colorScheme.error
-                                        },
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> stringResource(R.string.trackpad_provider_native_ime_status)
-                                            shizukuStatus == ShizukuStatus.Connected -> stringResource(R.string.trackpad_gestures_shizuku_connected)
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> stringResource(R.string.trackpad_gestures_shizuku_not_authorized)
-                                            else -> stringResource(R.string.trackpad_gestures_shizuku_not_connected)
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.Connected -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> MaterialTheme.colorScheme.tertiary
-                                            else -> MaterialTheme.colorScheme.error
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        SettingsSectionDivider(stringResource(R.string.settings_section_privacy))
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.CloudOff,
+                            title = stringResource(R.string.flux_offline_title),
+                            description = stringResource(
+                                if (SettingsManager.isOfflineMode(context)) R.string.flux_offline_on else R.string.flux_offline_description
+                            ),
+                            linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
+                            onClick = { onNavigate(SettingsDestination.FluxOffline) }
+                        )
 
+                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
                         // Backup
                         Surface(
                             modifier = Modifier
@@ -479,59 +385,6 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
-                        // Swipe Incremental Threshold
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.TouchApp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.swipe_incremental_threshold_title),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "${String.format("%.1f", swipeIncrementalThreshold)} ${stringResource(R.string.dip_unit)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Slider(
-                                    value = SettingsManager.getMaxSwipeIncrementalThreshold() +
-                                        SettingsManager.getMinSwipeIncrementalThreshold() - swipeIncrementalThreshold,
-                                    onValueChange = { newInvertedValue ->
-                                        // Invert the slider value (25 to 3) back to stored value (3 to 25)
-                                        val actualValue = SettingsManager.getMaxSwipeIncrementalThreshold() +
-                                            SettingsManager.getMinSwipeIncrementalThreshold() - newInvertedValue
-                                        swipeIncrementalThreshold = actualValue
-                                        SettingsManager.setSwipeIncrementalThreshold(context, actualValue)
-                                    },
-                                    valueRange = SettingsManager.getMinSwipeIncrementalThreshold()..SettingsManager.getMaxSwipeIncrementalThreshold(),
-                                    steps = 16,
-                                    modifier = Modifier
-                                        .weight(1.0f)
-                                        .height(24.dp)
-                                )
-                            }
-                        }
-
                         // Clipboard Retention Time
                         Surface(
                             modifier = Modifier
@@ -598,6 +451,16 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        SettingsSectionDivider(stringResource(R.string.settings_category_accessibility))
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.TouchApp,
+                            title = stringResource(R.string.settings_category_accessibility),
+                            description = stringResource(R.string.settings_accessibility_row_description),
+                            linkId = SettingLinkIds.MAIN_ACCESSIBILITY,
+                            onClick = { onNavigate(SettingsDestination.Accessibility) }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_experimental))
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -681,6 +544,7 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
                         // Show Tutorial
                         Surface(
                             modifier = Modifier
@@ -774,6 +638,18 @@ fun AdvancedSettingsScreen(
                                 )
                             }
                         }
+                        SettingsUpdateRows(context)
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.Info,
+                            title = stringResource(R.string.about_title),
+                            description = stringResource(
+                                R.string.settings_about_version_summary,
+                                BuildConfig.VERSION_NAME
+                            ),
+                            linkId = SettingLinkIds.MAIN_ABOUT,
+                            onClick = { onNavigate(SettingsDestination.About) }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }

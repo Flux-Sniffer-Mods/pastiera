@@ -26,15 +26,24 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import it.palsoftware.pastiera.R
 import it.palsoftware.pastiera.core.Punctuation
 
+/** The two Typing screens built from these rows. */
+enum class TextInputPage {
+    CapitalisationPunctuation,
+    EditingKeys
+}
+
 /**
- * Text Input settings screen.
+ * Typing settings: capitalisation and punctuation, or the editing keys
+ * (Backspace combinations and Enter per app).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TextInputSettingsScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onNavModeSettingsClick: () -> Unit = {}
+    page: TextInputPage = TextInputPage.CapitalisationPunctuation,
+    onNavModeSettingsClick: () -> Unit = {},
+    onEnterBehaviorClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showTextExpansion by remember { mutableStateOf(settingsChild(context, "text") == "expansion") }
@@ -110,18 +119,6 @@ fun TextInputSettingsScreen(
     }
 
     var smartQuotesExpanded by remember { mutableStateOf(false) }
-
-    var clearAltOnSpace by remember {
-        mutableStateOf(SettingsManager.getClearAltOnSpace(context))
-    }
-
-    var autoShowKeyboard by remember {
-        mutableStateOf(SettingsManager.getAutoShowKeyboard(context))
-    }
-
-    var altCtrlSpeechShortcut by remember {
-        mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context))
-    }
 
     var shiftBackspaceDelete by remember {
         mutableStateOf(SettingsManager.getShiftBackspaceDelete(context))
@@ -293,7 +290,12 @@ fun TextInputSettingsScreen(
                         )
                     }
                     Text(
-                        text = stringResource(R.string.settings_category_text_input),
+                        text = stringResource(
+                            when (page) {
+                                TextInputPage.CapitalisationPunctuation -> R.string.settings_capitalisation_punctuation_title
+                                TextInputPage.EditingKeys -> R.string.settings_editing_keys_title
+                            }
+                        ),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 8.dp)
@@ -308,14 +310,7 @@ fun TextInputSettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsSectionHeader(text = stringResource(R.string.text_expansion_title))
-            SettingsNavigationRow(
-                title = stringResource(R.string.text_expansion_title),
-                description = stringResource(R.string.text_expansion_description),
-                linkId = SettingLinkIds.TEXT_INPUT_TEXT_EXPANSION,
-                onClick = { openSettingsChild(context, "text", "expansion") }
-            )
-
+            if (page == TextInputPage.CapitalisationPunctuation) {
             SettingsSectionHeader(text = stringResource(R.string.text_input_section_capitalization))
             SettingsSwitchRow(
                 title = stringResource(R.string.auto_capitalize_title),
@@ -477,38 +472,9 @@ fun TextInputSettingsScreen(
                 }
             )
 
-            SettingsSectionHeader(text = stringResource(R.string.text_input_section_keyboard_behavior))
-            SettingsSwitchRow(
-                title = stringResource(R.string.clear_alt_on_space_title),
-                description = stringResource(R.string.clear_alt_on_space_description),
-                checked = clearAltOnSpace,
-                linkId = SettingLinkIds.TEXT_INPUT_CLEAR_ALT_ON_SPACE,
-                onCheckedChange = { enabled ->
-                    clearAltOnSpace = enabled
-                    SettingsManager.setClearAltOnSpace(context, enabled)
-                }
-            )
-            SettingsSwitchRow(
-                title = stringResource(R.string.auto_show_keyboard_title),
-                description = stringResource(R.string.auto_show_keyboard_description),
-                checked = autoShowKeyboard,
-                linkId = SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
-                onCheckedChange = { enabled ->
-                    autoShowKeyboard = enabled
-                    SettingsManager.setAutoShowKeyboard(context, enabled)
-                }
-            )
-            SettingsSwitchRow(
-                title = stringResource(R.string.alt_ctrl_speech_shortcut_title),
-                description = stringResource(R.string.alt_ctrl_speech_shortcut_description),
-                checked = altCtrlSpeechShortcut,
-                linkId = SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT,
-                onCheckedChange = { enabled ->
-                    altCtrlSpeechShortcut = enabled
-                    SettingsManager.setAltCtrlSpeechShortcutEnabled(context, enabled)
-                }
-            )
+            }
 
+            if (page == TextInputPage.EditingKeys) {
             SettingsSectionHeader(text = stringResource(R.string.text_input_section_delete))
             Surface(
                 modifier = Modifier
@@ -618,6 +584,15 @@ fun TextInputSettingsScreen(
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
+            }
+
+            SettingsSectionHeader(text = stringResource(R.string.settings_section_enter))
+            SettingsNavigationRow(
+                title = stringResource(R.string.app_enter_behaviour_title),
+                description = stringResource(R.string.app_enter_behaviour_description),
+                linkId = SettingLinkIds.MAIN_APP_ENTER_BEHAVIOR,
+                onClick = onEnterBehaviorClick
+            )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

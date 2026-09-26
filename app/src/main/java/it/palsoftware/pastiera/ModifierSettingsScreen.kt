@@ -50,7 +50,7 @@ fun ModifierSettingsScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
     onOpenSymLayers: () -> Unit,
-    onOpenSymShortcuts: () -> Unit,
+    onOpenKeyShortcuts: () -> Unit,
     onOpenNavMode: () -> Unit
 ) {
     val context = LocalContext.current
@@ -63,6 +63,8 @@ fun ModifierSettingsScreen(
     var ctrlTapLatches by remember { mutableStateOf(SettingsManager.getCtrlTapLatches(context)) }
     var ctrlLatchStaysOnSpace by remember { mutableStateOf(SettingsManager.getCtrlLatchStaysOnSpace(context)) }
     var modifierIndicators by remember { mutableStateOf(SettingsManager.getModifierIndicators(context)) }
+    var clearAltOnSpace by remember { mutableStateOf(SettingsManager.getClearAltOnSpace(context)) }
+    var altCtrlSpeechShortcut by remember { mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) }
     var showSymShortcutCompatibilityInfo by remember { mutableStateOf(false) }
     var longPressExpanded by remember { mutableStateOf(false) }
     var altBindingExpanded by remember { mutableStateOf(false) }
@@ -105,7 +107,7 @@ fun ModifierSettingsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.settings_back_content_description))
                     }
                     Text(
-                        text = stringResource(R.string.modifiers_title),
+                        text = stringResource(R.string.settings_modifiers_sym_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 8.dp)
@@ -117,7 +119,65 @@ fun ModifierSettingsScreen(
         Column(
             modifier = modifier.fillMaxWidth().padding(paddingValues).verticalScroll(rememberScrollState())
         ) {
-            SettingsSectionDivider(stringResource(R.string.modifiers_section_long_press))
+            SettingsSectionDivider(stringResource(R.string.modifiers_section_tap_lock_long_press))
+            ModifierSwitchRow(
+                title = stringResource(R.string.shift_tap_latches_title),
+                description = stringResource(R.string.shift_tap_latches_description),
+                checked = shiftTapLatches,
+                linkId = SettingLinkIds.MODIFIERS_SHIFT_TAP_LATCHES
+            ) {
+                shiftTapLatches = it
+                SettingsManager.setShiftTapLatches(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.alt_tap_latches_title),
+                description = stringResource(R.string.alt_tap_latches_description),
+                checked = altTapLatches,
+                linkId = SettingLinkIds.MODIFIERS_ALT_TAP_LATCHES
+            ) {
+                altTapLatches = it
+                SettingsManager.setAltTapLatches(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.alt_latch_stays_on_space_title),
+                description = stringResource(R.string.alt_latch_stays_on_space_description),
+                checked = altLatchStaysOnSpace,
+                indent = true,
+                linkId = SettingLinkIds.MODIFIERS_ALT_LATCH_STAYS_ON_SPACE
+            ) {
+                altLatchStaysOnSpace = it
+                SettingsManager.setAltLatchStaysOnSpace(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.clear_alt_on_space_title),
+                description = stringResource(R.string.clear_alt_on_space_description),
+                checked = clearAltOnSpace,
+                linkId = SettingLinkIds.TEXT_INPUT_CLEAR_ALT_ON_SPACE
+            ) {
+                clearAltOnSpace = it
+                SettingsManager.setClearAltOnSpace(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.ctrl_tap_latches_title),
+                description = stringResource(R.string.ctrl_tap_latches_description),
+                checked = ctrlTapLatches,
+                linkId = SettingLinkIds.MODIFIERS_CTRL_TAP_LATCHES
+            ) {
+                ctrlTapLatches = it
+                SettingsManager.setCtrlTapLatches(context, it)
+            }
+            if (ctrlTapLatches) {
+                ModifierSwitchRow(
+                    title = stringResource(R.string.ctrl_latch_stays_on_space_title),
+                    description = stringResource(R.string.ctrl_latch_stays_on_space_description),
+                    checked = ctrlLatchStaysOnSpace,
+                    indent = true,
+                    linkId = SettingLinkIds.MODIFIERS_CTRL_LATCH_STAYS_ON_SPACE
+                ) {
+                    ctrlLatchStaysOnSpace = it
+                    SettingsManager.setCtrlLatchStaysOnSpace(context, it)
+                }
+            }
             ModifierDropdownRow(
                 title = stringResource(R.string.long_press_modifier_title),
                 value = longPressOptions.firstOrNull { it.first == longPressModifier }?.second.orEmpty(),
@@ -167,7 +227,7 @@ fun ModifierSettingsScreen(
                 }
             }
 
-            SettingsSectionDivider(stringResource(R.string.modifiers_section_sym))
+            SettingsSectionDivider(stringResource(R.string.modifiers_section_sym_pages_layers))
             ModifierNavigationRow(
                 iconRes = R.drawable.ic_emoji_symbols_24,
                 title = stringResource(R.string.sym_customization_title),
@@ -175,16 +235,6 @@ fun ModifierSettingsScreen(
                 linkId = SettingLinkIds.MODIFIERS_SYM_LAYERS,
                 onClick = onOpenSymLayers
             )
-            ModifierNavigationRow(
-                iconRes = R.drawable.ic_search_24,
-                title = stringResource(R.string.power_shortcuts_title),
-                description = stringResource(R.string.power_shortcuts_description),
-                linkId = SettingLinkIds.MODIFIERS_SYM_SHORTCUTS,
-                onClick = onOpenSymShortcuts,
-                onInfoClick = { showSymShortcutCompatibilityInfo = true }
-            )
-
-            SettingsSectionDivider(stringResource(R.string.modifiers_section_alt_modifier))
             ModifierDropdownRow(
                 title = stringResource(R.string.alt_binding_title),
                 description = stringResource(R.string.alt_binding_description),
@@ -201,15 +251,27 @@ fun ModifierSettingsScreen(
                     altBindingExpanded = false
                 }
             )
+
+            SettingsSectionDivider(stringResource(R.string.key_shortcuts_title))
             ModifierNavigationRow(
                 iconRes = R.drawable.keyboard_option_key_24,
-                title = stringResource(R.string.alt_key_shortcuts_title),
-                description = stringResource(R.string.alt_key_shortcuts_modifier_link_description),
-                linkId = SettingLinkIds.MODIFIERS_ALT_KEY_SHORTCUTS,
-                onClick = onOpenSymShortcuts
+                title = stringResource(R.string.key_shortcuts_title),
+                description = stringResource(R.string.key_shortcuts_description),
+                linkId = SettingLinkIds.MODIFIERS_SYM_SHORTCUTS,
+                onClick = onOpenKeyShortcuts,
+                onInfoClick = { showSymShortcutCompatibilityInfo = true }
             )
+            ModifierSwitchRow(
+                title = stringResource(R.string.alt_ctrl_speech_shortcut_title),
+                description = stringResource(R.string.alt_ctrl_speech_shortcut_description),
+                checked = altCtrlSpeechShortcut,
+                linkId = SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT
+            ) {
+                altCtrlSpeechShortcut = it
+                SettingsManager.setAltCtrlSpeechShortcutEnabled(context, it)
+            }
 
-            SettingsSectionDivider(stringResource(R.string.modifiers_section_control))
+            SettingsSectionDivider(stringResource(R.string.nav_mode_title))
             ModifierNavigationRow(
                 iconRes = R.drawable.navigation_24,
                 title = stringResource(R.string.modifier_control_nav_mode_title),
@@ -217,57 +279,6 @@ fun ModifierSettingsScreen(
                 linkId = SettingLinkIds.MODIFIERS_CONTROL_NAV_MODE,
                 onClick = onOpenNavMode
             )
-
-            SettingsSectionDivider(stringResource(R.string.modifier_tap_behaviour_title))
-            ModifierSwitchRow(
-                title = stringResource(R.string.shift_tap_latches_title),
-                description = stringResource(R.string.shift_tap_latches_description),
-                checked = shiftTapLatches,
-                linkId = SettingLinkIds.MODIFIERS_SHIFT_TAP_LATCHES
-            ) {
-                shiftTapLatches = it
-                SettingsManager.setShiftTapLatches(context, it)
-            }
-            ModifierSwitchRow(
-                title = stringResource(R.string.alt_tap_latches_title),
-                description = stringResource(R.string.alt_tap_latches_description),
-                checked = altTapLatches,
-                linkId = SettingLinkIds.MODIFIERS_ALT_TAP_LATCHES
-            ) {
-                altTapLatches = it
-                SettingsManager.setAltTapLatches(context, it)
-            }
-            ModifierSwitchRow(
-                title = stringResource(R.string.alt_latch_stays_on_space_title),
-                description = stringResource(R.string.alt_latch_stays_on_space_description),
-                checked = altLatchStaysOnSpace,
-                indent = true,
-                linkId = SettingLinkIds.MODIFIERS_ALT_LATCH_STAYS_ON_SPACE
-            ) {
-                altLatchStaysOnSpace = it
-                SettingsManager.setAltLatchStaysOnSpace(context, it)
-            }
-            ModifierSwitchRow(
-                title = stringResource(R.string.ctrl_tap_latches_title),
-                description = stringResource(R.string.ctrl_tap_latches_description),
-                checked = ctrlTapLatches,
-                linkId = SettingLinkIds.MODIFIERS_CTRL_TAP_LATCHES
-            ) {
-                ctrlTapLatches = it
-                SettingsManager.setCtrlTapLatches(context, it)
-            }
-            if (ctrlTapLatches) {
-                ModifierSwitchRow(
-                    title = stringResource(R.string.ctrl_latch_stays_on_space_title),
-                    description = stringResource(R.string.ctrl_latch_stays_on_space_description),
-                    checked = ctrlLatchStaysOnSpace,
-                    indent = true,
-                    linkId = SettingLinkIds.MODIFIERS_CTRL_LATCH_STAYS_ON_SPACE
-                ) {
-                    ctrlLatchStaysOnSpace = it
-                    SettingsManager.setCtrlLatchStaysOnSpace(context, it)
-                }
-            }
 
         }
     }

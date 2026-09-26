@@ -131,7 +131,7 @@ import rikka.shizuku.Shizuku
 
 /** The top bar with a back arrow and a scrolling column, as on the other settings screens. */
 @Composable
-private fun FluxScreenScaffold(
+internal fun FluxScreenScaffold(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier,
@@ -179,7 +179,7 @@ private fun FluxScreenScaffold(
 
 /** A short explanation at the top of a screen or under a section header. */
 @Composable
-private fun FluxNote(text: String) {
+internal fun FluxNote(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
@@ -190,8 +190,8 @@ private fun FluxNote(text: String) {
 
 /** A row with a title, a description and a switch; tapping anywhere on it toggles. */
 @Composable
-private fun FluxSwitchRow(
-    linkId: String,
+internal fun FluxSwitchRow(
+    linkId: String?,
     title: String,
     description: String,
     checked: Boolean,
@@ -214,7 +214,7 @@ private fun FluxSwitchRow(
 
 /** A row with a title and a description that does something when tapped. */
 @Composable
-private fun FluxActionRow(linkId: String, title: String, description: String, onClick: () -> Unit) {
+internal fun FluxActionRow(linkId: String?, title: String, description: String, onClick: () -> Unit) {
     Surface(modifier = Modifier.fillMaxWidth().settingRow(linkId, onClick)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -271,8 +271,11 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     var gifFocus by remember { mutableStateOf(SettingsManager.getGifFocusSearch(context)) }
     var layerTypeToSearch by remember { mutableStateOf(SettingsManager.getEmojiLayerTypeToSearch(context)) }
     var symbolsTypeToSearch by remember { mutableStateOf(SettingsManager.getSymbolsTypeToSearch(context)) }
+    var symAutoClose by remember { mutableStateOf(SettingsManager.getSymAutoClose(context)) }
+    var symAutoCloseOnTouch by remember { mutableStateOf(SettingsManager.getSymAutoCloseOnTouch(context)) }
+    var emojiPickerExpandedHeight by remember { mutableStateOf(SettingsManager.getEmojiPickerExpandedHeight(context)) }
 
-    FluxScreenScaffold(stringResource(R.string.flux_emoji_gifs_title), onBack, modifier) {
+    FluxScreenScaffold(stringResource(R.string.settings_emoji_symbols_gifs_title), onBack, modifier) {
         FluxNote(stringResource(R.string.flux_emoji_gifs_note))
 
         SettingsSectionDivider(stringResource(R.string.flux_section_emoji_key))
@@ -425,6 +428,40 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
             }
         }
+
+        SettingsSectionDivider(stringResource(R.string.flux_section_sym_picker))
+        FluxSwitchRow(
+            linkId = "sym.auto_close",
+            title = stringResource(R.string.sym_auto_close_title),
+            description = stringResource(R.string.sym_auto_close_description),
+            checked = symAutoClose,
+            onCheckedChange = { enabled ->
+                symAutoClose = enabled
+                SettingsManager.setSymAutoClose(context, enabled)
+            }
+        )
+        if (symAutoClose) {
+            FluxSwitchRow(
+                linkId = "sym.auto_close_touch",
+                title = stringResource(R.string.sym_auto_close_touch_title),
+                description = stringResource(R.string.sym_auto_close_touch_description),
+                checked = symAutoCloseOnTouch,
+                onCheckedChange = { enabled ->
+                    symAutoCloseOnTouch = enabled
+                    SettingsManager.setSymAutoCloseOnTouch(context, enabled)
+                }
+            )
+        }
+        FluxSwitchRow(
+            linkId = "sym.emoji_height",
+            title = stringResource(R.string.emoji_picker_expanded_height_title),
+            description = stringResource(R.string.emoji_picker_expanded_height_description),
+            checked = emojiPickerExpandedHeight,
+            onCheckedChange = { enabled ->
+                emojiPickerExpandedHeight = enabled
+                SettingsManager.setEmojiPickerExpandedHeight(context, enabled)
+            }
+        )
 
         SettingsSectionDivider(stringResource(R.string.flux_section_gif_search))
         if (SettingsManager.isOfflineMode(context)) {

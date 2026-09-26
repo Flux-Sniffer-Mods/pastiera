@@ -37,23 +37,23 @@ internal fun systemSettingEntries(): List<SettingEntry> = listOf(
         id = "trackpad.add_word",
         titleRes = R.string.trackpad_gesture_add_word_title,
         summaryRes = R.string.trackpad_gesture_add_word_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     ),
     SettingEntry(
         id = "trackpad.add_word_full_width",
         titleRes = R.string.trackpad_gesture_add_word_full_width_title,
         summaryRes = R.string.trackpad_gesture_add_word_full_width_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     ),
     SettingEntry(
         id = "trackpad.swipe_to_delete",
         titleRes = R.string.swipe_to_delete_title,
         summaryRes = R.string.swipe_to_delete_description,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     ),
     SettingEntry(
         id = "trackpad.swipe_to_delete_provider",
         titleRes = R.string.swipe_to_delete_provider_title,
-        route = SettingRoute(SettingsDestination.Advanced)
+        route = SettingRoute(SettingsDestination.TrackpadGestures)
     )
 )

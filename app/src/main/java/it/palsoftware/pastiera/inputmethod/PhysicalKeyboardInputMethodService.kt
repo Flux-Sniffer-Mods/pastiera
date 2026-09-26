@@ -1,5 +1,10 @@
 package it.palsoftware.pastiera.inputmethod
 
+import it.palsoftware.pastiera.shortcuts.AppShortcutRemapper
+import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
+import it.palsoftware.pastiera.shortcuts.KeyCombo
+import it.palsoftware.pastiera.shortcuts.ShortcutAction
+import it.palsoftware.pastiera.shortcuts.toIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -4676,6 +4681,73 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
     }
 
+    // Keys (as pressed) whose press was sent to the app as its own shortcut; their release is dropped
+    private val appShortcutKeysDown = mutableSetOf<Int>()
+
+    /**
+     * Universal app shortcuts: a standard combo (Ctrl+F, Alt+Down, ...) pressed in an app with
+     * a preset is sent as that app's own shortcut. Returns true when the key was handled.
+     */
+    private fun remapAppShortcut(pressedKeyCode: Int, event: KeyEvent?, hasEditableField: Boolean): Boolean {
+        if (event == null || event.action != KeyEvent.ACTION_DOWN) return false
+        if (event.repeatCount > 0) return pressedKeyCode in appShortcutKeysDown
+        val keyCode = event.keyCode
+        if (KeyEvent.isModifierKey(keyCode) || keyCode == KEYCODE_SYM) return false
+        if (::candidatesBarController.isInitialized && candidatesBarController.isEmojiPickerSearchInputActive()) return false
+        val heldCtrl = event.isCtrlPressed || ctrlPressed || ctrlPhysicallyPressed
+        // In a text field a latched Ctrl (and a held one with "held Ctrl uses Nav Mode") is
+        // Pastiera's cursor and selection grid; only a held Ctrl the app would get counts there
+        val ctrl = if (hasEditableField) {
+            heldCtrl && !SettingsManager.getNavModeCtrlHoldEnabled(this)
+        } else {
+            heldCtrl || ctrlOneShot || (ctrlLatchActive && !ctrlLatchFromNavMode)
+        }
+        val alt = event.isAltPressed || altPhysicallyPressed
+        // Every standard combo holds Ctrl or Alt; plain typing never gets this far
+        if (!ctrl && !alt) return false
+        val shift = event.isShiftPressed || shiftPressed || modifierStateController.shiftPhysicallyPressed
+        val packageName = currentInputEditorInfo?.packageName ?: currentPackageName ?: return false
+        val action = AppShortcutRemapper.resolve(
+            AppShortcutSettings.config(this),
+            packageName,
+            KeyCombo(keyCode, ctrl = ctrl, alt = alt, shift = shift, meta = event.isMetaPressed),
+            inTextField = hasEditableField
+        ) ?: return false
+        when (action) {
+            is ShortcutAction.SendKeys -> {
+                val target = action.combo
+                val ic = currentInputConnection ?: return false
+                val now = SystemClock.uptimeMillis()
+                val flags = KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE
+                ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, target.keyCode, 0, target.metaState,
+                    KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags))
+                ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, target.keyCode, 0, target.metaState,
+                    KeyCharacterMap.VIRTUAL_KEYBOARD, 0, flags))
+                // Which combo became which, never any text
+                Log.i("PastieraAppShortcuts", "$packageName: $keyCode sent as ${target.serialize()}")
+            }
+            is ShortcutAction.OpenInApp -> {
+                // A suggestion the app on this phone doesn't accept lets the key through
+                val intent = action.intents.firstNotNullOfOrNull { appIntent ->
+                    appIntent.toIntent(packageName).takeIf { it.resolveActivity(packageManager) != null }
+                } ?: return false
+                try {
+                    startActivity(intent)
+                } catch (error: Exception) {
+                    Log.w("PastieraAppShortcuts", "$packageName: suggestion not opened", error)
+                    return false
+                }
+                Log.i("PastieraAppShortcuts", "$packageName: $keyCode opened ${intent.action}")
+            }
+        }
+        appShortcutKeysDown += pressedKeyCode
+        if (ctrlOneShot) {
+            ctrlOneShot = false
+            updateStatusBarText()
+        }
+        return true
+    }
+
     override fun onKeyLongPress(keyCode_: Int, event_: KeyEvent?): Boolean {
         if (keyboardHiddenForApp && !hiddenAppKeyGoesToPastiera(keyCode_)) return super.onKeyLongPress(keyCode_, event_)
         if (!replayingProtectedNumberKey) {
@@ -4795,6 +4867,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val hasEditableField = initialInputConnection != null && inputType != EditorInfo.TYPE_NULL
         if (hasEditableField && !isInputViewActive) {
             isInputViewActive = true
+        }
+        if (remapAppShortcut(keyCode_, event, hasEditableField)) {
+            return true
         }
         if (hasEditableField && ::candidatesBarController.isInitialized) {
             candidatesBarController.resetSuggestionActionMode()
@@ -5465,6 +5540,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun handleKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
+        // The release of a key sent to the app as its own shortcut
+        if (appShortcutKeysDown.remove(keyCode_)) return true
         if (!replayingProtectedNumberKey) {
             when (val result = accidentalKeyPressFilter.onKeyUp(keyCode_, event_)) {
                 is AccidentalKeyPressFilter.KeyUpResult.Suppressed -> {

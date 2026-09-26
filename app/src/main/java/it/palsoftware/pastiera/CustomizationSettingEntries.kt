@@ -49,7 +49,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.power_shortcuts_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         )
     ),
     SettingEntry(
@@ -58,7 +58,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.alt_key_shortcuts_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         )
     ),
     SettingEntry(
@@ -67,7 +67,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.sym_shortcuts_in_text_fields_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         ),
         availabilityCheck = { SettingsManager.getPowerShortcutsEnabled(it) },
         unavailableFallbackId = "quick_launcher.sym_shortcuts"
@@ -78,7 +78,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.alt_shortcuts_in_text_fields_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         ),
         availabilityCheck = { SettingsManager.getQuickLauncherAltShortcutsOutsideTextFields(it) },
         unavailableFallbackId = "quick_launcher.alt_shortcuts"

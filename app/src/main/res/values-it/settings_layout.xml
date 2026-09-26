@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_keyboards_layouts_title">Tastiere e layout</string>
+    <string name="settings_keyboards_layouts_description">Dispositivi, lingue di input, cambio layout</string>
+    <string name="settings_typing_title">Digitazione</string>
+    <string name="settings_typing_description">Maiuscole e punteggiatura, tasti di modifica, correzione automatica, espansione testo</string>
+    <string name="settings_modifiers_sym_title">Modificatori e SYM</string>
+    <string name="settings_modifiers_sym_description">Tocco, blocco e pressione lunga, pagine SYM, scorciatoie, Nav Mode</string>
+    <string name="settings_emoji_symbols_gifs_title">Emoji, simboli e GIF</string>
+    <string name="settings_emoji_symbols_gifs_description">Tasto e livello emoji, selettore, ricerca simboli e GIF</string>
+    <string name="settings_look_sound_title">Aspetto e suono</string>
+    <string name="settings_look_sound_description">Tema e colori dei LED, barra di stato, suono e vibrazione, lingua</string>
+    <string name="settings_trackpad_gestures_title">Trackpad e gesti</string>
+    <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole</string>
+    <string name="settings_apps_title">App</string>
+    <string name="settings_apps_description">Scorciatoie delle app, QuickLauncher, app con tastiera nascosta, desktop Linux</string>
+    <string name="settings_privacy_system_title">Privacy e sistema</string>
+    <string name="settings_privacy_system_description">Modalità offline, backup, appunti, accessibilità, aggiornamenti, informazioni</string>
+
+    <string name="settings_keyboards_devices_description">Tastiere integrate, a schermo e accessori, e il passaggio tra di esse</string>
+    <string name="settings_input_languages_description">Lingue, i loro layout e i tasti per cambiarli</string>
+
+    <string name="settings_capitalisation_punctuation_title">Maiuscole e punteggiatura</string>
+    <string name="settings_capitalisation_punctuation_description">Lettere maiuscole, spazi, trattini e virgolette</string>
+    <string name="settings_editing_keys_title">Tasti di modifica</string>
+    <string name="settings_editing_keys_description">Combinazioni di Backspace e Invio per app</string>
+    <string name="settings_auto_correction_description">Sostituzioni, suggerimenti e dizionari</string>
+    <string name="settings_text_expansion_hub_description">Snippet e codici brevi per emoji e simboli</string>
+    <string name="settings_section_enter">Invio</string>
+
+    <string name="settings_theme_led_colours_title">Tema e colori dei LED</string>
+    <string name="settings_theme_led_colours_description">Colori della tastiera, forma dei tasti e LED dei modificatori</string>
+    <string name="settings_section_status_bar">Barra di stato</string>
+    <string name="settings_section_sound_popups">Suono e popup</string>
+    <string name="settings_variations_popup_description">I caratteri proposti tenendo premuto un tasto</string>
+    <string name="settings_section_language">Lingua</string>
+
+    <string name="settings_quick_launcher_description">Apri app e comandi dalla tastiera</string>
+
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_backup">Backup e appunti</string>
+    <string name="settings_accessibility_row_description">Lettura ad alta voce, tasti lenti e tasti sovrapposti</string>
+    <string name="settings_section_experimental">Sperimentale</string>
+    <string name="settings_section_help_about">Aiuto, aggiornamenti e informazioni</string>
+
+    <string name="modifiers_section_tap_lock_long_press">Tocco, blocco e pressione lunga</string>
+    <string name="modifiers_section_sym_pages_layers">Pagine e livelli SYM</string>
+    <string name="key_shortcuts_title">Scorciatoie da tastiera</string>
+    <string name="key_shortcuts_description">Scorciatoie SYM e Alt che aprono app e comandi</string>
+    <string name="key_shortcuts_intro">Tieni premuto SYM o Alt e premi una lettera per aprire ciò che le è assegnato. Entrambi usano la stessa lista di assegnazioni.</string>
+
+    <string name="flux_section_sym_picker">Livello SYM e selettore</string>
+</resources>

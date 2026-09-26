@@ -186,7 +186,7 @@ class SettingLinkRegistryTest {
     }
 
     @Test
-    fun trackpadDetailLinksRouteThroughAdvancedSettings() {
+    fun trackpadDetailLinksRouteToTrackpadAndGestures() {
         val trackpadIds = setOf(
             SettingLinkIds.TRACKPAD_GESTURES_ENABLED,
             SettingLinkIds.TRACKPAD_PROVIDER,
@@ -199,7 +199,7 @@ class SettingLinkRegistryTest {
 
         trackpadIds.forEach { id ->
             assertEquals(
-                SettingsDestination.Advanced,
+                SettingsDestination.TrackpadGestures,
                 requireNotNull(SettingLinkRegistry.byId(id)).route.destination
             )
         }

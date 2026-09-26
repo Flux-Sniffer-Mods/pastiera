@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings organised by what you are trying to do -->
+<resources>
+    <string name="settings_keyboards_layouts_title">Keyboards &amp; layouts</string>
+    <string name="settings_keyboards_layouts_description">Devices, input languages, layout switching</string>
+    <string name="settings_typing_title">Typing</string>
+    <string name="settings_typing_description">Capitals and punctuation, editing keys, auto-correction, text expansion</string>
+    <string name="settings_modifiers_sym_title">Modifiers &amp; SYM</string>
+    <string name="settings_modifiers_sym_description">Tap, lock and long press, SYM pages, key shortcuts, Nav Mode</string>
+    <string name="settings_emoji_symbols_gifs_title">Emoji, symbols &amp; GIFs</string>
+    <string name="settings_emoji_symbols_gifs_description">Emoji key and layer, the picker, symbol and GIF search</string>
+    <string name="settings_look_sound_title">Look &amp; sound</string>
+    <string name="settings_look_sound_description">Theme and LED colours, status bar, sound and haptics, language</string>
+    <string name="settings_trackpad_gestures_title">Trackpad &amp; gestures</string>
+    <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words</string>
+    <string name="settings_apps_title">Apps</string>
+    <string name="settings_apps_description">App shortcuts, Quick Launcher, hidden keyboard apps, Linux desktop</string>
+    <string name="settings_privacy_system_title">Privacy &amp; system</string>
+    <string name="settings_privacy_system_description">Offline mode, backup, clipboard, accessibility, updates, about</string>
+
+    <string name="settings_keyboards_devices_description">Built-in, on-screen and accessory keyboards, and switching between them</string>
+    <string name="settings_input_languages_description">Languages, their layouts and the keys that switch them</string>
+
+    <string name="settings_capitalisation_punctuation_title">Capitals &amp; punctuation</string>
+    <string name="settings_capitalisation_punctuation_description">Capital letters, spacing, dashes and quotes</string>
+    <string name="settings_editing_keys_title">Editing keys</string>
+    <string name="settings_editing_keys_description">Backspace combinations and Enter per app</string>
+    <string name="settings_auto_correction_description">Replacements, suggestions and dictionaries</string>
+    <string name="settings_text_expansion_hub_description">Snippets, and emoji and symbol shortcodes</string>
+    <string name="settings_section_enter">Enter</string>
+
+    <string name="settings_theme_led_colours_title">Theme &amp; LED colours</string>
+    <string name="settings_theme_led_colours_description">Keyboard colours, key shapes and the modifier LEDs</string>
+    <string name="settings_section_status_bar">Status bar</string>
+    <string name="settings_section_sound_popups">Sound &amp; popups</string>
+    <string name="settings_variations_popup_description">The characters offered when you hold a key</string>
+    <string name="settings_section_language">Language</string>
+
+    <string name="settings_quick_launcher_description">Open apps and commands from the keyboard</string>
+
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_backup">Backup &amp; clipboard</string>
+    <string name="settings_accessibility_row_description">Reading aloud, bounce keys and overlapping keys</string>
+    <string name="settings_section_experimental">Experimental</string>
+    <string name="settings_section_help_about">Help, updates &amp; about</string>
+
+    <string name="modifiers_section_tap_lock_long_press">Tap, lock &amp; long press</string>
+    <string name="modifiers_section_sym_pages_layers">SYM pages &amp; layers</string>
+    <string name="key_shortcuts_title">Key shortcuts</string>
+    <string name="key_shortcuts_description">SYM and Alt shortcuts that open apps and commands</string>
+    <string name="key_shortcuts_intro">Hold SYM or Alt and press a letter to open what is assigned to it. Both use the same assignment list.</string>
+
+    <string name="flux_section_sym_picker">SYM layer &amp; picker</string>
+</resources>

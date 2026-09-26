@@ -1767,7 +1767,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_tab_description">GIF search</string>
     <string name="gif_attribution">Powered by KLIPY</string>
     <string name="gif_search_placeholder">Search KLIPY</string>
-    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Pastiera Flux → Emoji, symbols &amp; GIFs → GIF search.</string>
+    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Emoji, symbols &amp; GIFs → GIF search.</string>
     <string name="gif_sent_as_link">This app doesn’t take GIFs here, so its link was typed instead.</string>
     <string name="gif_settings_title">GIF search</string>
     <string name="gif_settings_description">Adds a GIF key to the emoji layer and a GIF tab to the emoji picker, with GIFs from KLIPY. Searches and GIFs are only fetched from KLIPY while GIF search is open.</string>
@@ -1851,7 +1851,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="flux_offline_switch_description">Nothing in Pastiera goes online.</string>
     <string name="flux_section_offline_affects">While it’s on</string>
     <string name="flux_offline_affects">• GIF search is gone, with its tab and the emoji layer’s GIF key\n• Dictionaries and layouts can’t be downloaded\n• No update checks or release notes\n• Emoji come from the system font only, without the downloadable emoji font (from the next start of the keyboard)</string>
-    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Pastiera Flux → Offline mode).</string>
+    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Privacy &amp; system → Offline mode).</string>
     <string name="search_key_title">Search key</string>
     <string name="search_key_description">On the emoji layer and the symbols pages this key opens search; in the emoji picker and GIF search it puts typing into the search. A unless you change it; it can’t be the Recents or GIF key.</string>
 </resources>

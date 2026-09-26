@@ -1084,7 +1084,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_tab_description">Cerca GIF</string>
     <string name="gif_attribution">Fornito da KLIPY</string>
     <string name="gif_search_placeholder">Cerca su KLIPY</string>
-    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Pastiera Flux → Emoji, simboli e GIF → Ricerca GIF.</string>
+    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Emoji, simboli e GIF → Ricerca GIF.</string>
     <string name="gif_sent_as_link">Questa app non accetta GIF qui, quindi è stato scritto il link.</string>
     <string name="gif_settings_title">Cerca GIF</string>
     <string name="gif_settings_description">Aggiunge un tasto GIF al livello emoji e una scheda GIF al selettore emoji, con GIF da KLIPY. Ricerche e GIF vengono scaricate da KLIPY solo mentre la ricerca GIF è aperta.</string>
@@ -1168,7 +1168,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="flux_offline_switch_description">Nulla in Pastiera va online.</string>
     <string name="flux_section_offline_affects">Mentre è attiva</string>
     <string name="flux_offline_affects">• La ricerca GIF sparisce, con la sua scheda e il tasto GIF del livello emoji\n• Dizionari e layout non si possono scaricare\n• Nessun controllo degli aggiornamenti né note di rilascio\n• Le emoji vengono solo dal font di sistema, senza il font emoji scaricabile (dal prossimo avvio della tastiera)</string>
-    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Pastiera Flux → Modalità offline).</string>
+    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Privacy e sistema → Modalità offline).</string>
     <string name="search_key_title">Tasto ricerca</string>
     <string name="search_key_description">Nel livello emoji e nelle pagine dei simboli questo tasto apre la ricerca; nel selettore emoji e nella ricerca GIF manda la digitazione alla ricerca. A se non lo cambi; non può essere il tasto Recenti o GIF.</string>
 </resources>
