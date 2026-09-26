@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Rect
+import android.graphics.ImageDecoder
+import android.graphics.Typeface
+import android.graphics.drawable.AnimatedImageDrawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
@@ -39,6 +42,9 @@ import it.palsoftware.pastiera.data.emoji.EmojiRepository
 import it.palsoftware.pastiera.data.emoji.RecentEmojiManager
 import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
 import it.palsoftware.pastiera.data.emoji.EmojiCompatSupport
+import it.palsoftware.pastiera.data.gif.GifResult
+import it.palsoftware.pastiera.data.gif.KlipyGifs
+import java.nio.ByteBuffer
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -108,6 +115,17 @@ class EmojiPickerView(
     private var searchFieldHost: ViewGroup? = null
     private var searchQuery: String = ""
     private var searchJob: Job? = null
+
+    // GIF mode (KLIPY): its own grid over the emoji grid, and a tab in the bottom bar
+    private var gifMode: Boolean = false
+    private var gifJob: Job? = null
+    private val gifAdapter = GifAdapter()
+    private val gifTabButton: TextView
+    private val gifGrid: RecyclerView
+    private val gifAttribution: TextView
+
+    /** A GIF was tapped in GIF mode; the input method sends it. */
+    var onGifChosen: ((GifResult) -> Unit)? = null
     private var isSearchMode: Boolean = false
     private var isSearchPanelVisible: Boolean = false
     private var searchInputCaptureEnabled: Boolean = true
@@ -316,6 +334,46 @@ class EmojiPickerView(
                 }
             }
         }
+        gifTabButton = TextView(context).apply {
+            text = context.getString(R.string.gif_tab)
+            contentDescription = context.getString(R.string.gif_tab_description)
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTypeface(typeface, Typeface.BOLD)
+            background = createTabBackground(false)
+            isClickable = true
+            isFocusable = true
+            visibility = if (SettingsManager.getGifsEnabled(context)) View.VISIBLE else View.GONE
+            layoutParams = LinearLayout.LayoutParams(dpToPx(40f), ViewGroup.LayoutParams.MATCH_PARENT).apply {
+                marginEnd = spacing
+            }
+            setOnClickListener { if (gifMode) setGifMode(false) else openGifs() }
+        }
+        gifGrid = RecyclerView(context).apply {
+            layoutManager = GridLayoutManager(context, 3)
+            adapter = gifAdapter
+            itemAnimator = null
+            clipToPadding = false
+            setPadding(smallPadding, smallPadding, smallPadding, smallPadding)
+            visibility = View.GONE
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        // KLIPY asks for attribution where its content is shown
+        gifAttribution = TextView(context).apply {
+            text = context.getString(R.string.gif_attribution)
+            textSize = 10f
+            alpha = 0.7f
+            visibility = View.GONE
+            setPadding(dpToPx(6f), dpToPx(2f), dpToPx(6f), dpToPx(2f))
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            )
+        }
         tabRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
@@ -355,10 +413,13 @@ class EmojiPickerView(
                     1f
                 )
                 addView(recyclerView)
+                // GIF mode draws over the emoji grid (opaque), messages above both
+                addView(gifGrid)
                 // Keep empty/error states inside the result area. A root-level MATCH_PARENT
                 // overlay would hide the search field and bottom controls when no emoji matches.
                 addView(emptyView)
                 addView(searchPanel)
+                addView(gifAttribution)
             }
         )
         vertical.addView(
@@ -369,6 +430,7 @@ class EmojiPickerView(
                     tabHeight
                 )
                 addView(searchToggleButton)
+                addView(gifTabButton)
                 addView(keyboardSwitcherButton)
                 addView(tabScrollView, LinearLayout.LayoutParams(0, tabHeight, 1f))
                 addView(closeButton)
@@ -489,6 +551,8 @@ class EmojiPickerView(
     }
 
     fun refresh() {
+        refreshGifAvailability()
+        if (gifMode) setGifMode(false)
         loadCategories()
     }
 
@@ -917,6 +981,75 @@ class EmojiPickerView(
         }
     }
 
+    /** Opens GIF search (KLIPY): featured GIFs first; typing searches. Needs GIFs turned on. */
+    fun openGifs() {
+        if (!SettingsManager.getGifsEnabled(context)) return
+        setGifMode(true)
+        setSearchPanelVisible(true)
+    }
+
+    /** Shows or hides the GIF tab as the setting changes; leaves GIF mode when it's turned off. */
+    fun refreshGifAvailability() {
+        val enabled = SettingsManager.getGifsEnabled(context)
+        gifTabButton.visibility = if (enabled) View.VISIBLE else View.GONE
+        if (!enabled && gifMode) setGifMode(false)
+    }
+
+    private fun setGifMode(enabled: Boolean) {
+        if (gifMode == enabled) return
+        gifMode = enabled
+        gifTabButton.background = createTabBackground(enabled)
+        gifGrid.visibility = if (enabled) View.VISIBLE else View.GONE
+        gifAttribution.visibility = if (enabled) View.VISIBLE else View.GONE
+        tabRow.alpha = if (enabled) 0.55f else 1f
+        searchField.hint = context.getString(
+            if (enabled) R.string.gif_search_placeholder else R.string.emoji_picker_search_placeholder
+        )
+        if (enabled) {
+            loadGifs(searchQuery)
+        } else {
+            gifJob?.cancel()
+            gifAdapter.submit(emptyList())
+            emptyView.visibility = View.GONE
+            applySearchNow()
+        }
+    }
+
+    private fun loadGifs(query: String) {
+        gifJob?.cancel()
+        val apiKey = SettingsManager.getKlipyApiKey(context)
+        if (apiKey.isBlank()) {
+            gifAdapter.submit(emptyList())
+            showGifMessage(R.string.gif_no_api_key)
+            return
+        }
+        gifJob = coroutineScope.launch {
+            // Wait for a pause in typing before asking the network
+            if (query.isNotBlank()) delay(350)
+            val results = try {
+                KlipyGifs.find(apiKey, query.trim())
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                gifAdapter.submit(emptyList())
+                showGifMessage(R.string.gif_error)
+                return@launch
+            }
+            gifAdapter.submit(results)
+            gifGrid.scrollToPosition(0)
+            showGifMessage(if (results.isEmpty()) R.string.emoji_picker_no_results else null)
+        }
+    }
+
+    private fun showGifMessage(messageRes: Int?) {
+        if (messageRes == null) {
+            emptyView.visibility = View.GONE
+        } else {
+            emptyView.text = context.getString(messageRes)
+            emptyView.visibility = View.VISIBLE
+        }
+    }
+
     /** Opens the search, focused for typing (e.g. from the emoji layer's search button). */
     fun openSearch() {
         setSearchPanelVisible(true)
@@ -935,6 +1068,10 @@ class EmojiPickerView(
     }
 
     private fun applySearchNow() {
+        if (gifMode) {
+            loadGifs(searchQuery)
+            return
+        }
         val query = searchQuery.trim()
         if (query.isEmpty()) {
             lastSearchResults = emptyList()
@@ -1044,6 +1181,7 @@ class EmojiPickerView(
                     1f // Equal weight for all tabs
                 )
                 setOnClickListener {
+                    if (gifMode) setGifMode(false)
                     if (isSearchMode) return@setOnClickListener
                     selectedCategoryId = category.id
                     updateTabsSelection()
@@ -1264,6 +1402,10 @@ class EmojiPickerView(
     private fun applyTheme() {
         val theme = themeOverride
         val background = theme?.background ?: Color.TRANSPARENT
+        gifGrid.setBackgroundColor(if (background == Color.TRANSPARENT) Color.BLACK else background)
+        gifTabButton.setTextColor(theme?.textAndIcons ?: Color.WHITE)
+        gifTabButton.background = createTabBackground(gifMode)
+        gifAttribution.setTextColor(theme?.textAndIcons ?: Color.WHITE)
         setBackgroundColor(background)
         vertical.setBackgroundColor(background)
         recyclerView.setBackgroundColor(background)
@@ -1724,6 +1866,73 @@ class EmojiPickerView(
             } else {
                 compactHeight
             }
+        }
+    }
+
+    /** GIF grid: animated previews, decoded per cell from cached bytes. */
+    private inner class GifAdapter : RecyclerView.Adapter<GifHolder>() {
+        private var items: List<GifResult> = emptyList()
+
+        fun submit(list: List<GifResult>) {
+            items = list
+            @Suppress("NotifyDataSetChanged")
+            notifyDataSetChanged()
+        }
+
+        override fun getItemCount(): Int = items.size
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GifHolder {
+            val image = ImageView(parent.context).apply {
+                layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(84f)).apply {
+                    val margin = dpToPx(2f)
+                    setMargins(margin, margin, margin, margin)
+                }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = createTabBackground(false)
+                clipToOutline = true
+                isClickable = true
+                isFocusable = true
+            }
+            return GifHolder(image)
+        }
+
+        override fun onBindViewHolder(holder: GifHolder, position: Int) {
+            holder.bind(items[position])
+        }
+
+        override fun onViewRecycled(holder: GifHolder) {
+            holder.clear()
+        }
+    }
+
+    private inner class GifHolder(private val image: ImageView) : RecyclerView.ViewHolder(image) {
+        private var job: Job? = null
+
+        fun bind(gif: GifResult) {
+            clear()
+            image.contentDescription = gif.description
+            image.setOnClickListener { onGifChosen?.invoke(gif) }
+            job = coroutineScope.launch {
+                val drawable = try {
+                    withContext(Dispatchers.IO) {
+                        val bytes = KlipyGifs.previewBytes(gif.previewUrl)
+                        ImageDecoder.decodeDrawable(ImageDecoder.createSource(ByteBuffer.wrap(bytes)))
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return@launch
+                }
+                image.setImageDrawable(drawable)
+                (drawable as? AnimatedImageDrawable)?.start()
+            }
+        }
+
+        fun clear() {
+            job?.cancel()
+            job = null
+            (image.drawable as? AnimatedImageDrawable)?.stop()
+            image.setImageDrawable(null)
         }
     }
 }

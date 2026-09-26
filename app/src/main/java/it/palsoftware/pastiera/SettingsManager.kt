@@ -153,6 +153,8 @@ object SettingsManager {
     private const val KEY_EMOJI_KEY_OPENS_LAYER = "emoji_key_opens_layer" // Emoji key opens the emoji layer instead of the picker
     private const val KEY_EMOJI_KEY_AUTO_CLOSE = "emoji_key_auto_close" // Emoji key screens close after an emoji
     private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
+    private const val KEY_GIFS_ENABLED = "gifs_enabled" // GIF key on the emoji layer, GIF tab in the picker
+    private const val KEY_KLIPY_API_KEY = "klipy_api_key" // User's own KLIPY key (not backed up)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
     private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed" // Whether the first-run tutorial has been completed
     private const val KEY_LAST_SEEN_WHATS_NEW_VERSION = "last_seen_whats_new_version"
@@ -5356,6 +5358,29 @@ object SettingsManager {
         KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_V,
         KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_M
     )
+
+    /** GIF search (KLIPY): a GIF key on the emoji layer and a GIF tab in the emoji picker. */
+    fun getGifsEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIFS_ENABLED, false)
+
+    fun setGifsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIFS_ENABLED, enabled).apply()
+    }
+
+    /** The KLIPY key GIF search uses: the user's own, else the build's built-in one (may be empty). */
+    fun getKlipyApiKey(context: Context): String =
+        getUserKlipyApiKey(context).ifEmpty { BuildConfig.KLIPY_API_KEY.trim() }
+
+    /** Only the key the user entered (the settings field never shows the built-in one). */
+    fun getUserKlipyApiKey(context: Context): String =
+        getPreferences(context).getString(KEY_KLIPY_API_KEY, "").orEmpty().trim()
+
+    /** This build has a KLIPY key built in (set as a CI secret when it was built). */
+    fun hasBuiltInKlipyApiKey(): Boolean = BuildConfig.KLIPY_API_KEY.isNotBlank()
+
+    fun setKlipyApiKey(context: Context, apiKey: String) {
+        getPreferences(context).edit().putString(KEY_KLIPY_API_KEY, apiKey.trim()).apply()
+    }
 
     /** The emoji layer key that shows recent emoji instead of its own (KEYCODE_UNKNOWN = none). */
     fun getEmojiLayerRecentsKey(context: Context): Int {

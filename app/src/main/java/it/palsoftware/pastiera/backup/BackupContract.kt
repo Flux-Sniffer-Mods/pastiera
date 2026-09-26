@@ -309,6 +309,7 @@ internal object BackupPreferenceContract {
             "emoji_key_opens_layer" to PreferenceValueType.BOOLEAN,
             "emoji_key_auto_close" to PreferenceValueType.BOOLEAN,
             "emoji_layer_recents_key" to PreferenceValueType.INT,
+            "gifs_enabled" to PreferenceValueType.BOOLEAN,
             "hidden_keyboard_apps" to PreferenceValueType.STRING,
             "hidden_keyboard_apps_show_leds" to PreferenceValueType.BOOLEAN,
             "hidden_keyboard_apps_allow_panels" to PreferenceValueType.BOOLEAN,
@@ -464,7 +465,8 @@ internal object BackupPreferenceContract {
         "software_keyboard_mode_runtime_override" to "runtime-derived state",
         "typing_sound_updated_at" to "runtime refresh marker",
         "clicks_bluetooth_permission_explained" to "permission UI state",
-        "clicks_manual_charging_until" to "transient runtime state"
+        "clicks_manual_charging_until" to "transient runtime state",
+        "klipy_api_key" to "personal API credential"
     )
 
     fun expectedExportType(prefName: String, key: String): PreferenceValueType? {

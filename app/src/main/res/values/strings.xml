@@ -1762,4 +1762,17 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="emoji_layer_recents_key_current">Key %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Turn off</string>
     <string name="emoji_layer_search_button">Search emoji</string>
+    <string name="gif_tab">GIF</string>
+    <string name="gif_tab_description">GIF search</string>
+    <string name="gif_attribution">Powered by KLIPY</string>
+    <string name="gif_search_placeholder">Search KLIPY</string>
+    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Modifiers → Customize SYM Keyboard → GIF search.</string>
+    <string name="gif_error">Couldn’t reach KLIPY. Check the connection and your API key.</string>
+    <string name="gif_sent_as_link">This app doesn’t take GIFs here, so its link was typed instead.</string>
+    <string name="gif_settings_title">GIF search</string>
+    <string name="gif_settings_description">Adds a GIF key to the emoji layer and a GIF tab to the emoji picker, with GIFs from KLIPY. Searches and GIFs are only fetched from KLIPY while GIF search is open.</string>
+    <string name="gif_api_key_help_builtin">Optional: this build has a KLIPY key built in, used while this field is empty. Your own free key from partner.klipy.com replaces it. Your key stays on this phone and isn’t included in backups.</string>
+    <string name="gif_api_key_label">KLIPY API key</string>
+    <string name="gif_api_key_help">Sign up at partner.klipy.com and create a key under API Keys → Add Platform. The key stays on this phone and isn’t included in backups.</string>
+    <string name="gif_get_key">Get a free key</string>
 </resources>

@@ -1079,4 +1079,17 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="emoji_layer_recents_key_current">Tasto %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Disattiva</string>
     <string name="emoji_layer_search_button">Cerca emoji</string>
+    <string name="gif_tab">GIF</string>
+    <string name="gif_tab_description">Cerca GIF</string>
+    <string name="gif_attribution">Fornito da KLIPY</string>
+    <string name="gif_search_placeholder">Cerca su KLIPY</string>
+    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Modificatori → Personalizza tastiera SYM → Cerca GIF.</string>
+    <string name="gif_error">Impossibile raggiungere KLIPY. Controlla la connessione e la chiave API.</string>
+    <string name="gif_sent_as_link">Questa app non accetta GIF qui, quindi è stato scritto il link.</string>
+    <string name="gif_settings_title">Cerca GIF</string>
+    <string name="gif_settings_description">Aggiunge un tasto GIF al livello emoji e una scheda GIF al selettore emoji, con GIF da KLIPY. Ricerche e GIF vengono scaricate da KLIPY solo mentre la ricerca GIF è aperta.</string>
+    <string name="gif_api_key_help_builtin">Facoltativo: questa build include una chiave KLIPY, usata finché questo campo è vuoto. La tua chiave gratuita da partner.klipy.com la sostituisce. La tua chiave resta su questo telefono e non è inclusa nei backup.</string>
+    <string name="gif_api_key_label">Chiave API KLIPY</string>
+    <string name="gif_api_key_help">Registrati su partner.klipy.com e crea una chiave in API Keys → Add Platform. La chiave resta su questo telefono e non è inclusa nei backup.</string>
+    <string name="gif_get_key">Ottieni una chiave gratuita</string>
 </resources>

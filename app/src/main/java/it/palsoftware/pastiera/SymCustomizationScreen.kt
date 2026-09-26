@@ -83,6 +83,8 @@ fun SymCustomizationScreen(
     var emojiKeyAutoClose by remember { mutableStateOf(SettingsManager.getEmojiKeyAutoClose(context)) }
     var emojiLayerRecentsKey by remember { mutableStateOf(SettingsManager.getEmojiLayerRecentsKey(context)) }
     var showRecentsKeyDialog by remember { mutableStateOf(false) }
+    var gifsEnabled by remember { mutableStateOf(SettingsManager.getGifsEnabled(context)) }
+    var klipyApiKey by remember { mutableStateOf(SettingsManager.getUserKlipyApiKey(context)) }
 
     val titan2LayoutEnabled = remember {
         SettingsManager.isTitan2LayoutEnabled(context)
@@ -873,6 +875,71 @@ fun SymCustomizationScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        // GIF search (KLIPY): a GIF key on the emoji layer and a GIF tab in the picker
+        Column(
+            modifier = Modifier.settingRow("sym.gifs")
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.gif_settings_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.gif_settings_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = gifsEnabled,
+                    onCheckedChange = { enabled ->
+                        gifsEnabled = enabled
+                        SettingsManager.setGifsEnabled(context, enabled)
+                    }
+                )
+            }
+            if (gifsEnabled) {
+                OutlinedTextField(
+                    value = klipyApiKey,
+                    onValueChange = { value ->
+                        klipyApiKey = value
+                        SettingsManager.setKlipyApiKey(context, value)
+                    },
+                    label = { Text(stringResource(R.string.gif_api_key_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+                Text(
+                    text = stringResource(
+                        if (SettingsManager.hasBuiltInKlipyApiKey()) R.string.gif_api_key_help_builtin
+                        else R.string.gif_api_key_help
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                TextButton(onClick = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(it.palsoftware.pastiera.data.gif.KlipyGifs.SIGNUP_URL))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                }) {
+                    Text(stringResource(R.string.gif_get_key))
                 }
             }
         }

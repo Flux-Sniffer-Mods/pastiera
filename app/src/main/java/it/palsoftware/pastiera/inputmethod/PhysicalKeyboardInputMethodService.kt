@@ -27,6 +27,14 @@ import android.view.inputmethod.CursorAnchorInfo
 import it.palsoftware.pastiera.clipboard.ClipboardDao
 import it.palsoftware.pastiera.inputmethod.KeyboardEventTracker
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import android.content.ClipDescription
+import androidx.core.content.FileProvider
+import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.inputmethod.InputConnectionCompat
+import androidx.core.view.inputmethod.InputContentInfoCompat
+import it.palsoftware.pastiera.data.gif.GifResult
+import it.palsoftware.pastiera.data.gif.KlipyGifs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -304,6 +312,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     // Trackpad gesture detection
     private val trackpadScope = CoroutineScope(Dispatchers.IO)
+    // Sends GIFs picked in the emoji picker (download, then rich content or a link)
+    private val gifScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var trackpadGestureDetector: TrackpadGestureDetector
     private var modifierStateBeforeHold: it.palsoftware.pastiera.core.ModifierStateController.LogicalState? = null
     private var variationInteractedDuringHold: Boolean = false
@@ -1942,6 +1952,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             symLayoutController.openEmojiPickerPage()
             updateStatusBarText()
         }
+        candidatesBarController.onEmojiLayerGifRequested = {
+            // Emoji layer's GIF key: the picker, in GIF search
+            candidatesBarController.requestEmojiPickerGifs()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
+        candidatesBarController.onGifChosen = { gif -> sendGif(gif) }
         candidatesBarController.onEmojiLayerRecentsToggled = {
             if (symLayoutController.toggleEmojiLayerRecents()) {
                 updateStatusBarText()
@@ -2775,6 +2792,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        gifScope.cancel()
         HiddenAppKeyObserver.sink = null
         HiddenAppKeyObserver.interceptor = null
         ClicksAccessibilityKeyBridge.unregister(this)
@@ -2950,6 +2968,50 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     private fun requestKeyboardInputView() = requestShowSelf(0)
+
+    /**
+     * A GIF picked in the emoji picker. Fields that take GIF content get the file itself
+     * (through the FileProvider); anywhere else, or if the download fails, its link is typed.
+     */
+    private fun sendGif(gif: GifResult) {
+        val editorInfo = currentInputEditorInfo ?: return
+        val acceptsGif = KlipyGifs.editorAcceptsGif(EditorInfoCompat.getContentMimeTypes(editorInfo))
+        // A GIF is a one-off: close the picker straight away
+        if (symLayoutController.closeSymPage()) updateStatusBarText()
+        if (!acceptsGif) {
+            currentInputConnection?.commitText(gif.gifUrl, 1)
+            Toast.makeText(this, R.string.gif_sent_as_link, Toast.LENGTH_SHORT).show()
+            return
+        }
+        gifScope.launch {
+            val file = try {
+                KlipyGifs.downloadToCache(this@PhysicalKeyboardInputMethodService, gif)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            // The field may have changed during the download: use the current one
+            val connection = currentInputConnection ?: return@launch
+            val info = currentInputEditorInfo ?: return@launch
+            if (file == null) {
+                connection.commitText(gif.gifUrl, 1)
+                return@launch
+            }
+            val uri = FileProvider.getUriForFile(
+                this@PhysicalKeyboardInputMethodService, "$packageName.fileprovider", file
+            )
+            val content = InputContentInfoCompat(
+                uri,
+                ClipDescription(gif.description.ifBlank { "GIF" }, arrayOf("image/gif")),
+                null
+            )
+            val sent = InputConnectionCompat.commitContent(
+                connection, info, content, InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION, null
+            )
+            if (!sent) connection.commitText(gif.gifUrl, 1)
+        }
+    }
 
     /** Hidden app with the panels option and an emoji or symbols panel open. */
     private fun hiddenAppPanelOpen(): Boolean =

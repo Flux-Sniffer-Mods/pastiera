@@ -156,6 +156,26 @@ class CandidatesBarController(
             candidatesStatusBar.onEmojiLayerRecentsToggled = value
         }
 
+    var onEmojiLayerGifRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerGifRequested = value
+            candidatesStatusBar.onEmojiLayerGifRequested = value
+        }
+
+    var onGifChosen: ((it.palsoftware.pastiera.data.gif.GifResult) -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onGifChosen = value
+            candidatesStatusBar.onGifChosen = value
+        }
+
+    /** The next time the emoji picker shows, open its GIF search. */
+    fun requestEmojiPickerGifs() {
+        inputStatusBar.requestEmojiPickerGifs()
+        candidatesStatusBar.requestEmojiPickerGifs()
+    }
+
     /** The next time the emoji picker shows, open its search. */
     fun requestEmojiPickerSearch() {
         inputStatusBar.requestEmojiPickerSearch()

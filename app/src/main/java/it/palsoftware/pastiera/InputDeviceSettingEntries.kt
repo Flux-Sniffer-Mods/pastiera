@@ -62,6 +62,7 @@ internal fun inputDeviceSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry("sym.emoji_key_target", R.string.emoji_key_target_title, route = SettingRoute(SettingsDestination.Modifiers, symCustomization = true)),
     SettingEntry("sym.emoji_key_auto_close", R.string.emoji_key_auto_close_title, route = SettingRoute(SettingsDestination.Modifiers, symCustomization = true)),
     SettingEntry("sym.emoji_layer_recents_key", R.string.emoji_layer_recents_key_title, route = SettingRoute(SettingsDestination.Modifiers, symCustomization = true)),
+    SettingEntry("sym.gifs", R.string.gif_settings_title, route = SettingRoute(SettingsDestination.Modifiers, symCustomization = true)),
     SettingEntry("sym.pages", R.string.sym_swap_pages_title, route = SettingRoute(SettingsDestination.Modifiers, symCustomization = true)),
     SettingEntry("clicks.charging_reserve", R.string.clicks_charging_reserve_title, route = SettingRoute(SettingsDestination.KeyboardsDevices, keyboardsDevicesDestination = KeyboardsDevicesDestination.PowerKeyboard)),
     SettingEntry("clicks.manual_wireless_charging", R.string.clicks_manual_wireless_charging_title, route = SettingRoute(SettingsDestination.KeyboardsDevices, keyboardsDevicesDestination = KeyboardsDevicesDestination.PowerKeyboard)),
