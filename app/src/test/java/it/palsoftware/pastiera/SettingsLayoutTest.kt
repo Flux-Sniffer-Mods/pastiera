@@ -165,4 +165,17 @@ class SettingsLayoutTest {
         SettingsManager.setIncognitoAlways(context, true)
         assertTrue(SettingsManager.isIncognitoField(context, 0))
     }
+
+    @Test
+    fun settingsForHardwareThisPhoneLacksStayHidden() {
+        // Robolectric is no Titan 2 and has never had a Clicks keyboard
+        listOf("clicks.backlight", SettingLinkIds.KEYBOARDS_DEVICES_KEYBOARD_ACCESSORIES, "hardware.titan2_layout").forEach { id ->
+            val entry = requireNotNull(SettingLinkRegistry.byId(id))
+            assertFalse(id, entry.isAvailable(context))
+            assertFalse(id, SettingLinkRegistry.search(context, context.getString(entry.titleRes)).any { it.id == id })
+        }
+        // Once a Clicks keyboard has been connected, its settings stay
+        SettingsManager.markClicksKeyboardSeen(context)
+        assertTrue(requireNotNull(SettingLinkRegistry.byId("clicks.backlight")).isAvailable(context))
+    }
 }

@@ -270,7 +270,8 @@ object SettingLinkRegistry {
         keyboardThemeTarget: SettingsManager.KeyboardThemeTarget? = null,
         keyboardThemeTab: KeyboardThemeEditorTab? = null,
         availability: SettingAvailability = SettingAvailability.Always,
-        unavailableFallbackId: String? = null
+        unavailableFallbackId: String? = null,
+        availabilityCheck: ((android.content.Context) -> Boolean)? = null
     ) = SettingEntry(
         id = id,
         titleRes = titleRes,
@@ -282,7 +283,8 @@ object SettingLinkRegistry {
             keyboardThemeTab = keyboardThemeTab
         ),
         availability = availability,
-        unavailableFallbackId = unavailableFallbackId
+        unavailableFallbackId = unavailableFallbackId,
+        availabilityCheck = availabilityCheck
     )
 
     val entries: List<SettingEntry> = listOf(
@@ -531,7 +533,9 @@ object SettingLinkRegistry {
         entry(
             SettingLinkIds.KEYBOARDS_DEVICES_KEYBOARD_ACCESSORIES,
             R.string.keyboard_accessories_title,
-            destination = SettingsDestination.KeyboardsDevices
+            destination = SettingsDestination.KeyboardsDevices,
+            availabilityCheck = { SettingsManager.hasClicksKeyboard(it) },
+            unavailableFallbackId = SettingLinkIds.KEYBOARDS_DEVICES_BUILT_IN_KEYBOARDS
         ),
 
         entry(

@@ -495,6 +495,7 @@ internal object BackupPreferenceContract {
 
     internal val deliberatelyExcludedPastieraKeys = mapOf(
         "alt_shift_default_initialized" to "default-initialization marker",
+        "clicks_keyboard_seen" to "hardware seen on this phone",
         "keyboard_layout_auto_mapping_updated" to "mapping refresh marker",
         "legacy_german_qwertz_default_migrated" to "migration marker",
         "titan2_elite_rounded_corners_enforced_v1" to "migration marker",

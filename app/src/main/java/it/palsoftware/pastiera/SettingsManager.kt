@@ -76,6 +76,7 @@ object SettingsManager {
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
     private const val KEY_SUGGESTION_KEYS = "suggestion_keys" // Keys that pick a suggestion
     private const val KEY_SPEECH_KEEP_LISTENING = "speech_keep_listening" // Voice input carries on through pauses
+    private const val KEY_CLICKS_KEYBOARD_SEEN = "clicks_keyboard_seen" // A Clicks Power Keyboard has been connected here
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
     private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
@@ -2914,6 +2915,32 @@ object SettingsManager {
     fun setSpeechKeepListening(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_SPEECH_KEEP_LISTENING, enabled).apply()
     }
+
+    /**
+     * The Clicks Power Keyboard's settings apply here: one is connected now or has been before.
+     * Phones that never had one don't see its settings.
+     */
+    fun hasClicksKeyboard(context: Context): Boolean {
+        if (getPreferences(context).getBoolean(KEY_CLICKS_KEYBOARD_SEEN, false)) return true
+        val connected = runCatching {
+            android.view.InputDevice.getDeviceIds().asSequence()
+                .mapNotNull(android.view.InputDevice::getDevice)
+                .any(it.palsoftware.pastiera.inputmethod.DeviceSpecific::isClicksPowerKeyboard)
+        }.getOrDefault(false)
+        if (connected) markClicksKeyboardSeen(context)
+        return connected
+    }
+
+    fun markClicksKeyboardSeen(context: Context) {
+        val prefs = getPreferences(context)
+        if (!prefs.getBoolean(KEY_CLICKS_KEYBOARD_SEEN, false)) {
+            prefs.edit().putBoolean(KEY_CLICKS_KEYBOARD_SEEN, true).apply()
+        }
+    }
+
+    /** The Titan 2 layout option applies here: a Titan 2, or it's already on elsewhere (so it can be turned off). */
+    fun titan2LayoutApplies(context: Context): Boolean =
+        it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2Device() || isTitan2LayoutEnabled(context)
 
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_EMOJI_SUGGESTIONS, true)
