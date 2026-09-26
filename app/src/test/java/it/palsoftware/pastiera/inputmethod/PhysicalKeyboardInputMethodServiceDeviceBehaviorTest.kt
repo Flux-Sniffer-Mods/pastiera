@@ -987,6 +987,20 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun layoutSwitchChords_notFromEmojiScreensOrWithTheEmojiKey() {
+        val context = RuntimeEnvironment.getApplication()
+        val blocked = PhysicalKeyboardInputMethodService::class.java
+            .getDeclaredMethod("layoutSwitchChordBlocked", Int::class.java, Boolean::class.java)
+            .apply { isAccessible = true }
+        fun isBlocked(keyCode: Int, symOpen: Boolean) = blocked.invoke(service, keyCode, symOpen) as Boolean
+
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_ALT_RIGHT)
+        assertFalse(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_RIGHT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, true))
+    }
+
+    @Test
     fun hiddenApp_holdingALetterInATextFieldDoesNotRepeatIntoTheApp() {
         setField(service, "keyboardHiddenForApp", true)
 

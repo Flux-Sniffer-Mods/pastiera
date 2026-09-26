@@ -4704,6 +4704,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
     }
 
+    /** A layout-switch chord doesn't count with the emoji key, or from an open emoji/symbol screen. */
+    private fun layoutSwitchChordBlocked(keyCode: Int, symPageWasOpen: Boolean): Boolean {
+        if (symPageWasOpen || symPage > 0) return true
+        val emojiKey = SettingsManager.getEmojiPickerKey(this)
+        return emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey
+    }
+
     // Paste suggestion: the chip offering what was just copied, while it is shown
     private var pasteSuggestionShown = false
 
@@ -4968,6 +4975,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             )
             return true
         }
+
+        // Whether an emoji/symbol screen was open when this key came (keys can close it)
+        val symPageOpenBeforeKey = symPage > 0
 
         // Check if we have an editable field at the very start
         val info = currentInputEditorInfo
@@ -5323,8 +5333,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             InputEventRouter.EditableFieldRoutingResult.Continue -> {}
         }
         
+        // Layout-switch chords never fire from an emoji/symbol screen or with the emoji key: Shift
+        // then an action key there (the emoji key on Alt or Shift, Alt closing a layer) is not
+        // a request to change layout
+        val layoutSwitchChordsAllowed = !layoutSwitchChordBlocked(keyCode, symPageOpenBeforeKey)
+
         // Handle Alt+Shift for subtype cycling
         if (
+            layoutSwitchChordsAllowed &&
             hasEditableField &&
             event != null &&
             event.repeatCount == 0 &&
@@ -5361,6 +5377,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         // Handle Alt+Enter for subtype cycling
         if (
+            layoutSwitchChordsAllowed &&
             hasEditableField &&
             event != null &&
             event.repeatCount == 0 &&
@@ -5385,6 +5402,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
         // Handle Ctrl+Space for subtype cycling
         if (
+            layoutSwitchChordsAllowed &&
             hasEditableField &&
             keyCode == KeyEvent.KEYCODE_SPACE &&
             SettingsManager.isCtrlSpaceLayoutSwitchEnabled(this) &&
