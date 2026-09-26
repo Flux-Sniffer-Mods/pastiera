@@ -74,4 +74,6 @@
     <string name="incognito_follow_apps_description">Learn nothing in fields that ask keyboards not to, such as private browser tabs</string>
     <string name="paste_suggestion_title">Suggest pasting what you copied</string>
     <string name="paste_suggestion_description">For a minute after you copy text, a new text field offers it as a suggestion; typing dismisses it. Never in password fields or for text marked sensitive</string>
+    <string name="emoji_suggestions_title">Emoji suggestions</string>
+    <string name="emoji_suggestions_description">An emoji for the word you\'re typing, e.g. 🍕 for pizza. Picking it adds the emoji after the word.</string>
 </resources>

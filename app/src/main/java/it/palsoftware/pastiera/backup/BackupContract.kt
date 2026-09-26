@@ -330,6 +330,7 @@ internal object BackupPreferenceContract {
             "incognito_always" to PreferenceValueType.BOOLEAN,
             "incognito_follow_apps" to PreferenceValueType.BOOLEAN,
             "paste_suggestion_enabled" to PreferenceValueType.BOOLEAN,
+            "emoji_suggestions_enabled" to PreferenceValueType.BOOLEAN,
             "terminal_mode_enabled" to PreferenceValueType.BOOLEAN,
             "terminal_mode_apps" to PreferenceValueType.STRING,
             "app_shortcuts_enabled" to PreferenceValueType.BOOLEAN,

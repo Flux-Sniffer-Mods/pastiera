@@ -6,6 +6,8 @@ import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
 import it.palsoftware.pastiera.shortcuts.KeyCombo
 import it.palsoftware.pastiera.shortcuts.ShortcutAction
 import it.palsoftware.pastiera.shortcuts.toIntent
+import it.palsoftware.pastiera.inputmethod.suggestions.EmojiSuggestion
+import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
 import it.palsoftware.pastiera.shortcuts.AppActionDiscovery
 import it.palsoftware.pastiera.shortcuts.DiscoveredAppActions
 import android.content.BroadcastReceiver
@@ -1316,7 +1318,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         val locale = getLocaleFromSubtype()
 
-        return latestSuggestionResults.map { suggestion ->
+        val words = latestSuggestionResults.map { suggestion ->
             when (suggestion.kind) {
                 SuggestionKind.NEXT_WORD,
                 SuggestionKind.STARTER_WORD -> recaseWordStartSuggestion(
@@ -1326,6 +1328,37 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 )
                 SuggestionKind.CURRENT_WORD -> suggestion.candidate
             }
+        }
+        return withEmojiSuggestion(words)
+    }
+
+    /**
+     * The emoji for the word being typed, in the third slot (the bar's left one): after the word
+     * suggestions, or instead of the third.
+     */
+    private fun withEmojiSuggestion(words: List<String>): List<String> {
+        if (!SettingsManager.getEmojiSuggestionsEnabled(this)) return words
+        if (latestSuggestionResults.none { it.kind == SuggestionKind.CURRENT_WORD }) return words
+        val word = suggestionController.currentWord()
+        if (word.isBlank()) return words
+        val index = EmojiSearchRepository.cachedSearchIndex(this) ?: run {
+            requestEmojiSuggestionIndex()
+            return words
+        }
+        val emoji = EmojiSearchRepository.suggestionFor(index, word) ?: return words
+        // Keycaps (1️⃣) have a digit, so they would be taken for a word
+        if (!EmojiSuggestion.isEmoji(emoji) || emoji in words) return words
+        return words.take(2) + emoji
+    }
+
+    private var emojiSuggestionIndexRequested = false
+
+    private fun requestEmojiSuggestionIndex() {
+        if (emojiSuggestionIndexRequested) return
+        emojiSuggestionIndexRequested = true
+        expansionAssetScope.launch {
+            runCatching { EmojiSearchRepository.getSearchIndex(this@PhysicalKeyboardInputMethodService) }
+            emojiSuggestionIndexRequested = false
         }
     }
 
@@ -6485,6 +6518,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
             // Provide visual feedback on the suggestions bar, matching variation press color
             candidatesBarController.flashSuggestionSlot(suggestionIndex)
+
+            if (EmojiSuggestion.isEmoji(suggestion)) {
+                EmojiSuggestion.commitAfterWord(ic, suggestion)
+                suggestionController.onContextReset()
+                NotificationHelper.triggerHapticFeedback(this)
+                return@post
+            }
 
             val forceLeadingCapital = AutoCapitalizeHelper.shouldAutoCapitalizeAtCursor(
                 context = this,

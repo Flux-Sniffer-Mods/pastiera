@@ -58,6 +58,9 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         route = SettingRoute(SettingsDestination.Advanced),
         availabilityCheck = { !SettingsManager.getIncognitoAlways(it) },
         unavailableFallbackId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS),
+    SettingEntry(SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS, R.string.emoji_suggestions_title,
+        summaryRes = R.string.emoji_suggestions_description,
+        route = SettingRoute(SettingsDestination.AutoCorrection)),
     SettingEntry(SettingLinkIds.PRIVACY_PASTE_SUGGESTION, R.string.paste_suggestion_title,
         summaryRes = R.string.paste_suggestion_description,
         route = SettingRoute(SettingsDestination.Advanced))

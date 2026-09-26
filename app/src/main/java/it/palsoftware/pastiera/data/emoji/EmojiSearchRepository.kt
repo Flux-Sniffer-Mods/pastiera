@@ -136,6 +136,48 @@ object EmojiSearchRepository {
         indexCache.clear()
     }
 
+    /** Index already built for the current locales, without waiting; null until it is. */
+    fun cachedSearchIndex(context: Context): EmojiSearchIndex? {
+        val cacheKey = getPreferredLocaleChain(context).joinToString("|")
+        return indexCache[cacheKey]
+    }
+
+    /** Words that name too many emoji, or none in particular, to suggest one for. */
+    private val GENERIC_WORDS = setOf(
+        "button", "symbol", "sign", "mark", "face", "hand", "up", "down", "left", "right", "arrow",
+        "time", "done", "double", "fast", "person", "man", "woman", "people", "light", "flag",
+        "small", "large", "big", "black", "white", "open", "closed", "square", "circle", "other",
+        "the", "and", "with", "for", "you", "not", "new", "top", "end", "back", "on", "off", "free", "ok"
+    )
+
+    /**
+     * One emoji for a word you typed, for the suggestion bar: an emoji whose name is the word
+     * ("pizza", "rocket"), otherwise the first (in picker order) of the emoji that have it as a
+     * keyword ("happy", "love"), unless the word is generic or names too many emoji.
+     */
+    fun suggestionFor(
+        index: EmojiSearchIndex,
+        word: String,
+        extraAvailable: ((String) -> Boolean)? = null
+    ): String? {
+        if (word.length < 3) return null
+        val query = normalizeSearchText(word)
+        if (query.isEmpty() || query in GENERIC_WORDS) return null
+        val available: (String) -> Boolean = { emoji ->
+            EmojiRepository.isSystemAvailable(emoji) || extraAvailable?.invoke(emoji) == true
+        }
+        index.items.firstOrNull { item ->
+            item.terms.any { it.kind == TermKind.NAME && it.normalizedText == query } && available(item.entry.base)
+        }?.let { return it.entry.base }
+        val byKeyword = index.items.filter { item ->
+            item.terms.any { it.kind == TermKind.KEYWORD && it.normalizedText == query } && available(item.entry.base)
+        }
+        if (byKeyword.isEmpty() || byKeyword.size > MAX_KEYWORD_EMOJI) return null
+        return byKeyword.minByOrNull { it.categoryOrder }?.entry?.base
+    }
+
+    private const val MAX_KEYWORD_EMOJI = 30
+
     private fun scoreItem(
         item: IndexedEmoji,
         rawQuery: String,

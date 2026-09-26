@@ -73,4 +73,6 @@
     <string name="incognito_follow_apps_description">Non imparare nulla nei campi che lo chiedono alle tastiere, come le schede private dei browser</string>
     <string name="paste_suggestion_title">Suggerisci di incollare ciò che hai copiato</string>
     <string name="paste_suggestion_description">Per un minuto dopo aver copiato del testo, un nuovo campo lo propone come suggerimento; scrivere lo nasconde. Mai nei campi password o per testo segnato come sensibile</string>
+    <string name="emoji_suggestions_title">Suggerimenti emoji</string>
+    <string name="emoji_suggestions_description">Un\'emoji per la parola che scrivi, es. 🍕 per pizza. Sceglierla aggiunge l\'emoji dopo la parola.</string>
 </resources>

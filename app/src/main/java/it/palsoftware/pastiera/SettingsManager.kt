@@ -71,6 +71,7 @@ object SettingsManager {
     private const val KEY_DEVELOPER_OPTIONS_ENABLED = "developer_options_enabled"
     private const val KEY_INCOGNITO_ALWAYS = "incognito_always"
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
+    private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
@@ -2832,6 +2833,14 @@ object SettingsManager {
     }
     
     /** Offer what you just copied as a suggestion to paste when you start typing in a field. */
+    /** An emoji for the word you're typing, in the suggestion bar. */
+    fun getEmojiSuggestionsEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_SUGGESTIONS, true)
+
+    fun setEmojiSuggestionsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_SUGGESTIONS, enabled).apply()
+    }
+
     fun getPasteSuggestionEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_PASTE_SUGGESTION, true)
 
