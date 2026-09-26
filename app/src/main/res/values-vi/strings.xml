@@ -239,7 +239,7 @@
     <string name="nav_mode_key_mappings">Ánh xạ phím</string>
     <string name="nav_mode_revert_to_default">Khôi phục mặc định</string>
     <string name="nav_mode_note">Lưu ý: Thay đổi phím Nav Mode cũng ảnh hưởng đến tổ hợp Ctrl+phím trong ô văn bản.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Cấu hình %1$s</string>
     <string name="nav_mode_type">Loại</string>
     <string name="nav_mode_keycode">Keycode</string>

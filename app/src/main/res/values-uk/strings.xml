@@ -223,7 +223,7 @@
     <string name="nav_mode_key_mappings">Карта клавіш</string>
     <string name="nav_mode_revert_to_default">Скинути до стандартних</string>
     <string name="nav_mode_note">Увага: Зміна клавіш режиму навігації також змінює Ctrl+клавішу в текстових полях.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Налаштувати %1$s</string>
     <string name="nav_mode_type">Тип</string>
     <string name="nav_mode_keycode">Код клавіші</string>

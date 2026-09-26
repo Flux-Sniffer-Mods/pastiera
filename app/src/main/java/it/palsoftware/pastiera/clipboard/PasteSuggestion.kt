@@ -7,6 +7,7 @@ object PasteSuggestion {
     fun label(text: String): String {
         val oneLine = text.trim().replace(Regex("\\s+"), " ")
         val shown = if (oneLine.length > MAX_LABEL_LENGTH) oneLine.take(MAX_LABEL_LENGTH - 1).trimEnd() + "…" else oneLine
-        return "📋 $shown"
+        // ⎘ (copy/paste): a text symbol, not an emoji, like every indicator
+        return "\u2398 $shown"
     }
 }

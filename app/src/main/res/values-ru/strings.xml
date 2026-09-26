@@ -225,7 +225,7 @@
     <string name="nav_mode_key_mappings">Клавиатурная карта</string>
     <string name="nav_mode_revert_to_default">Сбросить по умолчанию</string>
     <string name="nav_mode_note">Внимание: Изменение клавиш в режиме навигации так же меняет CTRL+клавишу в текстовых полях.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Настроить %1$s</string>
     <string name="nav_mode_type">Тип</string>
     <string name="nav_mode_keycode">Код</string>
