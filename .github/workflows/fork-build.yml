@@ -1,4 +1,6 @@
 name: Fork build and test
+# Each run is named by its version, not a running number
+run-name: Pastiera Flux ${{ inputs.version_name }}
 
 # Two jobs side by side: the APK is ready (and installable) as soon as it's built,
 # while the tests carry on; pastiera-flux.sh reports them and won't release a build
@@ -100,6 +102,28 @@ jobs:
           path: |
             out/*.apk
             out/RELEASE_NOTES.md
+
+  # Only the latest build is kept: once this APK is uploaded, every earlier workflow run in the
+  # repository is deleted, with its artifacts and logs.
+  tidy:
+    name: keep only the latest build
+    needs: apk
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Delete earlier workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT: ${{ github.run_id }}
+        run: |
+          gh api --paginate "repos/$REPO/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.status == "completed") | .id' |
+            while read -r id; do
+              if [ "$id" != "$CURRENT" ]; then
+                gh api -X DELETE "repos/$REPO/actions/runs/$id" && echo "Deleted run $id"
+              fi
+            done
 
 
   tests:
