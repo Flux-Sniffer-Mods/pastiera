@@ -14,6 +14,8 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import it.palsoftware.pastiera.R
+import it.palsoftware.pastiera.T2eCornerCalibration
+import it.palsoftware.pastiera.T2eCornerGeometry
 import it.palsoftware.pastiera.inputmethod.StatusBarController
 import kotlin.math.roundToInt
 
@@ -27,6 +29,7 @@ class LedStatusView(
         private val LED_COLOR_GRAY_OFF = Color.argb(100, 17, 17, 17)
         private val LED_COLOR_RED_LOCKED = Color.rgb(247, 99, 0)
         private val LED_COLOR_BLUE_ACTIVE = Color.rgb(100, 150, 255)
+        private const val CONTOUR_STEPS = 64
     }
 
     private val ledHeight: Int by lazy {
@@ -71,6 +74,17 @@ class LedStatusView(
             if (field == value) return
             field = value
             rebuildSegments()
+        }
+
+    /**
+     * False when Right Shift is dedicated to another job (the emoji picker key). The merged
+     * Titan 2 Elite layout then shows only Sym on its right-hand LED, so Left Shift can't light it.
+     */
+    var rightShiftIsShift: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }
         }
 
     var onLongPressListener: (() -> Unit)? = null
@@ -152,8 +166,11 @@ class LedStatusView(
                 // Shift share it; a locked modifier wins over an active one.
                 if (layout == ModifierLedLayouts.TITAN_2_ELITE && segment.y == 0f) return
                 if (layout == ModifierLedLayouts.TITAN_2_ELITE && segment.state == ModifierLedState.SHIFT) {
-                    val otherState = if (segment.x < 0.5f) ModifierLedState.ALT else ModifierLedState.SYM
-                    val priority = maxOf(statePriority[ModifierLedState.SHIFT] ?: 0, statePriority[otherState] ?: 0)
+                    val rightSide = segment.x >= 0.5f
+                    val otherState = if (rightSide) ModifierLedState.SYM else ModifierLedState.ALT
+                    val shiftPriority = if (rightSide && !rightShiftIsShift) 0
+                        else statePriority[ModifierLedState.SHIFT] ?: 0
+                    val priority = maxOf(shiftPriority, statePriority[otherState] ?: 0)
                     paint.color = when (priority) {
                         2 -> themeOverride?.ledLocked ?: LED_COLOR_RED_LOCKED
                         1 -> themeOverride?.ledActive ?: LED_COLOR_BLUE_ACTIVE
@@ -169,9 +186,16 @@ class LedStatusView(
                 val rightRadius = radii.second.toFloat().coerceIn(inset, maxOf(inset, width / 2f))
                 val leftArc = leftRadius - inset
                 val rightArc = rightRadius - inset
-                val contour = Path().apply {
-                    moveTo(inset, 0f)
-                    lineTo(inset, height - leftRadius)
+                // One LED per modifier: spread along the corners and bottom edge only; the vertical
+                // side runs sit behind the bar and would swallow the outer LEDs.
+                val cornersAndBottomOnly = layout == ModifierLedLayouts.TITAN_2_ELITE_SPLIT
+                val contour = straightContour() ?: liftedContour(radii) ?: Path().apply {
+                    if (cornersAndBottomOnly) {
+                        moveTo(inset, height - leftRadius)
+                    } else {
+                        moveTo(inset, 0f)
+                        lineTo(inset, height - leftRadius)
+                    }
                     if (leftArc > 0f) {
                         arcTo(inset, height - leftRadius - leftArc,
                             leftRadius + leftArc, height - inset, 180f, -90f, false)
@@ -181,7 +205,7 @@ class LedStatusView(
                         arcTo(width - rightRadius - rightArc, height - rightRadius - rightArc,
                             width - inset, height - inset, 90f, -90f, false)
                     }
-                    lineTo(width - inset, 0f)
+                    if (!cornersAndBottomOnly) lineTo(width - inset, 0f)
                 }
                 val measure = PathMeasure(contour, false)
                 paint.strokeWidth = segment.height * ledHeight
@@ -206,6 +230,71 @@ class LedStatusView(
             shape = GradientDrawable.RECTANGLE
             setColor(color)
             cornerRadius = this@LedStatusView.cornerRadius
+        }
+    }
+
+    /**
+     * Titan 2 Elite with the status bar lifted: the LEDs run in the band under the bar, on the
+     * calibrated display curve (the one the outer buttons use) raised by half the lift, so they
+     * stay clear of the physical corners. Null when the bar isn't lifted.
+     */
+    /**
+     * Straight outer buttons: the corner buttons fill the corners, so the LEDs run in a straight
+     * line through the band under the other buttons or keys, between the two corner buttons.
+     */
+    private fun straightContour(): Path? {
+        val canvasView = container ?: return null
+        var ancestor = canvasView.parent
+        while (ancestor != null && ancestor !is StatusBarController.ImeChromeLayout) ancestor = ancestor.parent
+        val chrome = ancestor as? StatusBarController.ImeChromeLayout ?: return null
+        val span = chrome.straightLedSpanPx ?: return null
+        // Top of the band under the buttons: the bar's row, or an emoji/SYM screen's bottom keys
+        val rowBottom = chrome.straightLedBandTopPx
+        if (rowBottom < 0 || rowBottom >= chrome.height) return null
+        val location = IntArray(2)
+        val chromeLocation = IntArray(2)
+        canvasView.getLocationInWindow(location)
+        chrome.getLocationInWindow(chromeLocation)
+        val lineY = (rowBottom + chrome.height) / 2f
+        return Path().apply {
+            moveTo(span.first.toFloat(), lineY)
+            lineTo(span.second.toFloat(), lineY)
+            // Chrome coordinates to this view's
+            offset((chromeLocation[0] - location[0]).toFloat(), (chromeLocation[1] - location[1]).toFloat())
+        }
+    }
+
+    private fun liftedContour(radii: Pair<Int, Int>): Path? {
+        val canvasView = container ?: return null
+        var ancestor = canvasView.parent
+        while (ancestor != null && ancestor !is StatusBarController.ImeChromeLayout) ancestor = ancestor.parent
+        val chrome = ancestor as? StatusBarController.ImeChromeLayout ?: return null
+        val lift = chrome.nestedRowLiftPx
+        if (lift <= 0 || chrome.width <= 0 || chrome.height <= 0) return null
+        val location = IntArray(2)
+        val chromeLocation = IntArray(2)
+        canvasView.getLocationInWindow(location)
+        chrome.getLocationInWindow(chromeLocation)
+        val x = (location[0] - chromeLocation[0]).toFloat()
+        val y = (location[1] - chromeLocation[1]).toFloat()
+        val calibration = T2eCornerCalibration.read(context)
+        val width = chrome.width.toFloat()
+        val bottom = chrome.height - lift / 2f
+        val left = radii.first.toFloat().coerceIn(0f, width / 2f)
+        val right = radii.second.toFloat().coerceIn(0f, width / 2f)
+        fun point(radius: Float, step: Int): T2eCornerGeometry.Point =
+            T2eCornerGeometry.point(radius, bottom, Math.PI / 2 * step / CONTOUR_STEPS, calibration)
+        // Left arc, bottom, right arc; LED segments are spread over what shows below the bar
+        val points = (0..CONTOUR_STEPS).map { point(left, it) } +
+            (CONTOUR_STEPS downTo 0).map { point(right, it).let { p -> T2eCornerGeometry.Point(width - p.x, p.y) } }
+        val rowBottom = chrome.nestedRowBottomPx
+        val visibleTop = if (rowBottom >= 0) rowBottom + ledHeight / 2f - calibration.shiftYPx else Float.NEGATIVE_INFINITY
+        val visible = points.filter { it.y >= visibleTop }.takeIf { it.size >= 2 } ?: points
+        return Path().apply {
+            moveTo(visible.first().x, visible.first().y)
+            visible.drop(1).forEach { lineTo(it.x, it.y) }
+            // Chrome coordinates to this view's, plus the calibrated shift the buttons use
+            offset(calibration.shiftXPx - x, calibration.shiftYPx - y)
         }
     }
 

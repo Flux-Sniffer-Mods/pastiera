@@ -648,6 +648,104 @@ fun AdvancedSettingsScreen(
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                             }
+
+                            var fillCorners by remember {
+                                mutableStateOf(SettingsManager.getTitan2EliteFillCorners(context))
+                            }
+                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.corner_fill")) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(stringResource(R.string.titan2_elite_fill_corners_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Medium)
+                                        Text(stringResource(R.string.titan2_elite_fill_corners_description),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(
+                                        checked = fillCorners,
+                                        onCheckedChange = { enabled ->
+                                            fillCorners = enabled
+                                            SettingsManager.setTitan2EliteFillCorners(context, enabled)
+                                        }
+                                    )
+                                }
+                            }
+
+                            var straightOuterButtons by remember {
+                                mutableStateOf(SettingsManager.getTitan2EliteStraightOuterButtons(context))
+                            }
+                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.straight_outer_buttons")) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(stringResource(R.string.titan2_elite_straight_outer_buttons_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Medium)
+                                        Text(stringResource(R.string.titan2_elite_straight_outer_buttons_description),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Switch(
+                                        checked = straightOuterButtons,
+                                        onCheckedChange = { enabled ->
+                                            straightOuterButtons = enabled
+                                            SettingsManager.setTitan2EliteStraightOuterButtons(context, enabled)
+                                        }
+                                    )
+                                }
+                            }
+
+                            var statusBarLiftDp by remember {
+                                mutableStateOf(SettingsManager.getTitan2EliteStatusBarLiftDp(context).toFloat())
+                            }
+                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.status_bar_lift")) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(stringResource(R.string.titan2_elite_status_bar_lift_title),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium)
+                                    Text(stringResource(R.string.titan2_elite_status_bar_lift_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Slider(
+                                            value = statusBarLiftDp,
+                                            onValueChange = { statusBarLiftDp = kotlin.math.round(it) },
+                                            onValueChangeFinished = {
+                                                SettingsManager.setTitan2EliteStatusBarLiftDp(
+                                                    context, statusBarLiftDp.toInt()
+                                                )
+                                            },
+                                            valueRange = 0f..SettingsManager.TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP.toFloat(),
+                                            steps = SettingsManager.TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP - 1,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(stringResource(
+                                            R.string.titan2_elite_status_bar_lift_value,
+                                            statusBarLiftDp.toInt()
+                                        ))
+                                    }
+                                }
+                            }
                         }
 
                         // IME Test Screen (only in debug builds)

@@ -70,6 +70,21 @@ internal object ModifierLedLayouts {
         )
     )
 
+    /**
+     * Titan 2 Elite: one LED per modifier, left to right in physical order (Alt, Shift, Ctrl,
+     * Sym), on every screen. Nothing is shared, so Shift never lights the Sym LED, which matters
+     * when Right Shift is the emoji picker key.
+     */
+    val TITAN_2_ELITE_SPLIT = ModifierLedLayout(
+        id = "titan2-elite-split",
+        segments = listOf(
+            ModifierLedSegment(ModifierLedState.ALT, x = 0.00f, y = 0.5f, width = 0.22f, height = 0.5f),
+            ModifierLedSegment(ModifierLedState.SHIFT, x = 0.26f, y = 0.5f, width = 0.22f, height = 0.5f),
+            ModifierLedSegment(ModifierLedState.CTRL, x = 0.52f, y = 0.5f, width = 0.22f, height = 0.5f),
+            ModifierLedSegment(ModifierLedState.SYM, x = 0.78f, y = 0.5f, width = 0.22f, height = 0.5f)
+        )
+    )
+
     fun resolve(
         physicalProfileOverride: String?,
         titan2EliteAutoDetected: Boolean
@@ -80,7 +95,7 @@ internal object ModifierLedLayouts {
             normalizedOverride == "titan2elite_qwerty" ||
             (useAutoDetectedProfile && titan2EliteAutoDetected)
         ) {
-            TITAN_2_ELITE
+            TITAN_2_ELITE_SPLIT
         } else {
             DEFAULT
         }

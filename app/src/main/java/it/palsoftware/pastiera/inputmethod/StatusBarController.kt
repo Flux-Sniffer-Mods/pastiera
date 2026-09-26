@@ -765,7 +765,13 @@ class StatusBarController(
                 addView(emojiKeyboardContainer)
                 addView(ledStrip)
             }
-            symSurfaceCloseButton = createSurfaceCloseButton()
+            symSurfaceCloseButton = createSurfaceCloseButton().also { close ->
+                // The shared SYM/picker close button sits in the bottom-right display corner
+                close.setTag(
+                    R.id.tag_outer_edge_button,
+                    StatusBarButtonPosition.RIGHT
+                )
+            }
             symSurfaceContainer = FrameLayout(context).apply {
                 clipChildren = true
                 clipToPadding = true
@@ -1184,7 +1190,8 @@ class StatusBarController(
     ) {
         val container = emojiKeyboardContainer ?: return
         // Emoji picker page should be edge-to-edge; remove the SYM container side padding.
-        container.setPadding(0, 0, 0, 0)
+        val gap = expandedScreenGapPx()
+        container.setPadding(0, gap, 0, gap)
 
         // Reuse the same view to avoid flicker caused by removeAllViews()/recreate on each status update.
         val view = emojiPickerView ?: EmojiPickerView(context) {
@@ -1247,6 +1254,11 @@ class StatusBarController(
         } else minOf(dpToPx(24f).toFloat(), hardwareSymKeyHeightPx(colors) * 0.48f)
         view.configureRoundedControls(roundedControls, hardwareSymKeyHeightPx(colors), iconSize)
         (statusBarLayout as? ImeChromeLayout)?.expandedPickerButtons = if (roundedControls) view.edgeControls else null
+        // The picker's search toggle is its bottom-left corner button (straight outer buttons)
+        view.edgeControls.first.setTag(
+            R.id.tag_outer_edge_button,
+            if (roundedControls) StatusBarButtonPosition.LEFT else null
+        )
         view.setInputConnection(inputConnection)
         val bar = fullSuggestionsBar
         val barHost = bar?.centerAccessoryHost()
@@ -1362,7 +1374,8 @@ class StatusBarController(
         // Restore default padding for emoji/symbols pages.
         val roundedCorners = SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)
         val sidePadding = emojiKeyboardHorizontalPaddingPx
-        container.setPadding(sidePadding, 0, sidePadding, 0)
+        val gap = expandedScreenGapPx()
+        container.setPadding(sidePadding, gap, sidePadding, gap)
         val inputConnectionChanged = lastInputConnectionUsed != inputConnection
         val inputConnectionBecameAvailable = lastInputConnectionUsed == null && inputConnection != null
         if (lastSymPageRendered == page && lastSymMappingsRendered == symMappings && !inputConnectionChanged && !inputConnectionBecameAvailable) {
@@ -1453,6 +1466,11 @@ class StatusBarController(
                         for (i in 0..3) {
                             addKeyToRow(rowLayout, row[i], symMappings, fixedKeyWidth, keyHeight, keySpacing, page, inputConnection, false)
                         }
+                        // Z sits in the bottom-left display corner (straight outer buttons)
+                        rowLayout.getChildAt(0)?.setTag(
+                            R.id.tag_outer_edge_button,
+                            StatusBarButtonPosition.LEFT
+                        )
                         
                         // Editor button (left part of spacebar area)
                         val editorButton = createSymEditorButton(keyHeight, fixedKeyWidth, page)
@@ -2342,6 +2360,13 @@ class StatusBarController(
      * @param height L'altezza del tasto
      * @param page La pagina attiva (1=emoji, 2=caratteri)
      */
+    /**
+     * Titan 2 Elite (rounded corners): space above the emoji/SYM/picker screens, below the bar, and
+     * below their bottom keys, giving the LEDs a band of their own. Same as the gap between rows.
+     */
+    private fun expandedScreenGapPx(): Int =
+        if (SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)) dpToPx(4f) else 0
+
     private fun createEmojiKeyButton(label: String, content: String, height: Int, page: Int): View {
         val theme = activeThemeColors()
         val keyLayout = FrameLayout(context).apply {
@@ -2378,10 +2403,18 @@ class StatusBarController(
             (heightInDp * 0.75f)
         }
         
+        // Emoji layer's Recents key: a text symbol, drawn larger and bold so it reads like a key
+        val recentsSymbol = page == 1 && (
+            content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_KEY_LABEL ||
+                content == it.palsoftware.pastiera.core.SymLayoutController.RECENTS_BACK_LABEL
+            )
         val contentText = TextView(context).apply {
             text = content
-            textSize = contentTextSize // textSize è in sp
+            textSize = if (recentsSymbol) contentTextSize * 1.35f else contentTextSize // textSize è in sp
             gravity = Gravity.CENTER
+            // Emoji layer: glyphs centre on their own box, not on the font's extra padding
+            if (page == 1) includeFontPadding = false
+            if (recentsSymbol) setTypeface(null, android.graphics.Typeface.BOLD)
             if (roundedCorners) setTextColor(theme.textAndIcons)
             // Per pagina 2 (caratteri), rendi bianco e in grassetto
             if (page == 2) {
@@ -2419,6 +2452,13 @@ class StatusBarController(
             }
         }
         
+        if (page == 1 && label.isNotEmpty()) {
+            // Emoji layer: centre the emoji in the space left of the letter, with a small gap,
+            // so wide emoji don't run into it
+            val letterSpace = labelText.paint.measureText(label).toInt() + labelPadding + dpToPx(2f)
+            contentText.setPadding(0, 0, letterSpace, 0)
+        }
+
         // Aggiungi prima il contenuto (dietro) poi il testo (davanti)
         keyLayout.addView(contentText)
         keyLayout.addView(labelText)
@@ -2564,6 +2604,7 @@ class StatusBarController(
                 val rightInset = if (rounded) dpToPx(3.1f) else 0
                 val targetWidth = if (rounded) screenWidth - (screenWidth / 10) * 9 - rightInset else dpToPx(36f)
                 val targetHeight = if (rounded) hardwareSymKeyHeightPx(theme) else dpToPx(32f)
+                // The bottom margin is set with the surface layout (updateSurfaceCloseBottomMargin)
                 if (params.width != targetWidth || params.height != targetHeight || params.rightMargin != rightInset) {
                     params.width = targetWidth
                     params.height = targetHeight
@@ -3105,6 +3146,8 @@ class StatusBarController(
         )
 
         ledStatusView.layout = modifierLedLayout()
+        // Right Shift as the emoji key must not light the Sym side as a Shift
+        ledStatusView.rightShiftIsShift = SettingsManager.getEmojiPickerKey(context) != KeyEvent.KEYCODE_SHIFT_RIGHT
         val showLedStrip = if (isFullSoftwareKeyboardMode) {
             softwareThemeSettings.showLeds
         } else {
@@ -3487,7 +3530,10 @@ class StatusBarController(
             stackParams.height = ViewGroup.LayoutParams.MATCH_PARENT
             stack.layoutParams = stackParams
         }
-        updateSurfaceCloseBottomMargin(if (reserveLedSpace) reservedExpandedLedHeight() else 0)
+        // In line with the content's bottom row: above the LED strip and the content's padding
+        updateSurfaceCloseBottomMargin(
+            (if (reserveLedSpace) reservedExpandedLedHeight() else 0) + content.paddingBottom
+        )
 
         val contentParams = content.layoutParams as? LinearLayout.LayoutParams
         val targetContentHeight = 0
@@ -3569,8 +3615,9 @@ class StatusBarController(
         if (!isFullSoftwareKeyboardMode && snapshot.symPage in listOf(1, 2, 5)) {
             // All hardware SYM pages use the same three key rows. Do not let
             // measurement under the previous page's weighted layout resize them.
+            // Plus the space above and below the rows (Titan 2 Elite rounded corners).
             val gap = dpToPx(4f)
-            return 3 * hardwareSymKeyHeightPx() + 2 * gap
+            return 3 * hardwareSymKeyHeightPx() + 2 * gap + 2 * expandedScreenGapPx()
         }
         if (snapshot.symPage == 4 && measuredHeight > 0) {
             return measuredHeight
@@ -3610,10 +3657,162 @@ class StatusBarController(
             requestLayout()
             invalidate()
         }
+        // Kept as a field: SharedPreferences only holds listeners weakly
+        private val chromePrefsListener =
+            android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == SettingsManager.KEY_TITAN2_ELITE_FILL_CORNERS ||
+                    key == SettingsManager.KEY_TITAN2_ELITE_STATUS_BAR_LIFT ||
+                    key == SettingsManager.KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS
+                ) {
+                    applyBottomCornerClip()
+                    requestLayout()
+                    invalidate()
+                }
+            }
+
+        /** How far the nested status row sits above the LED contour (Titan 2 Elite lift setting). */
+        var nestedRowLiftPx: Int = 0
+            private set
+
+        /** Bottom edge of the nested status row after layout, or -1 when no row is nested. */
+        var nestedRowBottomPx: Int = -1
+            private set
+
+        /** Straight outer buttons: the chrome x range between the corner buttons, for the LEDs. */
+        var straightLedSpanPx: Pair<Int, Int>? = null
+            private set
+        // Parents whose clipping was lifted so a corner button can reach below them (original values)
+        private val unclippedParents = HashMap<ViewGroup, Pair<Boolean, Boolean>>()
+        private val outerBasePaddingBottom = java.util.WeakHashMap<View, Int>()
+        private val outerNormalBottom = java.util.WeakHashMap<View, Int>()
+
+        /** Straight outer buttons: top of the band under the buttons, where the LEDs run. */
+        var straightLedBandTopPx: Int = -1
+            private set
+
+        private fun straightOuterButtonsActive(): Boolean =
+            bottomCornerRadiiPx != null && SettingsManager.getTitan2EliteStraightOuterButtons(context)
+
+        /**
+         * Straight outer buttons: the corner buttons of [scope] (the nested bar, or the expanded
+         * emoji/SYM screen) reach down to the bottom of the chrome; the display's own curve crops
+         * them. Their icon or label stays where it was. Each button's normal bottom is remembered,
+         * so a pass that doesn't re-lay out the buttons gives the same result. Undoes everything
+         * for buttons that no longer qualify, or when [scope] is null.
+         */
+        private fun layoutStraightOuterButtons(scope: ViewGroup?) {
+            val extended = HashSet<View>()
+            val parentsNeeded = HashSet<ViewGroup>()
+            var spanLeft = 0
+            var spanRight = width
+            var bandTop = -1
+            if (scope != null && straightOuterButtonsActive()) {
+                val gap = (3f * resources.displayMetrics.density).toInt()
+                fun visit(view: View, x: Int, y: Int) {
+                    if (view.visibility != View.VISIBLE) return
+                    val edge = view.getTag(R.id.tag_outer_edge_button)
+                        as? StatusBarButtonPosition
+                    if (edge != null) {
+                        if (view.width <= 0) return
+                        val bottomNow = y + view.height
+                        val normalBottom = if (bottomNow >= height) {
+                            outerNormalBottom[view] ?: return // naturally at the bottom already
+                        } else {
+                            bottomNow.also { outerNormalBottom[view] = it }
+                        }
+                        val base = outerBasePaddingBottom.getOrPut(view) { view.paddingBottom }
+                        // Every ancestor up to and including the chrome: each one clips its
+                        // children to their bounds, and the bar's parent is the chrome itself
+                        var parent = view.parent as? ViewGroup
+                        while (parent != null) {
+                            parentsNeeded += parent
+                            if (parent === this@ImeChromeLayout) break
+                            parent = parent.parent as? ViewGroup
+                        }
+                        // Content stays centred on the button's normal area
+                        val paddingBottom = base + (height - normalBottom)
+                        if (view.paddingBottom != paddingBottom) {
+                            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, paddingBottom)
+                        }
+                        view.layout(view.left, view.top, view.right, view.top + (height - y))
+                        extended += view
+                        bandTop = maxOf(bandTop, normalBottom)
+                        if (edge == StatusBarButtonPosition.LEFT) {
+                            spanLeft = maxOf(spanLeft, x + view.width + gap)
+                        } else {
+                            spanRight = minOf(spanRight, x - gap)
+                        }
+                        return
+                    }
+                    if (view is ViewGroup) {
+                        // An opaque overlay covering the whole group (the menu) hides the corner
+                        // buttons behind it; only it and what's above it may reach down
+                        var first = 0
+                        for (index in view.childCount - 1 downTo 0) {
+                            val child = view.getChildAt(index)
+                            if (child.visibility == View.VISIBLE && child.background != null &&
+                                child.left <= 0 && child.top <= 0 &&
+                                child.width >= view.width && child.height >= view.height
+                            ) {
+                                first = index
+                                break
+                            }
+                        }
+                        for (index in first until view.childCount) {
+                            val child = view.getChildAt(index)
+                            visit(child, x + child.left, y + child.top)
+                        }
+                    }
+                }
+                visit(scope, scope.left, scope.top)
+            }
+            parentsNeeded.forEach { parent ->
+                if (parent !in unclippedParents) {
+                    unclippedParents[parent] = parent.clipChildren to parent.clipToPadding
+                    parent.clipChildren = false
+                    parent.clipToPadding = false
+                }
+            }
+            unclippedParents.keys.filter { it !in parentsNeeded }.forEach { parent ->
+                val (clipChildren, clipToPadding) = unclippedParents.remove(parent)!!
+                parent.clipChildren = clipChildren
+                parent.clipToPadding = clipToPadding
+            }
+            outerBasePaddingBottom.keys.filter { it !in extended }.forEach { view ->
+                val base = outerBasePaddingBottom.remove(view) ?: return@forEach
+                outerNormalBottom.remove(view)
+                view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, base)
+            }
+            val span = if (extended.isNotEmpty() && spanLeft < spanRight) spanLeft to spanRight else null
+            val band = if (span != null) bandTop else -1
+            if (span != straightLedSpanPx || band != straightLedBandTopPx) {
+                straightLedSpanPx = span
+                straightLedBandTopPx = band
+                surfaceView?.let(::invalidateTree)
+            }
+        }
+
+        private fun invalidateTree(view: View) {
+            view.invalidate()
+            if (view is ViewGroup) for (index in 0 until view.childCount) invalidateTree(view.getChildAt(index))
+        }
+
+        /** The lift that applies to [view]: the lift if it belongs to the nested row, else 0. */
+        internal fun liftFor(view: View): Int {
+            val row = nestedRow ?: return 0
+            if (nestedRowLiftPx == 0) return 0
+            var current: View? = view
+            while (current != null && current !== this) {
+                if (current === row) return nestedRowLiftPx
+                current = current.parent as? View
+            }
+            return 0
+        }
 
         override fun onAttachedToWindow() {
             super.onAttachedToWindow()
             it.palsoftware.pastiera.T2eCornerCalibration.addPreviewListener(calibrationPreviewListener)
+            SettingsManager.getPreferences(context).registerOnSharedPreferenceChangeListener(chromePrefsListener)
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -3687,6 +3886,8 @@ class StatusBarController(
                 row.minimumHeight = originalRowMinHeight
             }
             nestedRow = null
+            nestedRowLiftPx = 0
+            nestedRowBottomPx = -1
             val radii = bottomCornerRadiiPx ?: return
             if (expandedSurfaceView?.visibility == View.VISIBLE && indicatorView?.visibility == View.VISIBLE) {
                 val density = resources.displayMetrics.density
@@ -3740,7 +3941,11 @@ class StatusBarController(
             // The LED surface draws first; overlap its empty center with the row.
             val requestedRowHeight = params.height.coerceAtLeast(0)
             val bottomInset = (3.1f * resources.displayMetrics.density).toInt()
-            indicatorView?.layoutParams?.height = maxOf(radius + stripTop, requestedRowHeight + bottomInset)
+            // Lift: a taller LED surface raises the row by the same amount; onLayout keeps the
+            // row's bottom that far above the LEDs, leaving them a clear band underneath.
+            nestedRowLiftPx = SettingsManager.getTitan2EliteStatusBarLiftPx(context)
+            indicatorView?.layoutParams?.height =
+                maxOf(radius + stripTop, requestedRowHeight + bottomInset) + nestedRowLiftPx
             // A fixed-height row does not honor minimumHeight during measurement.
             // Overlapping more than that height puts the LED surface above the
             // row's top, while LinearLayout still reserves its full height below.
@@ -3780,7 +3985,13 @@ class StatusBarController(
                 icon.imageMatrix = original.second
             }
             originalIconTransforms.clear()
-            val row = nestedRow as? ViewGroup ?: return
+            val row = nestedRow as? ViewGroup ?: run {
+                // Expanded emoji/SYM screen: its bottom-row corner keys are the corner buttons
+                layoutStraightOuterButtons(
+                    if (expandedSurfaceView?.visibility == View.VISIBLE) surfaceView as? ViewGroup else null
+                )
+                return
+            }
             val originalContentHeight = row.height
             // A fixed-height row can be shorter than the requested overlap.
             // Anchor its actual bottom to the inner LED contour after layout.
@@ -3788,7 +3999,7 @@ class StatusBarController(
             // their top edge is closer to the bottom than the two-row side arcs.
             val bottomInset = (3.1f * resources.displayMetrics.density).toInt()
             surfaceView?.let { surface ->
-                val targetBottom = surface.bottom - bottomInset
+                val targetBottom = surface.bottom - bottomInset - nestedRowLiftPx
                 val extraHeight = (targetBottom - row.bottom).coerceAtLeast(0)
                 // Fill the space up to the row's original top instead of translating
                 // a short row downward and exposing an empty band above it.
@@ -3816,6 +4027,7 @@ class StatusBarController(
                 }
                 if (extraHeight > 0) extendContent(row)
             }
+            nestedRowBottomPx = row.bottom
             // Fixed-height button containers otherwise leave unused space beneath
             // their contents when the corner geometry makes the row taller.
             for (index in 0 until row.childCount) {
@@ -3824,10 +4036,14 @@ class StatusBarController(
                     child.offsetTopAndBottom(row.height - row.paddingBottom - child.bottom)
                 }
             }
+            layoutStraightOuterButtons(row)
+            val straightOuter = straightLedSpanPx != null
             val radii = bottomCornerRadiiPx ?: return
             fun fitIcons(view: View, offsetX: Int) {
                 if (view is ImageView && view.visibility == View.VISIBLE &&
-                    view.background !is it.palsoftware.pastiera.inputmethod.statusbar.CurvedCornerButtonDrawable
+                    view.background !is it.palsoftware.pastiera.inputmethod.statusbar.CurvedCornerButtonDrawable &&
+                    // Straight corner buttons keep their icon centred on the row part
+                    !(straightOuter && view.getTag(R.id.tag_outer_edge_button) != null)
                 ) {
                     val onLeft = offsetX < radii.first
                     val onRight = offsetX + view.width > row.width - radii.second
@@ -3926,12 +4142,15 @@ class StatusBarController(
                     }
                 }
             }
-            clipToOutline = true
+            // "Fill corners": let the background reach the physical display corners so the app
+            // never shows around the bar; the outer buttons still draw their own rounded shape.
+            clipToOutline = !SettingsManager.getTitan2EliteFillCorners(context)
             invalidateOutline()
         }
 
         override fun onDetachedFromWindow() {
             it.palsoftware.pastiera.T2eCornerCalibration.removePreviewListener(calibrationPreviewListener)
+            SettingsManager.getPreferences(context).unregisterOnSharedPreferenceChangeListener(chromePrefsListener)
             screenAwakeController.release()
             super.onDetachedFromWindow()
         }

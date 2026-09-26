@@ -14,6 +14,8 @@ import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonId
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonRegistry
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarCallbacks
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonStyles
+import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonPosition
+import it.palsoftware.pastiera.inputmethod.statusbar.CurvedCornerButtonDrawable
 
 /**
  * Overlay menu that replaces the status bar row with fixed buttons.
@@ -214,6 +216,8 @@ class HamburgerMenuView(
             rowView.addView(hosted.container)
         }
         currentButtons = hostedButtons
+        // The last button sits in the bottom-right display corner, like the bar's outer buttons
+        hostedButtons.lastOrNull()?.let { buttonHost.setOuterEdge(it.id, StatusBarButtonPosition.RIGHT) }
 
         updateButtonSizes(rowView)
         applyStoredStates()
@@ -238,18 +242,23 @@ class HamburgerMenuView(
             return
         }
         val buttonWidth = ((availableWidth - spacing * (totalButtons - 1)) / totalButtons).coerceAtLeast(1)
-        val buttonHeight = resolveButtonHeight(rowView)
+        // MATCH_PARENT, not a pixel height: on the Titan 2 Elite the chrome stretches this row after
+        // the normal layout pass, and fixed heights got clipped whenever the row was re-laid out.
+        val fill = ViewGroup.LayoutParams.MATCH_PARENT
         for (index in 0 until totalButtons) {
             val child = rowView.getChildAt(index)
-            val params = (child.layoutParams as? LinearLayout.LayoutParams)
-                ?: LinearLayout.LayoutParams(buttonWidth, buttonHeight)
-            params.width = buttonWidth
-            params.height = buttonHeight
-            params.marginEnd = if (index == totalButtons - 1) 0 else spacing
-            child.layoutParams = params
+            val current = child.layoutParams as? LinearLayout.LayoutParams
+            val marginEnd = if (index == totalButtons - 1) 0 else spacing
+            if (current == null || current.width != buttonWidth || current.height != fill || current.marginEnd != marginEnd) {
+                child.layoutParams = (current ?: LinearLayout.LayoutParams(buttonWidth, fill)).apply {
+                    width = buttonWidth
+                    height = fill
+                    this.marginEnd = marginEnd
+                }
+            }
         }
         currentButtons.forEach { hosted ->
-            buttonHost.updateButtonLayout(hosted.id, buttonWidth, buttonHeight)
+            buttonHost.updateButtonLayout(hosted.id, buttonWidth, fill)
         }
     }
 
@@ -305,14 +314,30 @@ class HamburgerMenuView(
             ?: button.height.takeIf { it > 0 }
             ?: dpToPx(39f)
         button.setColorFilter(theme?.textAndIcons ?: Color.WHITE)
-        button.background = StatusBarButtonStyles.createButtonDrawable(
-            heightPx = height,
-            normalColor = theme?.statusBarButton ?: StatusBarButtonStyles.NORMAL_COLOR,
-            pressedColor = theme?.accent ?: StatusBarButtonStyles.PRESSED_BLUE,
-            cornerRadiusRatio = theme?.chromeCornerRadiusRatio ?: StatusBarButtonStyles.BUTTON_CORNER_RADIUS_RATIO,
-            borderColor = theme?.divider,
-            borderWidthPx = if (theme != null) dpToPx(1f) else 0
-        )
+        val normalColor = theme?.statusBarButton ?: StatusBarButtonStyles.NORMAL_COLOR
+        val pressedColor = theme?.accent ?: StatusBarButtonStyles.PRESSED_BLUE
+        val cornerRadiusRatio = theme?.chromeCornerRadiusRatio ?: StatusBarButtonStyles.BUTTON_CORNER_RADIUS_RATIO
+        val borderWidth = if (theme != null) dpToPx(1f) else 0
+        // Leftmost menu button: the bottom-left corner button, like the bar's outer button
+        button.setTag(R.id.tag_outer_edge_button, StatusBarButtonPosition.LEFT)
+        button.background = if (
+            it.palsoftware.pastiera.SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context) &&
+            !it.palsoftware.pastiera.SettingsManager.getTitan2EliteStraightOuterButtons(context)
+        ) {
+            CurvedCornerButtonDrawable(
+                button, normalColor, pressedColor, height * cornerRadiusRatio,
+                theme?.divider, borderWidth, leftEdge = true
+            )
+        } else {
+            StatusBarButtonStyles.createButtonDrawable(
+                heightPx = height,
+                normalColor = normalColor,
+                pressedColor = pressedColor,
+                cornerRadiusRatio = cornerRadiusRatio,
+                borderColor = theme?.divider,
+                borderWidthPx = borderWidth
+            )
+        }
     }
 
     private fun dpToPx(dp: Float): Int {

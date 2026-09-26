@@ -442,9 +442,11 @@ class EmojiPickerView(
                     val scale = roundedIconSize / icon.intrinsicHeight.coerceAtLeast(1)
                     button.imageMatrix = Matrix().apply {
                         setScale(scale, scale)
+                        // Nudged away from the display curve, unless the buttons are straight
+                        val dodge = if (SettingsManager.getTitan2EliteStraightOuterButtons(context)) 0 else dpToPx(8f)
                         postTranslate(
                             (button.layoutParams.width - icon.intrinsicWidth * scale) / 2f +
-                                dpToPx(8f) * if (button === searchToggleButton) 1 else -1,
+                                dodge * if (button === searchToggleButton) 1 else -1,
                             (button.layoutParams.height - icon.intrinsicHeight * scale) / 2f - dpToPx(2f)
                         )
                     }

@@ -1052,4 +1052,11 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="kw_indicator_bottom_strip">LED, luci, striscia, in basso</string>
     <string name="kw_indicator_menu_bar">LED, luci, icona, barra di stato, indicatori</string>
     <string name="kw_indicator_status_bar">LED, luci, simboli, indicatori, pastiera</string>
+    <string name="titan2_elite_fill_corners_title">Riempi gli angoli con lo sfondo della barra</string>
+    <string name="titan2_elite_straight_outer_buttons_title">Pulsanti esterni dritti</string>
+    <string name="titan2_elite_straight_outer_buttons_description">Mantiene dimensioni e spaziature pensate per gli angoli arrotondati, ma disegna i pulsanti d\'angolo come pulsanti normali che scendono dritti negli angoli: i pulsanti esterni della barra e i tasti degli angoli in basso delle schermate emoji, SYM e selettore emoji. La curva dello schermo li ritaglia e i LED corrono in linea retta tra di essi.</string>
+    <string name="titan2_elite_fill_corners_description">Estende lo sfondo della tastiera fino agli angoli arrotondati del display, così l\'app sottostante non si vede attorno alla barra.</string>
+    <string name="titan2_elite_status_bar_lift_title">Alza la barra di stato sopra i LED</string>
+    <string name="titan2_elite_status_bar_lift_description">Alza la barra di stato così i LED dei modificatori scorrono in una fascia libera sotto di essa, seguendo gli angoli del display. 0 lascia i LED attorno alla barra.</string>
+    <string name="titan2_elite_status_bar_lift_value">%1$d dp</string>
 </resources>

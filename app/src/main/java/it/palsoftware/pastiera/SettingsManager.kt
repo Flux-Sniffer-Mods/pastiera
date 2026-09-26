@@ -181,6 +181,10 @@ object SettingsManager {
     const val KEY_TITAN2_ELITE_MAX_ICON_SHRINK = "titan2_elite_max_icon_shrink"
     const val KEY_TITAN2_ELITE_TOP_CORNER_MULTIPLIER = "titan2_elite_top_corner_multiplier"
     const val KEY_TITAN2_ELITE_ROUNDED_CORNER_INSETS = "titan2_elite_rounded_corner_insets"
+    const val KEY_TITAN2_ELITE_FILL_CORNERS = "titan2_elite_fill_corners"
+    const val KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS = "titan2_elite_straight_outer_buttons"
+    const val KEY_TITAN2_ELITE_STATUS_BAR_LIFT = "titan2_elite_status_bar_lift_dp"
+    const val TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP = 16
     private const val KEY_ACCESSIBILITY_LIVE_ANNOUNCEMENTS_ENABLED = "accessibility_live_announcements_enabled" // Whether status bar accessibility live announcements are enabled
     private const val KEY_ACCESSIBILITY_READ_SECOND_ROW_ENABLED = "accessibility_read_second_row_enabled" // Whether TalkBack should read quick settings/variations row
     private const val KEY_ACCESSIBILITY_SUGGESTIONS_ANNOUNCEMENT_DELAY_MS = "accessibility_suggestions_announcement_delay_ms" // Delay before suggestions become accessible again while typing
@@ -1470,6 +1474,39 @@ object SettingsManager {
             .putBoolean(KEY_TITAN2_ELITE_ROUNDED_CORNER_INSETS, enabled)
             .apply()
     }
+
+    /** Paint the keyboard background into the display's rounded corners instead of clipping to them. */
+    fun getTitan2EliteFillCorners(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, false)
+
+    fun setTitan2EliteFillCorners(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, enabled).apply()
+    }
+
+    /**
+     * Rounded corners for sizing and spacing only: the outer bar buttons are plain buttons
+     * reaching straight down into the corners instead of shapes following the display curve.
+     */
+    fun getTitan2EliteStraightOuterButtons(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, false)
+
+    fun setTitan2EliteStraightOuterButtons(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, enabled).apply()
+    }
+
+    /** How far the status bar sits above the modifier LEDs, in dp (0 = LEDs hug the bar). */
+    fun getTitan2EliteStatusBarLiftDp(context: Context): Int =
+        getPreferences(context).getInt(KEY_TITAN2_ELITE_STATUS_BAR_LIFT, 0)
+            .coerceIn(0, TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP)
+
+    fun setTitan2EliteStatusBarLiftDp(context: Context, dp: Int) {
+        getPreferences(context).edit()
+            .putInt(KEY_TITAN2_ELITE_STATUS_BAR_LIFT, dp.coerceIn(0, TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP))
+            .apply()
+    }
+
+    fun getTitan2EliteStatusBarLiftPx(context: Context): Int =
+        Math.round(getTitan2EliteStatusBarLiftDp(context) * context.resources.displayMetrics.density)
 
     /**
      * Enables the calibrated rounded-corner layout once for Titan 2 Elite users receiving this

@@ -37,11 +37,46 @@ class ModifierLedLayoutTest {
     @Test
     fun explicitPhysicalProfileControlsPresetAndAutoUsesDetection() {
         assertSame(
-            ModifierLedLayouts.TITAN_2_ELITE,
+            ModifierLedLayouts.TITAN_2_ELITE_SPLIT,
             ModifierLedLayouts.resolve("titan2elite_qwerty", titan2EliteAutoDetected = false)
         )
         assertSame(
-            ModifierLedLayouts.TITAN_2_ELITE,
+            ModifierLedLayouts.TITAN_2_ELITE_SPLIT,
+            ModifierLedLayouts.resolve("auto", titan2EliteAutoDetected = true)
+        )
+        assertSame(
+            ModifierLedLayouts.DEFAULT,
+            ModifierLedLayouts.resolve("titan2", titan2EliteAutoDetected = true)
+        )
+    }
+
+    @Test
+    fun liftedStatusBarUsesOneLedPerModifierInPhysicalOrder() {
+        val segments = ModifierLedLayouts.TITAN_2_ELITE_SPLIT.segments.sortedBy { it.x }
+
+        assertEquals(
+            listOf(ModifierLedState.ALT, ModifierLedState.SHIFT, ModifierLedState.CTRL, ModifierLedState.SYM),
+            segments.map { it.state }
+        )
+        segments.zipWithNext().forEach { (left, right) ->
+            assertTrue("${left.state} overlaps ${right.state}", left.x + left.width < right.x)
+        }
+    }
+
+    @Test
+    fun splitLayoutKeepsShiftAwayFromTheSymLed() {
+        val segments = ModifierLedLayouts.TITAN_2_ELITE_SPLIT.segments
+        val shift = segments.single { it.state == ModifierLedState.SHIFT }
+        val sym = segments.single { it.state == ModifierLedState.SYM }
+
+        assertTrue(shift.x + shift.width < 0.5f)
+        assertTrue(sym.x > 0.5f)
+    }
+
+    @Test
+    fun titan2EliteUsesTheFourLedLayoutOnEveryScreen() {
+        assertSame(
+            ModifierLedLayouts.TITAN_2_ELITE_SPLIT,
             ModifierLedLayouts.resolve("auto", titan2EliteAutoDetected = true)
         )
         assertSame(
