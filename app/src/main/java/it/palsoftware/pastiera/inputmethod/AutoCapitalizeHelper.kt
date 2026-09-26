@@ -181,6 +181,11 @@ object AutoCapitalizeHelper {
             clearSmartShift(disableShift, onUpdateStatusBar)
             return
         }
+        // Scripts without capitals (Thai, Arabic, CJK…) use Shift for other letters: never auto-Shift
+        if (isCaselessLanguage(currentLanguageCode(context))) {
+            clearSmartShift(disableShift, onUpdateStatusBar)
+            return
+        }
 
         // Check field-specific capitalization flags first.
         if (inputContextState != null) {
@@ -281,12 +286,34 @@ object AutoCapitalizeHelper {
         }
     }
 
+    /**
+     * Languages written in scripts without capital letters. On their layouts Shift picks other
+     * letters (Thai: d is ก, D is ฏ), so auto-capitals would type the wrong ones
+     * (palsoftware/pastiera#302).
+     */
+    private val CASELESS_LANGUAGES = setOf(
+        "th", "lo", "km", "my", "zh", "ja", "ko", "ar", "fa", "ur", "ps", "he", "yi",
+        "hi", "mr", "ne", "sa", "bn", "as", "pa", "gu", "or", "ta", "te", "kn", "ml", "si",
+        "am", "ti", "ka", "bo", "dz", "dv"
+    )
+
+    fun isCaselessLanguage(languageCode: String?): Boolean =
+        languageCode != null && languageCode.lowercase().substringBefore('_').substringBefore('-') in CASELESS_LANGUAGES
+
+    private fun currentLanguageCode(context: android.content.Context): String? = runCatching {
+        val imm = context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+            as? android.view.inputmethod.InputMethodManager
+        imm?.currentInputMethodSubtype?.languageTag?.takeIf { it.isNotBlank() }
+            ?: imm?.currentInputMethodSubtype?.locale
+    }.getOrNull()
+
     fun shouldAutoCapitalizeAtCursor(
         context: android.content.Context,
         inputConnection: InputConnection?,
         shouldDisableAutoCapitalize: Boolean
     ): Boolean {
         if (inputConnection == null || shouldDisableAutoCapitalize) return false
+        if (isCaselessLanguage(currentLanguageCode(context))) return false
         val settings = resolveAutoCapSettings(context, inputConnection)
         if (!settings.autoCapFirstLetter && !settings.autoCapAfterPeriod) {
             return false
