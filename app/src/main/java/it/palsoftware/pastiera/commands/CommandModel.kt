@@ -17,7 +17,7 @@ data class CommandTarget(
 
 enum class CommandSourceId(val storageValue: String, val displayLabel: String) {
     Apps("apps", "Apps"),
-    Pastiera("pastiera", "Pastiera"),
+    Pastiera("pastiera", it.palsoftware.pastiera.BuildConfig.APP_NAME),
     AppActions("app_actions", "App actions"),
     DeviceControl("device_control", "Device control"),
     NavActions("nav_actions", "Navigation");

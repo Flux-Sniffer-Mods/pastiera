@@ -71,6 +71,46 @@ fun shouldValidateStableSigning(taskNames: List<String>): Boolean {
     }
 }
 
+// Flux Keyboard: the fork's builds don't use the Pastiera name (at the Pastiera team's request).
+// Every string resource that names Pastiera is regenerated for the stable flavor with the fork's
+// name, so Pastiera's own string files stay untouched; credits in assets still name Pastiera.
+val forkAppName = "Flux Keyboard"
+val forkCompactModeName = "Solderina" // Pastiera's compact mode, Pastierina
+val forkNamesDir = layout.buildDirectory.dir("generated/forkNames/res")
+val generateForkNames = tasks.register("generateForkNames") {
+    val resDir = file("src/main/res")
+    val outDir = forkNamesDir
+    val appName = forkAppName
+    val compactName = forkCompactModeName
+    inputs.dir(resDir).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("appName", appName)
+    inputs.property("compactName", compactName)
+    outputs.dir(outDir)
+    doLast {
+        val out = outDir.get().asFile
+        out.deleteRecursively()
+        val element = Regex("(?s)<(string|plurals|string-array)\\b[^>]*>.*?</\\1>")
+        val word = Regex("\\bPastiera\\b|Pastierina")
+        resDir.listFiles { f -> f.isDirectory && f.name.startsWith("values") }.orEmpty().forEach { dir ->
+            val renamed = dir.listFiles { f -> f.extension == "xml" }.orEmpty().sortedBy { it.name }
+                .flatMap { xml -> element.findAll(xml.readText()).map { it.value }.toList() }
+                .filter { word.containsMatchIn(it) }
+                .map {
+                    word.replace(it.replace("Pastiera Flux", appName).replace("Pastierina", compactName), appName)
+                }
+            if (renamed.isNotEmpty()) {
+                File(out, dir.name).mkdirs()
+                File(out, "${dir.name}/fork_names.xml").writeText(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n    " +
+                        renamed.joinToString("\n    ") + "\n</resources>\n"
+                )
+            }
+        }
+    }
+}
+tasks.named("preBuild") { dependsOn(generateForkNames) }
+
 android {
     namespace = "it.palsoftware.pastiera"
     compileSdk = 36
@@ -91,6 +131,15 @@ android {
         )
     }
 
+    // Flux Keyboard: stable builds update from this repository's "flux/" GitHub releases
+    val forkGithubRepository = providers.gradleProperty("PASTIERA_FORK_GITHUB_REPOSITORY")
+        .orNull ?: "Flux-Sniffer-Mods/Flux-Keyboard"
+    if (forkGithubRepository.isNotEmpty() && !forkGithubRepository.matches(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"))) {
+        throw GradleException(
+            "PASTIERA_FORK_GITHUB_REPOSITORY must be empty or have the form owner/repository"
+        )
+    }
+
     defaultConfig {
         applicationId = "it.palsoftware.pastiera"
         minSdk = 29
@@ -99,7 +148,11 @@ android {
         versionName = ciVersionName ?: defaultVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "APP_NAME", "\"Pastiera\"")
+        buildConfigField("String", "COMPACT_MODE_NAME", "\"Pastierina\"")
         buildConfigField("String", "SUCCESSOR_GITHUB_REPOSITORY", "\"$successorGithubRepository\"")
+        buildConfigField("String", "FORK_GITHUB_REPOSITORY", "\"$forkGithubRepository\"")
+        buildConfigField("String", "KLIPY_API_KEY", "\"$klipyApiKey\"")
     }
 
     signingConfigs {
@@ -135,12 +188,18 @@ android {
     }
 
     flavorDimensions += "channel"
+    sourceSets.maybeCreate("stable").res.srcDir(forkNamesDir)
 
     productFlavors {
         create("stable") {
             dimension = "channel"
-            manifestPlaceholders["appLabel"] = "Pastiera"
-            manifestPlaceholders["imeLabel"] = "Pastiera"
+            // Flux Keyboard (Flux-Sniffer-Mods fork): its own name and app ID, so it installs next
+            // to official Pastiera and never presents itself as Pastiera
+            applicationId = "io.github.fluxsniffermods.fluxkeyboard"
+            manifestPlaceholders["appLabel"] = forkAppName
+            manifestPlaceholders["imeLabel"] = forkAppName
+            buildConfigField("String", "APP_NAME", "\"$forkAppName\"")
+            buildConfigField("String", "COMPACT_MODE_NAME", "\"$forkCompactModeName\"")
             buildConfigField("String", "RELEASE_CHANNEL", "\"stable\"")
             buildConfigField("boolean", "IS_FDROID_BUILD", if (isFdroidBuild) "true" else "false")
             buildConfigField("boolean", "ENABLE_GITHUB_UPDATE_CHECKS", if (isFdroidBuild) "false" else "true")

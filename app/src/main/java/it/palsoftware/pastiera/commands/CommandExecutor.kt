@@ -100,7 +100,7 @@ class CommandExecutor(
                     CommandExecutionResult.Success
                 } catch (error: Exception) {
                     Log.e(TAG, "Failed to open Pastiera", error)
-                    fail("Could not open Pastiera")
+                    fail("Could not open ${it.palsoftware.pastiera.BuildConfig.APP_NAME}")
                 }
             }
             PastieraCommandSource.ACTION_TOGGLE_SOFTWARE_KEYBOARD_MODE -> toggleSoftwareKeyboardMode()

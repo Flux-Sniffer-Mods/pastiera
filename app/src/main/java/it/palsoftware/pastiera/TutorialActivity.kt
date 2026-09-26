@@ -185,12 +185,14 @@ fun TutorialScreen(
     val lastSeenWhatsNewVersion = remember {
         SettingsManager.getLastSeenWhatsNewVersion(context)
     }
+    // Notes bundled with the build (a fork's own changes) win over the online ones
+    val bundledNotes = remember { it.palsoftware.pastiera.update.bundledReleaseNotes(context, BuildConfig.VERSION_NAME) }
     var releaseNotes by remember {
-        mutableStateOf(ReleaseNotesSummary.fallback(BuildConfig.VERSION_NAME, releaseNotesLanguageTag))
+        mutableStateOf(bundledNotes ?: ReleaseNotesSummary.fallback(BuildConfig.VERSION_NAME, releaseNotesLanguageTag))
     }
 
     LaunchedEffect(updateTutorial) {
-        if (updateTutorial) {
+        if (updateTutorial && bundledNotes == null) {
             fetchReleaseNotesForVersion(
                 version = BuildConfig.VERSION_NAME,
                 languageTag = releaseNotesLanguageTag
@@ -1183,7 +1185,7 @@ fun TutorialWhatsNewPageContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(R.string.tutorial_whats_new_description),
+            text = page.summary.intro ?: stringResource(R.string.tutorial_whats_new_description),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1192,6 +1194,7 @@ fun TutorialWhatsNewPageContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        page.summary.sectionTitle?.let { ReleaseNotesSectionTitle(it) }
         page.summary.highlights.forEach { highlight ->
             ReleaseNoteRow(
                 text = highlight,
@@ -1208,6 +1211,19 @@ fun TutorialWhatsNewPageContent(
                     text = improvement,
                     icon = Icons.Filled.CheckCircle,
                     tint = MaterialTheme.colorScheme.secondary,
+                    prominent = false
+                )
+            }
+        }
+
+        if (page.summary.upstreamChanges.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            page.summary.upstreamTitle?.let { ReleaseNotesSectionTitle(it) }
+            page.summary.upstreamChanges.forEach { change ->
+                ReleaseNoteRow(
+                    text = change,
+                    icon = Icons.Filled.CheckCircle,
+                    tint = MaterialTheme.colorScheme.tertiary,
                     prominent = false
                 )
             }
@@ -1275,7 +1291,7 @@ fun TutorialWhatsNewPageContent(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.tutorial_whats_new_docs_button))
+            Text(page.summary.docsLabel ?: stringResource(R.string.tutorial_whats_new_docs_button))
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -1288,6 +1304,20 @@ fun TutorialWhatsNewPageContent(
             fontWeight = FontWeight.Medium
         )
     }
+}
+
+/** A heading inside the release notes, such as whose changes follow. */
+@Composable
+private fun ReleaseNotesSectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 6.dp)
+    )
 }
 
 @Composable
@@ -1327,10 +1357,12 @@ private fun buildReleaseRangeLabel(previousVersion: String?, currentVersion: Str
     val normalizedPrevious = previousVersion
         ?.trim()
         ?.takeIf { it.isNotBlank() && it != normalizedCurrent }
+    // Versions as people read them (a build's date rather than its timestamp)
+    val current = it.palsoftware.pastiera.update.friendlyVersion(normalizedCurrent)
     return if (normalizedPrevious != null) {
-        "$normalizedPrevious → $normalizedCurrent"
+        "${it.palsoftware.pastiera.update.friendlyVersion(normalizedPrevious)} → $current"
     } else {
-        normalizedCurrent
+        current
     }
 }
 

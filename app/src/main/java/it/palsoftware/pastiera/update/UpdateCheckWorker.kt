@@ -58,11 +58,13 @@ class UpdateCheckWorker(
 
         if (result.hasAnnouncement) {
             if (result.releaseTag != null && result.displayName != null) {
+                if (result.isForkUpdate) rememberAnnouncedForkRelease(context, result.releaseTag)
                 NotificationHelper.showUpdateAvailableNotification(
                     context = context,
                     displayName = result.displayName,
                     releasePageUrl = result.releasePageUrl,
-                    isNightlyUpdate = result.isNightlyUpdate
+                    isNightlyUpdate = result.isNightlyUpdate,
+                    isForkUpdate = result.isForkUpdate
                 )
             }
         }

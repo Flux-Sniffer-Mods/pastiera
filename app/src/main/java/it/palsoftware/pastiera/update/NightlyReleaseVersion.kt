@@ -32,6 +32,16 @@ internal fun compareReleaseVersions(first: String, second: String): Int? {
     return ai.size.compareTo(bi.size)
 }
 
+/** Whether a Flux Keyboard release tag ("flux/v…") is newer than the [current] version name. */
+internal fun forkReleaseIsNewer(tag: String, current: String): Boolean =
+    tag.startsWith("flux/") && (compareReleaseVersions(tag.removePrefix("flux/"), current) ?: -1) > 0
+
+/** The newest Flux Keyboard release ("flux/v…" tag) that is newer than [current]. */
+internal fun findNewerForkRelease(releases: List<GitHubRelease>, current: String): ReleaseInfo? =
+    releases.filter { !it.draft && forkReleaseIsNewer(it.tagName, current) }
+        .maxWithOrNull { a, b -> compareReleaseVersions(a.tagName.removePrefix("flux/"), b.tagName.removePrefix("flux/")) ?: 0 }
+        ?.let { ReleaseInfo(it.tagName, it.name ?: it.tagName, it.htmlUrl, it.downloadUrl) }
+
 internal fun findNewerNightlyRelease(releases: List<GitHubRelease>, current: String): ReleaseInfo? =
     releases.filter { !it.draft && it.prerelease && it.tagName.startsWith("nightly/") &&
         (compareReleaseVersions(it.tagName, current) ?: -1) > 0 }
