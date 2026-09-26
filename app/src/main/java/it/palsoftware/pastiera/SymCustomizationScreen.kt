@@ -1023,34 +1023,60 @@ fun SymCustomizationScreen(
             )
         }
 
-        // Recents key on the emoji layer: pick one of the layer's letter keys
+        // Recents key on the emoji layer: press the letter key to use, like the emoji key
         if (showRecentsKeyDialog) {
+            val recentsKeyFocus = remember { FocusRequester() }
+            var rejectedRecentsKey by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { showRecentsKeyDialog = false },
                 title = { Text(stringResource(R.string.emoji_layer_recents_key_title)) },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(recentsKeyFocus)
+                            .focusable()
+                            .onPreviewKeyEvent { event ->
+                                val native = event.nativeKeyEvent
+                                // Let Back close the dialog as usual
+                                if (native.keyCode == KeyEvent.KEYCODE_BACK) return@onPreviewKeyEvent false
+                                if (native.action == KeyEvent.ACTION_DOWN && native.repeatCount == 0) {
+                                    if (SettingsManager.setEmojiLayerRecentsKey(context, native.keyCode)) {
+                                        emojiLayerRecentsKey = native.keyCode
+                                        showRecentsKeyDialog = false
+                                    } else {
+                                        rejectedRecentsKey = true
+                                    }
+                                }
+                                true
+                            },
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.emoji_layer_recents_key_description),
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        SettingsManager.EMOJI_LAYER_KEYS.chunked(7).forEach { keys ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                keys.forEach { keyCode ->
-                                    val selected = keyCode == emojiLayerRecentsKey
-                                    FilterChip(
-                                        selected = selected,
-                                        onClick = {
-                                            if (SettingsManager.setEmojiLayerRecentsKey(context, keyCode)) {
-                                                emojiLayerRecentsKey = keyCode
-                                                showRecentsKeyDialog = false
-                                            }
-                                        },
-                                        label = { Text(getLetterFromKeyCode(keyCode)) }
-                                    )
-                                }
-                            }
-                        }
+                        Text(
+                            text = if (emojiLayerRecentsKey == KeyEvent.KEYCODE_UNKNOWN) {
+                                stringResource(R.string.emoji_layer_recents_key_off)
+                            } else {
+                                stringResource(R.string.emoji_layer_recents_key_current, getLetterFromKeyCode(emojiLayerRecentsKey))
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(
+                                if (rejectedRecentsKey) R.string.emoji_layer_recents_key_rejected
+                                else R.string.emoji_layer_recents_key_press_prompt
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (rejectedRecentsKey) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    LaunchedEffect(Unit) {
+                        runCatching { recentsKeyFocus.requestFocus() }
                     }
                 },
                 confirmButton = {

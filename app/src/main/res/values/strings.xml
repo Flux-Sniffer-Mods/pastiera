@@ -1757,7 +1757,9 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="emoji_key_auto_close_title">Close after choosing an emoji</string>
     <string name="emoji_key_auto_close_description">For the emoji picker, and the emoji layer when your emoji key opens it. SYM auto-close no longer applies to them.</string>
     <string name="emoji_layer_recents_key_title">Recents key on the emoji layer</string>
-    <string name="emoji_layer_recents_key_description">Pick a key of the emoji layer. Pressing it shows your recent emoji from the picker on the other keys; press it again to go back.</string>
+    <string name="emoji_layer_recents_key_description">Press the emoji layer key that shows your recent emoji (Q unless you change it). On the layer, pressing it puts your recent picker emoji on the other keys; press it again to go back.</string>
+    <string name="emoji_layer_recents_key_press_prompt">Press a letter key now…</string>
+    <string name="emoji_layer_recents_key_rejected">That key isn’t on the emoji layer. Press a letter key.</string>
     <string name="emoji_layer_recents_key_off">Off</string>
     <string name="emoji_layer_recents_key_current">Key %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Turn off</string>

@@ -104,11 +104,18 @@ class EmojiKeyScreensTest {
     }
 
     @Test
-    fun recentsKeyMustBeAnEmojiLayerKey() {
+    fun recentsKeyIsQByDefaultAndMustBeAnEmojiLayerKey() {
+        assertEquals(KeyEvent.KEYCODE_Q, SettingsManager.getEmojiLayerRecentsKey(context))
         assertFalse(SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_SPACE))
-        assertEquals(KeyEvent.KEYCODE_UNKNOWN, SettingsManager.getEmojiLayerRecentsKey(context))
+        assertEquals(KeyEvent.KEYCODE_Q, SettingsManager.getEmojiLayerRecentsKey(context))
         assertTrue(SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_M))
         assertEquals(KeyEvent.KEYCODE_M, SettingsManager.getEmojiLayerRecentsKey(context))
+    }
+
+    @Test
+    fun turningTheRecentsKeyOffSticks() {
+        assertTrue(SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_UNKNOWN))
+        assertEquals(KeyEvent.KEYCODE_UNKNOWN, SettingsManager.getEmojiLayerRecentsKey(context))
     }
 
     @Test

@@ -1074,7 +1074,9 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="emoji_key_auto_close_title">Chiudi dopo aver scelto un\'emoji</string>
     <string name="emoji_key_auto_close_description">Per il selettore emoji e per il livello emoji quando lo apre il tasto emoji. La chiusura automatica di SYM non si applica più a questi.</string>
     <string name="emoji_layer_recents_key_title">Tasto recenti nel livello emoji</string>
-    <string name="emoji_layer_recents_key_description">Scegli un tasto del livello emoji. Premendolo, le emoji recenti del selettore compaiono sugli altri tasti; premilo di nuovo per tornare indietro.</string>
+    <string name="emoji_layer_recents_key_description">Premi il tasto del livello emoji che mostra le emoji recenti (Q se non lo cambi). Nel livello, premendolo le emoji recenti del selettore compaiono sugli altri tasti; premilo di nuovo per tornare indietro.</string>
+    <string name="emoji_layer_recents_key_press_prompt">Premi ora un tasto lettera…</string>
+    <string name="emoji_layer_recents_key_rejected">Quel tasto non è nel livello emoji. Premi un tasto lettera.</string>
     <string name="emoji_layer_recents_key_off">Disattivato</string>
     <string name="emoji_layer_recents_key_current">Tasto %1$s</string>
     <string name="emoji_layer_recents_key_turn_off">Disattiva</string>

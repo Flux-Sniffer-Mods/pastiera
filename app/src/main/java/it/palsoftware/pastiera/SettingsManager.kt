@@ -5382,9 +5382,9 @@ object SettingsManager {
         getPreferences(context).edit().putString(KEY_KLIPY_API_KEY, apiKey.trim()).apply()
     }
 
-    /** The emoji layer key that shows recent emoji instead of its own (KEYCODE_UNKNOWN = none). */
+    /** The emoji layer key that shows recent emoji instead of its own: Q unless changed (KEYCODE_UNKNOWN = off). */
     fun getEmojiLayerRecentsKey(context: Context): Int {
-        val keyCode = getPreferences(context).getInt(KEY_EMOJI_LAYER_RECENTS_KEY, KeyEvent.KEYCODE_UNKNOWN)
+        val keyCode = getPreferences(context).getInt(KEY_EMOJI_LAYER_RECENTS_KEY, KeyEvent.KEYCODE_Q)
         return if (keyCode in EMOJI_LAYER_KEYS) keyCode else KeyEvent.KEYCODE_UNKNOWN
     }
 
