@@ -108,7 +108,17 @@ enum class StandardShortcut(val combo: KeyCombo, val scope: ShortcutScope, val t
     Next(KeyCombo.alt(KeyEvent.KEYCODE_DPAD_DOWN), ShortcutScope.Anywhere, R.string.app_shortcut_next),
     Previous(KeyCombo.alt(KeyEvent.KEYCODE_DPAD_UP), ShortcutScope.Anywhere, R.string.app_shortcut_previous),
     Menu(KeyCombo.ctrl(KeyEvent.KEYCODE_M), ShortcutScope.Anywhere, R.string.app_shortcut_menu),
-    Help(KeyCombo.ctrl(KeyEvent.KEYCODE_SLASH), ShortcutScope.Anywhere, R.string.app_shortcut_help);
+    Help(KeyCombo.ctrl(KeyEvent.KEYCODE_SLASH), ShortcutScope.Anywhere, R.string.app_shortcut_help),
+    /** The app's own settings screen (Android's standard entry point for it). */
+    Settings(KeyCombo.ctrl(KeyEvent.KEYCODE_COMMA), ShortcutScope.Anywhere, R.string.app_shortcut_settings),
+    /**
+     * The app's own launcher shortcuts (long-press its icon), in its order. Ctrl+Alt+1 to 4; on a
+     * keyboard without a number row, the keys whose Alt character is 1 to 4.
+     */
+    AppAction1(KeyCombo(KeyEvent.KEYCODE_1, ctrl = true, alt = true), ShortcutScope.Anywhere, R.string.app_shortcut_app_action_1),
+    AppAction2(KeyCombo(KeyEvent.KEYCODE_2, ctrl = true, alt = true), ShortcutScope.Anywhere, R.string.app_shortcut_app_action_2),
+    AppAction3(KeyCombo(KeyEvent.KEYCODE_3, ctrl = true, alt = true), ShortcutScope.Anywhere, R.string.app_shortcut_app_action_3),
+    AppAction4(KeyCombo(KeyEvent.KEYCODE_4, ctrl = true, alt = true), ShortcutScope.Anywhere, R.string.app_shortcut_app_action_4);
 
     companion object {
         fun forCombo(combo: KeyCombo): StandardShortcut? = entries.firstOrNull { it.combo == combo }
@@ -366,9 +376,14 @@ object AppShortcutPresets {
      */
     val all: List<AppShortcutPreset> = run {
         val suggested = SuggestedAppShortcuts.all.associateBy { it.packageName }
-        documented.map { preset ->
+        val merged = documented.map { preset ->
             suggested[preset.packageName]?.let { preset.copy(suggested = it.suggested) } ?: preset
         } + SuggestedAppShortcuts.all.filter { suggestion -> documented.none { it.packageName == suggestion.packageName } }
+        // Social is Play's Social category plus the hand-picked social media apps
+        val ranked = merged.map { preset ->
+            if (preset.packageName in HandPickedSocialApps.packages) preset.copy(category = AppCategory.Social) else preset
+        }
+        ranked + HandPickedSocialApps.added.filter { added -> ranked.none { it.packageName == added.packageName } }
     }
 
     private val byPackage = all.associateBy { it.packageName }
@@ -398,6 +413,8 @@ sealed class ShortcutAction {
     data class SendKeys(val combo: KeyCombo) : ShortcutAction()
     /** Open one of the app's own screens: the first of [intents] the app accepts. */
     data class OpenInApp(val intents: List<AppIntent>) : ShortcutAction()
+    /** Open a screen the app itself offers on this phone (AppActionDiscovery). */
+    data class OpenDiscovered(val action: DiscoveredAction) : ShortcutAction()
 }
 
 /** Picks what to do in an app for a combo pressed on the keyboard. */
@@ -422,14 +439,36 @@ object AppShortcutRemapper {
         return preset.suggested[shortcut].orEmpty()
     }
 
+    /**
+     * The app's own screen for [shortcut] found on the phone, used when neither a key shortcut nor
+     * a suggestion covers it: none when suggestions are off or you set this shortcut yourself.
+     */
+    fun discoveredAction(
+        config: AppShortcutConfig,
+        packageName: String,
+        shortcut: StandardShortcut,
+        discovered: DiscoveredAppActions?
+    ): DiscoveredAction? {
+        if (discovered == null || !config.suggestionsEnabled) return null
+        if (config.apps[packageName]?.overrides?.containsKey(shortcut) == true) return null
+        return discovered.forStandard(shortcut)
+    }
+
     fun isAppEnabled(config: AppShortcutConfig, packageName: String): Boolean =
         config.apps[packageName]?.enabled ?: true
 
     /**
      * What to do instead of passing [pressed] to the app, or null to let the key through unchanged.
      * [inTextField]: a text field has focus, so typed characters and list-only actions are left alone.
+     * [discovered]: what the app offers on this phone, looked up only when a standard combo is pressed.
      */
-    fun resolve(config: AppShortcutConfig, packageName: String?, pressed: KeyCombo, inTextField: Boolean): ShortcutAction? {
+    fun resolve(
+        config: AppShortcutConfig,
+        packageName: String?,
+        pressed: KeyCombo,
+        inTextField: Boolean,
+        discovered: (() -> DiscoveredAppActions?)? = null
+    ): ShortcutAction? {
         if (!config.enabled || packageName.isNullOrEmpty()) return null
         if (!isAppEnabled(config, packageName)) return null
         val shortcut = StandardShortcut.forCombo(pressed) ?: return null
@@ -441,6 +480,8 @@ object AppShortcutRemapper {
             return ShortcutAction.SendKeys(target)
         }
         val intents = suggestedIntents(config, packageName, shortcut)
-        return if (intents.isEmpty()) null else ShortcutAction.OpenInApp(intents)
+        if (intents.isNotEmpty()) return ShortcutAction.OpenInApp(intents)
+        if (discovered == null || !config.suggestionsEnabled) return null
+        return discoveredAction(config, packageName, shortcut, discovered())?.let { ShortcutAction.OpenDiscovered(it) }
     }
 }

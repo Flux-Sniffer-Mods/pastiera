@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import it.palsoftware.pastiera.shortcuts.AppActionDiscovery
 import it.palsoftware.pastiera.shortcuts.AppCategory
 import it.palsoftware.pastiera.shortcuts.AppIntent
 import it.palsoftware.pastiera.shortcuts.AppShortcutAppSettings
@@ -48,6 +49,7 @@ import it.palsoftware.pastiera.shortcuts.AppShortcutConfig
 import it.palsoftware.pastiera.shortcuts.AppShortcutPresets
 import it.palsoftware.pastiera.shortcuts.AppShortcutRemapper
 import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
+import it.palsoftware.pastiera.shortcuts.DiscoveredAction
 import it.palsoftware.pastiera.shortcuts.KeyCombo
 import it.palsoftware.pastiera.shortcuts.ShortcutScope
 import it.palsoftware.pastiera.shortcuts.StandardShortcut
@@ -108,10 +110,13 @@ fun AppShortcutsSettingsScreen(modifier: Modifier = Modifier, onBack: () -> Unit
         )
 
         SettingsSectionDivider(stringResource(R.string.app_shortcuts_section_standard))
+        FluxNote(stringResource(R.string.app_shortcuts_keys_note))
         StandardShortcut.entries.forEach { shortcut ->
+            // As pressed on this keyboard; shortcuts it can't make aren't listed
+            val keys = pressLabel(shortcut.combo) ?: return@forEach
             ComboRow(
                 title = stringResource(shortcut.titleRes),
-                combo = keyComboLabel(shortcut.combo),
+                combo = keys,
                 note = if (shortcut.scope == ShortcutScope.OutsideTextFields) {
                     stringResource(R.string.app_shortcuts_scope_outside_text_fields)
                 } else {
@@ -210,6 +215,7 @@ private fun AppShortcutsAppScreen(modifier: Modifier, packageName: String, onBac
     val settings = config.apps[packageName] ?: AppShortcutAppSettings()
     val title = preset?.appName ?: settings.appName ?: packageName
     var editing by remember { mutableStateOf<StandardShortcut?>(null) }
+    val discovered = remember(packageName) { AppActionDiscovery.discover(context, packageName) }
 
     fun save(update: (AppShortcutAppSettings) -> AppShortcutAppSettings) {
         AppShortcutSettings.setApp(context, packageName, update(config.apps[packageName] ?: AppShortcutAppSettings()))
@@ -234,12 +240,15 @@ private fun AppShortcutsAppScreen(modifier: Modifier, packageName: String, onBac
         StandardShortcut.entries.forEach { shortcut ->
             val target = AppShortcutRemapper.effectiveShortcut(config, packageName, shortcut)
             val suggestion = AppShortcutRemapper.suggestedIntents(config, packageName, shortcut).firstOrNull()
+            val fromApp = AppShortcutRemapper.discoveredAction(config, packageName, shortcut, discovered)
             val changed = settings.overrides.containsKey(shortcut)
+            val keys = pressLabel(shortcut.combo) ?: return@forEach
             ComboRow(
                 title = stringResource(shortcut.titleRes),
-                combo = keyComboLabel(shortcut.combo),
+                combo = keys,
                 note = when {
                     target == null && suggestion != null -> suggestionLabel(suggestion)
+                    target == null && fromApp != null -> discoveredLabel(fromApp)
                     target == null -> stringResource(R.string.app_shortcuts_not_remapped)
                     target == shortcut.combo -> stringResource(R.string.app_shortcuts_same_in_app)
                     else -> stringResource(R.string.app_shortcuts_sent_as, keyComboLabel(target))
@@ -247,6 +256,22 @@ private fun AppShortcutsAppScreen(modifier: Modifier, packageName: String, onBac
                 onClick = { editing = shortcut }
             )
         }
+        SettingsSectionDivider(stringResource(R.string.app_shortcuts_section_discovered))
+        FluxNote(stringResource(R.string.app_shortcuts_discovered_note))
+        val numbered = listOf(
+            StandardShortcut.AppAction1, StandardShortcut.AppAction2,
+            StandardShortcut.AppAction3, StandardShortcut.AppAction4
+        )
+        // The first four have Ctrl+Alt+1 to 4; the rest are listed so you know they exist
+        val offered = discovered.launcherShortcuts.mapIndexed { index, action ->
+            action.label to (numbered.getOrNull(index)?.let { pressLabel(it.combo) } ?: "")
+        } + listOfNotNull(discovered.settings?.let {
+            stringResource(R.string.app_shortcuts_opens_settings) to (pressLabel(StandardShortcut.Settings.combo) ?: "")
+        })
+        if (offered.isEmpty()) {
+            FluxNote(stringResource(R.string.app_shortcuts_discovered_none))
+        }
+        offered.forEach { (label, combo) -> ComboRow(title = label, combo = combo, note = null) }
         if (settings.overrides.isNotEmpty() && preset != null) {
             FluxActionRow(
                 linkId = null,
@@ -423,6 +448,14 @@ private fun suggestionLabel(intent: AppIntent): String = when (intent.action) {
     else -> stringResource(R.string.app_shortcuts_suggested_link, intent.data.orEmpty())
 }
 
+@Composable
+private fun discoveredLabel(action: DiscoveredAction): String =
+    if (action.id == "settings" && action.label.isEmpty()) {
+        stringResource(R.string.app_shortcuts_opens_settings)
+    } else {
+        stringResource(R.string.app_shortcuts_opens_discovered, action.label)
+    }
+
 /** Keyboards (input methods) never get app shortcuts. */
 private fun keyboardPackages(context: android.content.Context): Set<String> {
     val manager = context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
@@ -447,7 +480,7 @@ internal fun keyComboLabel(combo: KeyCombo): String {
     }
 }
 
-private fun keyName(keyCode: Int): String = when (keyCode) {
+internal fun keyName(keyCode: Int): String = when (keyCode) {
     in KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z -> ('A' + (keyCode - KeyEvent.KEYCODE_A)).toString()
     in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> ('0' + (keyCode - KeyEvent.KEYCODE_0)).toString()
     KeyEvent.KEYCODE_ENTER -> "Enter"
@@ -469,4 +502,17 @@ private fun keyName(keyCode: Int): String = when (keyCode) {
     KeyEvent.KEYCODE_LEFT_BRACKET -> "["
     KeyEvent.KEYCODE_RIGHT_BRACKET -> "]"
     else -> KeyEvent.keyCodeToString(keyCode).removePrefix("KEYCODE_")
+}
+
+/** [combo] as pressed on the keyboard in use ("Ctrl+Alt+W (1)"), or null when it can't be made. */
+@Composable
+private fun pressLabel(combo: KeyCombo): String? {
+    val context = LocalContext.current
+    val altLayer = remember {
+        runCatching { it.palsoftware.pastiera.data.mappings.AltModifierMappingResolver.resolve(context.assets, context) }
+            .getOrDefault(emptyMap())
+    }
+    return it.palsoftware.pastiera.shortcuts.ShortcutKeys.howToPress(
+        combo, altLayer, it.palsoftware.pastiera.shortcuts.ShortcutKeys::keyboardHas, ::keyComboLabel, ::keyName
+    )
 }

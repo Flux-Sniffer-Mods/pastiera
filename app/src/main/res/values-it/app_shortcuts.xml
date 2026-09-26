@@ -101,4 +101,15 @@
     <string name="enter_standards_empty">Nessun\'altra app di chat o email della lista installata.</string>
     <string name="enter_standard_chat">Chat: %1$s nei campi messaggio</string>
     <string name="enter_standard_email">Email: Invio va a capo, Ctrl+Invio invia</string>
+    <string name="app_shortcut_settings">Impostazioni dell\'app</string>
+    <string name="app_shortcut_app_action_1">Scorciatoia dell\'app 1</string>
+    <string name="app_shortcut_app_action_2">Scorciatoia dell\'app 2</string>
+    <string name="app_shortcut_app_action_3">Scorciatoia dell\'app 3</string>
+    <string name="app_shortcut_app_action_4">Scorciatoia dell\'app 4</string>
+    <string name="app_shortcuts_opens_discovered">Apre %1$s (dall\'app)</string>
+    <string name="app_shortcuts_opens_settings">Apre le impostazioni dell\'app</string>
+    <string name="app_shortcuts_section_discovered">Cosa offre l\'app</string>
+    <string name="app_shortcuts_discovered_note">Le scorciatoie che l\'app mostra quando tieni premuta la sua icona, e la sua schermata delle impostazioni, lette dall\'app su questo telefono. Ctrl+Alt+1-4 aprono le prime quattro (su una tastiera senza riga dei numeri, tieni Ctrl+Alt e premi i tasti che scrivono 1-4), Ctrl+, apre le impostazioni, e una chiamata come Nuovo o Cerca copre Ctrl+N o Ctrl+F quando nient\'altro lo fa.</string>
+    <string name="app_shortcuts_discovered_none">Questa app non offre scorciatoie né impostazioni alle altre app.</string>
+    <string name="app_shortcuts_keys_note">Mostrate come le premi sulla tua tastiera. Se non ha un tasto numerico o \"/\", tieni Ctrl e Alt con la lettera che lo scrive (tra parentesi). Le scorciatoie che la tastiera non può fare, come le frecce senza tasti freccia, non sono elencate.</string>
 </resources>

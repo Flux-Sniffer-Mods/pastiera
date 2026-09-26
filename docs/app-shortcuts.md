@@ -34,6 +34,8 @@ suggestions), `AppIntents.kt`, `AppShortcutSettings.kt` (storage) and
 | Alt+↓ / Alt+↑ | Next / previous item (message, tab, sheet, session) | anywhere |
 | Ctrl+M | Menu or side panel | anywhere |
 | Ctrl+/ | Keyboard shortcut help | anywhere |
+| Ctrl+, | The app's settings | anywhere |
+| Ctrl+Alt+1 to 4 | The app's own launcher shortcuts 1 to 4 | anywhere |
 
 The combos follow common desktop habits where the apps agree: Ctrl+N, Ctrl+F,
 Ctrl+R, Ctrl+W, Ctrl+Enter, Ctrl+/. Where the apps disagree, the combo is one
@@ -45,7 +47,8 @@ Rules (`AppShortcutRemapper.resolve`):
   every other combo go through untouched.
 - Pastiera changes nothing when the app's own shortcut is already the standard
   combo. When the app has no shortcut for that action, a suggested intent is
-  used if there is one and the app accepts it; otherwise nothing changes.
+  used if there is one and the app accepts it, then one of the app's own
+  launcher shortcuts read on the phone; otherwise nothing changes.
 - In a text field, Pastiera never sends a shortcut that would type a character
   (Gmail's `C`, Keep's `/`) or move the cursor (a plain arrow). It also skips
   actions meant for lists and message views.
@@ -82,10 +85,14 @@ left out, and so is Pastiera. `tools/app-shortcuts/crawl.py` collects the data f
 and `tools/app-shortcuts/generate.py` writes `SuggestedAppShortcuts.kt` and
 `tools/app-shortcuts/play-ranking.json` (the ranking used).
 
-Google Play files some big social apps outside Social: X is in News & magazines, Snapchat and
-WhatsApp in Communication, Pinterest in Lifestyle, LinkedIn in Business and Discord in
-Communication. They appear in those categories' lists. Social itself is mostly live-video and
-chat-room apps by download count; Bluesky and Mastodon rank below its top 100.
+Social is Play's Social category **plus a hand-picked list of social media apps**
+(`HandPickedSocialApps.kt`). Google Play files some of the biggest outside Social: X and Quora are
+in News & magazines, Snapchat in Communication, Pinterest in Lifestyle, LinkedIn in Business,
+YouTube in Video players and Twitch in Entertainment. Those count as Social here, in the app list
+and for Enter per app. Play's Social top 100 is mostly live-video and chat-room apps by download
+count, so the hand-picked list also adds social media apps that rank below it: Bluesky, Mastodon,
+Nextdoor, Substack, Weibo and Lemon8 (New opens their share screen, Search their search screen).
+WhatsApp and Discord stay in Communication as messengers.
 
 **Social (top 100):** Facebook (10B+), Instagram (5B+), TikTok (1B+), Facebook Lite (1B+), Likee (1B+), Instagram Lite (1B+), Bigo Live (500M+), ShareChat Status, Video & Live (500M+), Threads (500M+), XClub (500M+), VK (100M+), Tango (100M+), Reddit (100M+), Tumblr (100M+), OK (100M+), NGL (100M+), Moj (100M+), MeetMe (100M+), Litmatch (100M+), Moj Lite (100M+), Josh (100M+), Pi Network (100M+), Telegram X (100M+), Saya Lite (100M+), OmeTV (100M+), Chingari (100M+), LOVOO (50M+), Tagged (50M+), Waplog (50M+), BAND (50M+), MICO (50M+), SayHi Chat Meet Dating People (50M+), IMVU (50M+), Widgetable (50M+), Text Me (50M+), textPlus (50M+), Chamet (50M+), KakaoStory (50M+), Who (50M+), StreamKar (50M+), SoulChill (50M+), SUGO：Voice Chat Party (50M+), Omega (50M+), Weverse (10M+), Clubhouse (10M+), Kismia (10M+), MeYo (10M+), Between (10M+), HOLLA (10M+), Jeevansathi.com® Matrimony App (10M+), HeeSay (10M+), Hoop (10M+), Yubo (10M+), Locket Widget (10M+), BeReal. Your friends for real. (10M+), Tellonym (10M+), YouNow (10M+), W (10M+), Muzz (10M+), 微博 (10M+), Voya (10M+), Poppo Live (10M+), Hornet (10M+), SuperLive (10M+), Meetup (10M+), Camfrog (10M+), PopUp (10M+), rednote (10M+), Chatous (10M+), Connected2.me (10M+), Karrot (10M+), mewe (10M+), Chatspin Random Video Chat Duo (10M+), Bermuda Video Chat (10M+), HoYoLAB (10M+), Spoon (10M+), Chatta (10M+), Blogger (10M+), MEEFF (10M+), Lumi (10M+), buz (10M+), BuzzCast (10M+), Gemgala (10M+), 17LIVE (10M+), Linky AI (10M+), Kumu Livestream Community (10M+), Clapper (10M+), FreeTone Calls & Texting (10M+), Xiaomi Community (10M+), Text Free (10M+), REALITY (10M+), GETTR (10M+), YoHo (10M+), Achat (10M+), Veego (10M+), Joi (10M+), Vava.chat (10M+), 네이버 블로그 (10M+), SoLive (10M+), Camsurf (10M+)
 
@@ -130,6 +137,20 @@ chat-room apps by download count; Bluesky and Mastodon rank below its top 100.
 **Sports:** Cricbuzz (100M+), ESPN (100M+), Sofascore (100M+), NFL (100M+), BeSoccer (100M+), Da Fit (100M+), 365Scores (50M+), OneFootball Live Soccer scores (50M+), FotMob (50M+), DAZN (50M+)
 
 **Weather:** Weather (1B+), The Weather Channel (100M+), Weather & Radar Forecast (100M+), AccuWeather (100M+), 1Weather Forecasts & Radar (100M+), Weather (100M+), Weather Radar (50M+), Transparent clock and weather (50M+), Yandex Weather & Rain Radar (50M+), Windy.com (50M+)
+
+## The app's own shortcuts, read on the phone
+
+Most apps publish a few screens for other apps to open: the shortcuts you see when you long-press their launcher icon (declared in the app's `shortcuts.xml`), and, for many, a settings screen (`Intent.ACTION_APPLICATION_PREFERENCES`). Pastiera reads these from each installed app when you first press one of the combos below in it, and again after the app updates. It keeps only screens the app exports to other apps, so nothing opens that the app doesn't allow.
+
+| Combo | Opens |
+| --- | --- |
+| Ctrl+Alt+1 to 4 | The app's first four launcher shortcuts, in the app's order. On a keyboard without a number row, hold Ctrl+Alt and press the keys that type 1 to 4 (the keyboard's own Alt layer, then Pastiera's). |
+| Ctrl+, | The app's settings screen. |
+| Ctrl+N, Ctrl+F | A launcher shortcut whose id or label says new, compose, create, write, post or draft (search or find for Ctrl+F), when the app documents no key shortcut and has no catalogue suggestion. |
+
+This works for every installed app, not only the ones in the list. The "Suggested shortcuts" switch turns it off with the suggestions, and choosing "Don't remap" for a combo in an app turns it off there. Each app's page lists what it offers.
+
+Dynamic shortcuts (the ones apps add at run time, such as recent chats) can only be read by the home screen app, so they aren't included.
 
 ## Enter by category
 

@@ -133,10 +133,15 @@ class AppShortcutRemapperTest {
     @Test
     fun theCatalogueCoversTheCategories() {
         val byCategory = AppShortcutPresets.all.groupBy { it.category }
-        assertTrue("social ${byCategory[AppCategory.Social]?.size}", (byCategory[AppCategory.Social]?.size ?: 0) >= 100)
-        listOf(AppCategory.Communication, AppCategory.Shopping, AppCategory.Music, AppCategory.News).forEach {
+        // Play's top 100 Social plus the hand-picked social media apps
+        val social = byCategory[AppCategory.Social].orEmpty().map { it.packageName }
+        assertTrue("social ${social.size}", social.size >= 100 + HandPickedSocialApps.added.size)
+        assertTrue(social.containsAll(listOf("com.twitter.android", "com.pinterest", "xyz.blueskyweb.app")))
+        listOf(AppCategory.Communication, AppCategory.Shopping, AppCategory.Music).forEach {
             assertTrue("$it", (byCategory[it]?.size ?: 0) >= 10)
         }
+        // X and Quora moved from News to Social
+        assertTrue((byCategory[AppCategory.News]?.size ?: 0) >= 8)
         val keyboards = setOf("com.google.android.inputmethod.latin", "com.touchtype.swiftkey", "com.samsung.android.honeyboard")
         assertTrue(AppShortcutPresets.all.none { it.packageName in keyboards })
     }
