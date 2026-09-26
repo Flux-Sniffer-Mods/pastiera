@@ -18,6 +18,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import android.view.InputDevice
+import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
@@ -3061,12 +3062,19 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     /**
      * Accessibility path for hidden apps that read keys before any input method (Termux:X11):
-     * hands the panel keys, and every key while a panel is open, to Pastiera.
+     * hands the panel keys, and every key while a panel is open, to Pastiera; sends the Titan's
+     * Ctrl and Sym on as standard keys ([translateHiddenAppKey]).
      */
     private fun interceptHiddenAppKey(event: KeyEvent): Boolean {
         if (!keyboardHiddenForApp || currentInputConnection == null) return false
         val keyCode = event.keyCode
         if (keyCode in HIDDEN_APP_SYSTEM_KEYS) return false
+        val forPastiera = when (event.action) {
+            KeyEvent.ACTION_DOWN -> hiddenAppKeyGoesToPastiera(keyCode)
+            KeyEvent.ACTION_UP -> keyCode in hiddenAppInterceptedKeys
+            else -> false
+        }
+        if (!forPastiera && translateHiddenAppKey(event)) return true
         val take = when (event.action) {
             KeyEvent.ACTION_DOWN -> hiddenAppKeyGoesToPastiera(keyCode).also { taken ->
                 if (taken && event.repeatCount == 0) hiddenAppInterceptedKeys += keyCode
@@ -3081,6 +3089,88 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             KeyEvent.ACTION_UP -> onKeyUp(keyCode, event)
         }
         return true
+    }
+
+    // The Titan's Ctrl and Sym in hidden apps (Termux:X11). Android names them FUNC3 and
+    // AGUI_SYM (Unihertz key codes), or keeps the press and only marks the next key with a Ctrl
+    // or Sym meta state; apps such as Termux:X11 can turn neither into keys. Pastiera sends
+    // standard Left Ctrl and Right Alt (the desktop layout's Sym) through the input connection.
+    private val hiddenAppTranslatedKeys = mutableMapOf<Int, Int>()          // original -> sent modifier
+    private val hiddenAppWrappedKeys = mutableMapOf<Int, List<Int>>()       // original -> modifiers around it
+    private var hiddenAppStandardCtrlHeld = false
+
+    /** Returns true when [event] was replaced by standard keys sent to the app (and must be consumed). */
+    private fun translateHiddenAppKey(event: KeyEvent?): Boolean {
+        if (event == null || !keyboardHiddenForApp) return false
+        if (!SettingsManager.getHiddenAppStandardModifiers(this)) return false
+        val ic = currentInputConnection ?: return false
+        val code = event.keyCode
+        val down = event.action == KeyEvent.ACTION_DOWN
+        if (event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return false
+        val titanModifier = TITAN_MODIFIER_SCAN_CODES[event.scanCode]
+        if (titanModifier == null && (code == KeyEvent.KEYCODE_CTRL_LEFT || code == KeyEvent.KEYCODE_CTRL_RIGHT)) {
+            // A standard Ctrl (another keyboard): the app gets it itself; never add a second one
+            hiddenAppStandardCtrlHeld = down
+            return false
+        }
+        if (titanModifier != null) {
+            if (down) {
+                if (event.repeatCount == 0) {
+                    sendHiddenAppKey(ic, event, KeyEvent.ACTION_DOWN, titanModifier)
+                    hiddenAppTranslatedKeys[code] = titanModifier
+                    HiddenAppKeyObserver.logKey(event, "sent as ${KeyEvent.keyCodeToString(titanModifier)}")
+                }
+            } else {
+                hiddenAppTranslatedKeys.remove(code)?.let { sendHiddenAppKey(ic, event, KeyEvent.ACTION_UP, it) }
+            }
+            return true
+        }
+        if (down) {
+            if (KeyEvent.isModifierKey(code)) return false
+            val held = hiddenAppTranslatedKeys.values
+            val wrap = buildList {
+                if (event.isCtrlPressed && !hiddenAppStandardCtrlHeld && KeyEvent.KEYCODE_CTRL_LEFT !in held) {
+                    add(KeyEvent.KEYCODE_CTRL_LEFT)
+                }
+                if (event.metaState and KeyEvent.META_SYM_ON != 0 && KeyEvent.KEYCODE_ALT_RIGHT !in held) {
+                    add(KeyEvent.KEYCODE_ALT_RIGHT)
+                }
+            }
+            if (wrap.isEmpty() && code !in hiddenAppWrappedKeys) return false
+            if (event.repeatCount == 0) {
+                wrap.forEach { sendHiddenAppKey(ic, event, KeyEvent.ACTION_DOWN, it) }
+                hiddenAppWrappedKeys[code] = wrap
+                // Which modifiers, never which key (no text is logged)
+                android.util.Log.i("FluxKeys", "a key marked ${wrap.joinToString { KeyEvent.keyCodeToString(it) }} sent with them")
+            }
+            val sentWith = hiddenAppWrappedKeys[code].orEmpty()
+            val meta = (if (KeyEvent.KEYCODE_CTRL_LEFT in sentWith) KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON else 0) or
+                (if (KeyEvent.KEYCODE_ALT_RIGHT in sentWith) KeyEvent.META_ALT_ON or KeyEvent.META_ALT_RIGHT_ON else 0)
+            sendHiddenAppKey(ic, event, KeyEvent.ACTION_DOWN, code, event.repeatCount, meta)
+            return true
+        }
+        val wrap = hiddenAppWrappedKeys.remove(code) ?: return false
+        sendHiddenAppKey(ic, event, KeyEvent.ACTION_UP, code)
+        wrap.asReversed().forEach { sendHiddenAppKey(ic, event, KeyEvent.ACTION_UP, it) }
+        return true
+    }
+
+    private fun sendHiddenAppKey(
+        ic: InputConnection,
+        source: KeyEvent,
+        action: Int,
+        keyCode: Int,
+        repeat: Int = 0,
+        metaState: Int = 0
+    ) {
+        val sent = KeyEvent(
+            source.downTime, source.eventTime, action, keyCode, repeat, metaState,
+            KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+            KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE
+        )
+        ic.sendKeyEvent(sent)
+        // The status LEDs follow what the app receives
+        if (KeyEvent.isModifierKey(keyCode)) observeHiddenAppKey(sent)
     }
 
     /** Hidden app with status LEDs: mirror modifier keys the app receives, never consume them. */
@@ -3573,7 +3663,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (keyboardHiddenForApp && ::symLayoutController.isInitialized && symLayoutController.isSymActive()) {
             symLayoutController.closeSymPage()
         }
-        HiddenAppKeyObserver.interceptor = if (hiddenAppAllowsPanels) ::interceptHiddenAppKey else null
+        // Every hidden app: panel keys (with the panels option) and the Titan's Ctrl and Sym
+        HiddenAppKeyObserver.interceptor = if (keyboardHiddenForApp) ::interceptHiddenAppKey else null
+        hiddenAppTranslatedKeys.clear()
+        hiddenAppWrappedKeys.clear()
+        hiddenAppStandardCtrlHeld = false
         hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
@@ -4583,6 +4677,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (keyboardHiddenForApp) {
             val firstPress = (event_?.repeatCount ?: 0) == 0
             if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
+                if (translateHiddenAppKey(event_)) return true
                 if (firstPress) hiddenAppPassedThroughKeys += keyCode_
                 HiddenAppKeyObserver.logKey(event_, "input method, to the app")
                 observeHiddenAppKey(event_)
@@ -5316,6 +5411,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 hiddenAppPassedThroughKeys.remove(keyCode_) -> false
                 else -> hiddenAppKeyGoesToPastiera(keyCode_)
             }
+            if (!toPastiera && translateHiddenAppKey(event_)) return true
             HiddenAppKeyObserver.logKey(event_, if (toPastiera) "input method, to Pastiera" else "input method, to the app")
             if (!toPastiera) {
                 observeHiddenAppKey(event_)
@@ -6168,6 +6264,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 }
 
 /** Keys that always belong to Android, even while a hidden app's Pastiera panel is open. */
+/** The Titan 2 Elite's Ctrl (scancode 251) and Sym (253), as the standard keys apps understand. */
+private val TITAN_MODIFIER_SCAN_CODES = mapOf(
+    251 to KeyEvent.KEYCODE_CTRL_LEFT,
+    253 to KeyEvent.KEYCODE_ALT_RIGHT
+)
+
 private val HIDDEN_APP_SYSTEM_KEYS = setOf(
     KeyEvent.KEYCODE_BACK,
     KeyEvent.KEYCODE_HOME,

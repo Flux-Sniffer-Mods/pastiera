@@ -9,10 +9,9 @@ import android.view.KeyEvent
  * Modifier state rebuilt from raw key events, for apps where Pastiera leaves every key to the app
  * but still shows its status LEDs ("Hide keyboard in these apps" with "Show status LEDs only").
  *
- * Shift, Alt and Sym behave like Pastiera and the Titan X layout: tap = next key only, tap again
- * = locked, tap once more = off, hold = only while held. Ctrl only shows while held (X uses a
- * plain Control_L). The same event can arrive twice (accessibility service and input method);
- * duplicates are ignored.
+ * Shift, Ctrl, Alt and Sym behave like Pastiera and the Titan X layout: tap = next key only, tap
+ * again = locked, tap once more = off, hold = only while held. The same event can arrive twice
+ * (accessibility service and input method); duplicates are ignored.
  */
 internal class ObservedModifierLeds {
     enum class Modifier { SHIFT, CTRL, ALT, SYM }
@@ -63,7 +62,7 @@ internal class ObservedModifierLeds {
                 }
             } else {
                 state.held = false
-                if (modifier != Modifier.CTRL && !state.usedWhileHeld) {
+                if (!state.usedWhileHeld) {
                     when {
                         state.locked -> state.locked = false
                         state.latched -> {
@@ -92,9 +91,9 @@ internal class ObservedModifierLeds {
             capsLockEnabled = shift.locked,
             shiftPhysicallyPressed = shift.held,
             shiftOneShot = shift.latched,
-            ctrlLatchActive = false,
+            ctrlLatchActive = ctrl.locked,
             ctrlPhysicallyPressed = ctrl.held,
-            ctrlOneShot = false,
+            ctrlOneShot = ctrl.latched,
             ctrlLatchFromNavMode = false,
             altLatchActive = alt.locked,
             altPhysicallyPressed = alt.held,

@@ -310,6 +310,7 @@ internal object BackupPreferenceContract {
             "emoji_key_auto_close" to PreferenceValueType.BOOLEAN,
             "emoji_layer_recents_key" to PreferenceValueType.INT,
             "emoji_layer_gif_key" to PreferenceValueType.INT,
+            "hidden_app_standard_modifiers" to PreferenceValueType.BOOLEAN,
             "gifs_enabled" to PreferenceValueType.BOOLEAN,
             "hidden_keyboard_apps" to PreferenceValueType.STRING,
             "hidden_keyboard_apps_show_leds" to PreferenceValueType.BOOLEAN,

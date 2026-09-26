@@ -154,6 +154,7 @@ object SettingsManager {
     private const val KEY_EMOJI_KEY_AUTO_CLOSE = "emoji_key_auto_close" // Emoji key screens close after an emoji
     private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
     private const val KEY_EMOJI_LAYER_GIF_KEY = "emoji_layer_gif_key" // Emoji layer key that opens GIF search
+    private const val KEY_HIDDEN_APP_STANDARD_MODIFIERS = "hidden_app_standard_modifiers" // Titan Ctrl/Sym as standard keys
     private const val KEY_GIFS_ENABLED = "gifs_enabled" // GIF key on the emoji layer, GIF tab in the picker
     private const val KEY_KLIPY_API_KEY = "klipy_api_key" // User's own KLIPY key (not backed up)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
@@ -5359,6 +5360,17 @@ object SettingsManager {
         KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_V,
         KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_M
     )
+
+    /**
+     * In apps with Pastiera hidden (Termux:X11), send the Titan's Ctrl and Sym on as standard Left
+     * Ctrl and Right Alt: Android gives them Unihertz key codes such apps can't use. On by default.
+     */
+    fun getHiddenAppStandardModifiers(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_HIDDEN_APP_STANDARD_MODIFIERS, true)
+
+    fun setHiddenAppStandardModifiers(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APP_STANDARD_MODIFIERS, enabled).apply()
+    }
 
     /** The emoji layer key that opens GIF search (while it's on): P unless changed (KEYCODE_UNKNOWN = off). */
     fun getEmojiLayerGifKey(context: Context): Int {

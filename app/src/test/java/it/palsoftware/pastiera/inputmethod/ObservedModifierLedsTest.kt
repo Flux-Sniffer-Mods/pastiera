@@ -56,11 +56,24 @@ class ObservedModifierLedsTest {
     }
 
     @Test
-    fun ctrlOnlyShowsWhileHeld() {
-        down(KeyEvent.KEYCODE_CTRL_LEFT)
+    fun ctrlLatchesAndLocksLikeTheOthers() {
+        // As the Titan X layout's Ctrl: tap = next key only
+        tap(KeyEvent.KEYCODE_CTRL_LEFT)
         assertEquals(Level.ACTIVE, leds.level(Modifier.CTRL))
-        up(KeyEvent.KEYCODE_CTRL_LEFT)
+        tap(KeyEvent.KEYCODE_C)
+        assertEquals(Level.OFF, leds.level(Modifier.CTRL))
 
+        // Tap twice = locked, once more = off
+        tap(KeyEvent.KEYCODE_CTRL_RIGHT)
+        tap(KeyEvent.KEYCODE_CTRL_RIGHT)
+        assertEquals(Level.LOCKED, leds.level(Modifier.CTRL))
+        tap(KeyEvent.KEYCODE_CTRL_RIGHT)
+        assertEquals(Level.OFF, leds.level(Modifier.CTRL))
+
+        // Held with another key: only while held
+        down(KeyEvent.KEYCODE_CTRL_LEFT)
+        tap(KeyEvent.KEYCODE_V)
+        up(KeyEvent.KEYCODE_CTRL_LEFT)
         assertEquals(Level.OFF, leds.level(Modifier.CTRL))
     }
 
@@ -101,5 +114,28 @@ class ObservedModifierLedsTest {
         assertFalse(observed.capsLockEnabled)
         assertFalse(observed.ctrlLatchActive)
         assertFalse(observed.altLatchActive)
+    }
+
+    @Test
+    fun snapshotShowsALatchedCtrl() {
+        tap(KeyEvent.KEYCODE_CTRL_LEFT)
+        val base = StatusBarController.StatusSnapshot(
+            capsLockEnabled = false,
+            shiftPhysicallyPressed = false,
+            shiftOneShot = false,
+            ctrlLatchActive = false,
+            ctrlPhysicallyPressed = false,
+            ctrlOneShot = false,
+            ctrlLatchFromNavMode = false,
+            altLatchActive = false,
+            altPhysicallyPressed = false,
+            altOneShot = false,
+            symPage = 0
+        )
+
+        val observed = leds.applyTo(base)
+
+        assertTrue(observed.ctrlOneShot)
+        assertFalse(observed.ctrlLatchActive)
     }
 }
