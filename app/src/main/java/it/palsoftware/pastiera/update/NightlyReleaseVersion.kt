@@ -32,6 +32,20 @@ internal fun compareReleaseVersions(first: String, second: String): Int? {
     return ai.size.compareTo(bi.size)
 }
 
+/** Whether a Flux Keyboard release tag ("flux/v…") is newer than the [current] version name. */
+internal fun forkReleaseIsNewer(tag: String, current: String): Boolean =
+    tag.startsWith("flux/") && (compareReleaseVersions(tag.removePrefix("flux/"), current) ?: -1) > 0
+
+/** The newest Flux Keyboard release ("flux/v…" tag) that is newer than [current]. */
+/** A dev build's release (flux/v0.92-flux.<time>), as opposed to a full release (flux/v0.91). */
+internal fun isForkDevRelease(tagName: String): Boolean = tagName.contains("-flux.")
+
+/** The newest release newer than [current]; dev builds only when [includeDev] (the Dev channel). */
+internal fun findNewerForkRelease(releases: List<GitHubRelease>, current: String, includeDev: Boolean = true): ReleaseInfo? =
+    releases.filter { !it.draft && (includeDev || !isForkDevRelease(it.tagName)) && forkReleaseIsNewer(it.tagName, current) }
+        .maxWithOrNull { a, b -> compareReleaseVersions(a.tagName.removePrefix("flux/"), b.tagName.removePrefix("flux/")) ?: 0 }
+        ?.let { ReleaseInfo(it.tagName, it.name ?: it.tagName, it.htmlUrl, it.downloadUrl) }
+
 internal fun findNewerNightlyRelease(releases: List<GitHubRelease>, current: String): ReleaseInfo? =
     releases.filter { !it.draft && it.prerelease && it.tagName.startsWith("nightly/") &&
         (compareReleaseVersions(it.tagName, current) ?: -1) > 0 }

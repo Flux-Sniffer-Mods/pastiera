@@ -970,7 +970,7 @@ private fun QuickLauncherDisplayedEntriesSection(
     var showCustomizeDialog by remember { mutableStateOf(false) }
     val sourceLabels = mapOf(
         CommandSourceId.Apps.storageValue to "Apps",
-        CommandSourceId.Pastiera.storageValue to "Pastiera actions",
+        CommandSourceId.Pastiera.storageValue to "${it.palsoftware.pastiera.BuildConfig.APP_NAME} actions",
         CommandSourceId.AppActions.storageValue to "App actions",
         CommandSourceId.DeviceControl.storageValue to "Device control",
         CommandSourceId.NavActions.storageValue to "Navigation actions"
@@ -1015,7 +1015,7 @@ private fun QuickLauncherDisplayedEntriesSection(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Choose which sources appear in Pastiera search.",
+                        text = "Choose which sources appear in ${it.palsoftware.pastiera.BuildConfig.APP_NAME} search.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

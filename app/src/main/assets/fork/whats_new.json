@@ -1,0 +1,49 @@
+{
+  "title": "Flux Keyboard",
+  "intro": "Everything new since Pastiera 0.85, the last official release: first what Flux Keyboard adds, then what the Pastiera team has built since.",
+  "sectionTitle": "Added by Flux Keyboard",
+  "highlights": [
+    "Pastiera Flux is now Flux Keyboard, at the Pastiera team's request. It's a separate app: restore a backup from Pastiera Flux, then uninstall it.",
+    "GIF search, a dedicated emoji picker key, emoji layer profiles that follow the app, and symbol search.",
+    "Spell checking and password-manager autofill in every app.",
+    "App shortcuts that work the same in every app.",
+    "Made for the Titan 2 Elite: a fitted status bar, per-LED colours, a customisable menu bar and recommended settings.",
+    "Settings grouped by task, searchable, and hiding what your phone can't use.",
+    "Terminal mode for Termux, and hidden-keyboard apps.",
+    "Pick suggestions with Ctrl+Shift+Q, W or E (Right Shift too); Backspace undoes an auto-replace."
+  ],
+  "improvements": [
+    "Paste what you just copied from a chip, with tracking stripped from links.",
+    "Emoji suggestions, Enter standards by app category, and exact typing in the apps you pick.",
+    "Offline mode: nothing in the keyboard goes online.",
+    "Updates come from Flux Keyboard's own releases, with the APK one tap away.",
+    "Snippets fill in the date, time and clipboard.",
+    "Voice input keeps listening through pauses.",
+    "Smart Alt and Ctrl, and incognito typing.",
+    "Ctrl+Shift+Space switches language backwards; bold suggestions option.",
+    "The QuickLauncher opens from other apps and the app icon."
+  ],
+  "upstreamTitle": "From the Pastiera team since 0.85",
+  "upstream": [
+    "Clicks Power Keyboard support: controls, firmware status and SYM profiles for Razr and Pixel.",
+    "An on-screen keyboard mode with themes, a number row, layout styles and long-press layers.",
+    "Keyboard themes with an editor, per-app theme assignment and transparent presets.",
+    "Titan 2 Elite geometry: rounded corners on the keyboard and status bar, and a gapless mode.",
+    "Settings overhauled, with search and shareable deep links.",
+    "Learned next-word suggestions, suggestions from several dictionaries, and adding words from a swipe.",
+    "Snippet expansion, and emoji and symbol shortcodes.",
+    "Configurable punctuation spacing (French spacing, brackets, commas) and smart quotes.",
+    "Native trackpad gestures on the Titan 2 and Titan 2 Elite, with separate sensitivities.",
+    "Original Titan support, a unified QuickLauncher with Niagara search, and Home and document navigation actions.",
+    "Configurable modifier latching and indicators, Alt+Enter layout switching, and bounce keys.",
+    "Greek translation, and clipboard history hidden while the phone is locked.",
+    "Safer backups (themes and typing sounds included) and many fixes, from Telegram suggestions to Firefox accents."
+  ],
+  "bugFixes": [
+    "No automatic Shift in scripts without capitals, such as Thai.",
+    "Indicators are text symbols, never emoji.",
+    "Letters on the emoji layer and symbols pages type their mappings."
+  ],
+  "docsUrl": "https://github.com/Flux-Sniffer-Mods/Flux-Keyboard/blob/flux-keyboard/FORK_CHANGES.md",
+  "docsLabel": "Full Flux Keyboard changelog"
+}

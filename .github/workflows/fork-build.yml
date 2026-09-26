@@ -1,0 +1,236 @@
+name: Flux Keyboard build
+# Each run is named by its version, not a running number
+run-name: Flux Keyboard ${{ inputs.version_name }}
+
+# Two jobs side by side: the APK is ready (and installable) as soon as it's built,
+# while the tests carry on; the build script reports them and won't release a build
+# whose tests failed.
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version name, e.g. 0.90-flux.202609251200"
+        required: true
+        type: string
+      version_code:
+        description: "Version code"
+        required: true
+        default: "90"
+        type: string
+      tests:
+        description: "Tests: quick (emoji, keys, settings), full, or none"
+        required: true
+        default: quick
+        type: choice
+        options: [quick, full, none]
+
+env:
+  # --build-cache: reuse task outputs from earlier runs (kept by setup-gradle)
+  GRADLE_ARGS: --build-cache -PPASTIERA_VERSION_CODE=${{ inputs.version_code }} -PPASTIERA_VERSION_NAME=${{ inputs.version_name }}
+
+jobs:
+  apk:
+    name: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      # Built-in KLIPY key for GIF search (empty when the secret isn't set)
+      KLIPY_API_KEY: ${{ secrets.KLIPY_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (caches dependencies and build outputs between runs)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Skip lint on the release build (personal builds)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/skip-lint-vital.gradle <<'EOF'
+          gradle.allprojects { project ->
+              project.tasks.matching { it.name.startsWith("lintVital") }.configureEach { enabled = false }
+          }
+          EOF
+
+      - name: Signing config
+        env:
+          PASTIERA_KEYSTORE_B64: ${{ secrets.PASTIERA_KEYSTORE_B64 }}
+          PASTIERA_KEYSTORE_PASSWORD: ${{ secrets.PASTIERA_KEYSTORE_PASSWORD }}
+          PASTIERA_KEY_ALIAS: ${{ secrets.PASTIERA_KEY_ALIAS }}
+          PASTIERA_KEY_PASSWORD: ${{ secrets.PASTIERA_KEY_PASSWORD }}
+        run: |
+          mkdir -p release
+          echo "$PASTIERA_KEYSTORE_B64" | base64 -d > release/pastiera-release.jks
+          cat > release/keystore.properties <<EOF
+          storeFile=pastiera-release.jks
+          storePassword=$PASTIERA_KEYSTORE_PASSWORD
+          keyAlias=$PASTIERA_KEY_ALIAS
+          keyPassword=$PASTIERA_KEY_PASSWORD
+          EOF
+
+      - name: Build signed APK
+        run: ./gradlew :app:assembleStableRelease $GRADLE_ARGS
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/stable/release/app-stable-release.apk "out/flux-keyboard-${{ inputs.version_name }}.apk"
+          # Release notes ship with the APK: this build's version and commit, then the fork's changes
+          {
+            echo "Version \`${{ inputs.version_name }}\` · built from ${GITHUB_SHA::7} on \`${GITHUB_REF_NAME}\` · the APK is under **Assets** below."
+            tail -n +2 FORK_CHANGES.md
+          } > out/RELEASE_NOTES.md
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: |
+            out/*.apk
+            out/RELEASE_NOTES.md
+
+      # The app checks this repository's latest "flux/" release for updates. With a
+      # RELEASE_TOKEN secret (a token of the repository owner's) the release is published
+      # as the owner; without it, as github-actions[bot].
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+          VERSION: ${{ inputs.version_name }}
+        run: |
+          # Dev builds (0.92-flux.<yyyyMMddHHmm>) carry their build time; releases (0.91) don't
+          # Dev builds are pre-releases, so GitHub's "latest" is always the latest full release
+          case "$VERSION" in
+            *-flux.*)
+              stamp="${VERSION##*.}"
+              when=$(date -u -d "${stamp:0:8} ${stamp:8:2}:${stamp:10:2}" "+%-d %b %Y, %H:%M" 2>/dev/null || echo "$stamp")
+              title="Flux Keyboard ${VERSION%%-*} dev · $when"
+              kind="--prerelease" ;;
+            *) title="Flux Keyboard $VERSION"
+              kind="--latest" ;;
+          esac
+          gh release create "flux/v$VERSION" out/*.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$title" \
+            --notes-file out/RELEASE_NOTES.md \
+            $kind
+
+  # Only the latest build is kept: once this APK is uploaded and released, every earlier workflow
+  # run in the repository is deleted with its artifacts and logs, and so is every earlier dev
+  # build's release (flux/v<version>-flux.<time>) with its tag. Real releases (flux/v0.91) stay.
+  tidy:
+    name: keep only the latest build
+    needs: apk
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    steps:
+      - name: Delete earlier workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT: ${{ github.run_id }}
+        run: |
+          gh api --paginate "repos/$REPO/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.status == "completed") | .id' |
+            while read -r id; do
+              if [ "$id" != "$CURRENT" ]; then
+                gh api -X DELETE "repos/$REPO/actions/runs/$id" && echo "Deleted run $id"
+              fi
+            done
+
+      - name: Delete earlier Flux Keyboard releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT: flux/v${{ inputs.version_name }}
+        run: |
+          gh release list --repo "$REPO" --limit 200 --json tagName --jq '.[].tagName' |
+            while read -r tag; do
+              case "$tag" in
+                flux/*-flux.*) if [ "$tag" != "$CURRENT" ]; then
+                          gh release delete "$tag" --repo "$REPO" --cleanup-tag --yes && echo "Deleted release $tag"
+                        fi ;;
+              esac
+            done
+
+
+  tests:
+    name: tests
+    if: ${{ inputs.tests != 'none' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle (caches dependencies and build outputs between runs)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Cache Robolectric's Android jars
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('gradle/libs.versions.toml', 'app/build.gradle*') }}
+          restore-keys: robolectric-
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Quick tests (emoji, keys, settings)
+        if: ${{ inputs.tests == 'quick' }}
+        run: >
+          ./gradlew :app:testStableDebugUnitTest $GRADLE_ARGS
+          --tests 'it.palsoftware.pastiera.data.emoji.*'
+          --tests 'it.palsoftware.pastiera.data.gif.*'
+          --tests 'it.palsoftware.pastiera.data.symbols.*'
+          --tests 'it.palsoftware.pastiera.data.desktop.*'
+          --tests 'it.palsoftware.pastiera.inputmethod.PhysicalKeyboardInputMethodServiceDeviceBehaviorTest'
+          --tests 'it.palsoftware.pastiera.SettingLinkCoverageTest'
+          --tests 'it.palsoftware.pastiera.SettingLinkRegistryTest'
+          --tests 'it.palsoftware.pastiera.InputDeviceSettingLinkTest'
+          --tests 'it.palsoftware.pastiera.CustomizationSettingLinkTest'
+          --tests 'it.palsoftware.pastiera.OfflineModeTest'
+          --tests 'it.palsoftware.pastiera.EmojiPickerKeySettingsTest'
+          --tests 'it.palsoftware.pastiera.Titan2EliteChromeSettingsTest'
+          --tests 'it.palsoftware.pastiera.HiddenKeyboardAppsTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.KeyboardVisibilityControllerTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.ObservedModifierLedsTest'
+          --tests 'it.palsoftware.pastiera.core.EmojiKeyScreensTest'
+          --tests 'it.palsoftware.pastiera.inputmethod.ui.*'
+          --tests 'it.palsoftware.pastiera.backup.*'
+
+      - name: Full unit test suite
+        if: ${{ inputs.tests == 'full' }}
+        run: ./gradlew :app:testStableDebugUnitTest $GRADLE_ARGS
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            app/build/test-results/
+            app/build/reports/tests/
+          if-no-files-found: ignore

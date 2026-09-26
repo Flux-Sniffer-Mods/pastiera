@@ -13,25 +13,25 @@ class PastieraCommandSource : CommandSource {
                 id = COMMAND_QUICK_LAUNCHER,
                 source = id,
                 kind = CommandKind.PastieraAction,
-                label = "Pastiera QuickLauncher",
-                subtitle = "Open Pastiera search",
+                label = "${it.palsoftware.pastiera.BuildConfig.APP_NAME} QuickLauncher",
+                subtitle = "Open ${it.palsoftware.pastiera.BuildConfig.APP_NAME} search",
                 icon = CommandIcon.Search,
                 launch = CommandLaunchSpec.InternalAction(ACTION_OPEN_QUICK_LAUNCHER),
                 capabilities = setOf(CommandCapability.LaunchesActivity),
                 defaultSurfaces = setOf(CommandSurface.AssignedKey, CommandSurface.NavMode),
-                searchTokens = listOf("Pastiera", "QuickLauncher", "Search")
+                searchTokens = listOf(it.palsoftware.pastiera.BuildConfig.APP_NAME, "QuickLauncher", "Search")
             ),
             CommandTarget(
                 id = COMMAND_MAIN_ACTIVITY,
                 source = id,
                 kind = CommandKind.PastieraAction,
-                label = "Pastiera",
+                label = it.palsoftware.pastiera.BuildConfig.APP_NAME,
                 subtitle = "Open app settings",
                 icon = CommandIcon.Settings,
                 launch = CommandLaunchSpec.InternalAction(ACTION_OPEN_MAIN_ACTIVITY),
                 capabilities = setOf(CommandCapability.LaunchesActivity),
                 defaultSurfaces = setOf(CommandSurface.AssignedKey, CommandSurface.NavMode),
-                searchTokens = listOf("Pastiera", "Settings")
+                searchTokens = listOf(it.palsoftware.pastiera.BuildConfig.APP_NAME, "Settings")
             ),
             CommandTarget(
                 id = COMMAND_TOGGLE_SOFTWARE_KEYBOARD_MODE,

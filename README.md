@@ -1,4 +1,15 @@
-Support this project on [OpenCollective](https://opencollective.com/pastiera)
+# Flux Keyboard
+
+> **Flux Keyboard** is an unofficial fork of [Pastiera](https://github.com/palsoftware/pastiera),
+> created by Andrea Palumbo (PalSoftware) and developed by Andrea Palumbo, Patrick Zauner and the
+> Pastiera contributors. Nearly everything described below is their work; this fork adds the
+> changes listed in [FORK_CHANGES.md](FORK_CHANGES.md). It is not affiliated with or endorsed by the
+> Pastiera team, so please report problems with Flux Keyboard to
+> [this fork](https://github.com/Flux-Sniffer-Mods/Flux-Keyboard), not upstream.
+
+### Support the original Pastiera project
+
+Support Pastiera on [OpenCollective](https://opencollective.com/pastiera)
 
 <details>
 <summary>Alternative direct support options</summary>
@@ -26,13 +37,43 @@ For everyone who sees an IBAN and quietly gives up:
 
 Input method for physical keyboards android devices (e.g. Unihertz Titan 2), designed to make typing faster through shortcuts, gestures, and customization.
 
+## Flux Keyboard (this fork)
+
+**Flux Keyboard** builds on Pastiera for the Unihertz Titan 2 Elite and works on any phone with a
+hardware keyboard. It installs alongside Pastiera (app ID `io.github.fluxsniffermods.fluxkeyboard`),
+so you can keep both. The biggest differences:
+
+1. **GIFs, emoji and symbols**: GIF search with favourites, a dedicated **emoji picker key**
+   (Right Shift by default), emoji layer **profiles** that follow the app, and search across
+   every Unicode symbol.
+2. **Spell checking and autofill in every app**: Pastiera becomes Android's spell checker, and
+   password managers show their chips in the suggestion bar.
+3. **App shortcuts everywhere**: the same shortcuts in every app, suggested per app category, plus
+   each app's own launcher shortcuts.
+4. **Made for the Titan 2 Elite**: a status bar fitted to its rounded display, **per-LED colours**,
+   a **customisable menu bar**, and **recommended settings** that set it all up in one step.
+5. **Settings rebuilt**: grouped by task, searchable, and hiding what your phone's hardware can't
+   use.
+6. **Terminal mode and hidden-keyboard apps**: Termux gets a real Ctrl and Pastiera's Alt and SYM
+   with the keyboard out of the way; Termux:X11 and launchers get the keys without the keyboard.
+7. **Faster suggestions**: pick one with Ctrl+Shift+Q, W or E, undo an auto-replace with
+   Backspace, and paste what you just copied from a chip, with tracking stripped from links.
+8. **Offline mode**, and **updates** from this fork's own releases.
+
+Everything else, including per-app exact typing, snippets and voice input that keeps listening,
+is in the [changelog](FORK_CHANGES.md). It covers everything since Pastiera 0.85, the last
+official release, including what the Pastiera team has added since, which Flux Keyboard also
+includes.
+
+*The rest of this README is Pastiera's own documentation, updated where the fork differs.*
+
 ## Quick overview
 - Compact status bar with LED indicators for Shift/SYM/Ctrl/Alt, variants/suggestions bar, and swipe-pad gestures to move the cursor.
 - Multiple layouts (QWERTY/AZERTY/QWERTZ, Greek, Cyrillic, Arabic, translit, etc.) fully configurable; JSON import/export directly from the app. A web frontend for editing layouts is available at https://pastierakeyedit.vercel.app/
-- SYM pages usable via touch or physical keys (emoji + symbols), reorderable/disableable, with an integrated layout editor.
+- SYM pages usable via touch or physical keys (emoji, symbols, clipboard and the full emoji picker), reorderable/disableable, with an integrated layout editor.
 - Clipboard support with multiple entries and pinnable items.
 - Support for dictionary based suggestions/Autocorrections + swipe gestures to accept a suggestion (requires Shizuku)
-- Full backup/restore (settings, layouts, variations, dictionaries), UI translated into multiple languages, and built-in GitHub update checks.
+- Full backup/restore (settings, layouts, variations, dictionaries), UI translated into multiple languages, and update notices (see [Backup, updates, and data](#backup-updates-and-data)).
 
 ## Typing and modifiers
 - Long press on a key can input Alt+key or Shift+Key (uppercase) timing configurable.
@@ -57,7 +98,7 @@ Input method for physical keyboards android devices (e.g. Unihertz Titan 2), des
 - Device/firmware behavior snapshots for physical keyboards are archived under [docs/device-archives](docs/device-archives/).
 
 ## Symbols, emoji, and variations
-- Two touch-based SYM pages (emoji + symbols): reorderable/enableable, auto-close after input, customizable keycaps.
+- Touch-based SYM pages (emoji, symbols, clipboard and the full emoji picker with search): reorderable/enableable, auto-close after input, customizable keycaps. Flux Keyboard adds a Device SYM layer editor and GIF and symbol search.
 - In-app SYM editor with emoji grid and Unicode picker.
 - Variations bar above the keyboard: shows accents/variants of the last typed letter or static sets (utility/email) when needed.
 - Dedicated variations editor to replace/add variants via JSON or Unicode picker; optional static bar.
@@ -74,25 +115,32 @@ Input method for physical keyboards android devices (e.g. Unihertz Titan 2), des
 ## Comfort and extra input
 - Double space → period + space + uppercase; 
 - Swipe left on the keyboard to delete a word (Titan 2).
-- Optional Alt+Ctrl shortcut to start Google Voice Typing; microphone always available on the variants bar.
-- Compact status bar to minimize vertical space. With on-screen keyboard disabled from the IME selector, it uses even less space (aka Pastierina mode)
-- Translated UI (it/en/de/es/fr/pl/ru/hy) and onboarding tutorial.
+- Optional Alt+Ctrl shortcut to start speech input; microphone always available on the variants bar.
+- Compact status bar to minimize vertical space. With on-screen keyboard disabled from the IME selector, it uses even less space (Solderina mode, called Pastierina in Pastiera)
+- Translated UI (en/it/de/el/es/fr/hy/pl/ru/uk/vi) and onboarding tutorial. Some settings added by Flux Keyboard are English only.
 
 ## Backup, updates, and data
 - UI-based backup/restore in ZIP format: includes preferences, custom layouts, variations, SYM/Ctrl maps, and user dictionaries.
 - Restore merges saved variations with defaults to avoid losing newly added keys.
-- Built-in GitHub update check when opening settings (with option to ignore a release).
+- Update notices when opening settings and once a day (with option to ignore a release). Flux Keyboard checks [this fork's latest release](https://github.com/Flux-Sniffer-Mods/Flux-Keyboard/releases/latest) and offers its APK; offline mode turns the checks off.
 - Customizable files in `files/`: `variations.json`, `ctrl_key_mappings.json`, `sym_key_mappings*.json`, `keyboard_layouts/*.json`, user dictionaries.
 - Android autobackup function 
 
 ## Installation
-1. Build the APK or install an existing build.
+1. Download the APK from the [latest Flux Keyboard release](https://github.com/Flux-Sniffer-Mods/Flux-Keyboard/releases/latest), or build it yourself.
 2. Android Settings → System → Languages & input → Virtual keyboard → Manage keyboards.
-3. Enable “Pastiera” and select it from the input selector when typing.
+3. Enable “Flux Keyboard” and select it from the input selector when typing.
+
+Flux Keyboard installs next to official Pastiera; it doesn't replace or update it.
+
+**Coming from Pastiera Flux?** Flux Keyboard was called Pastiera Flux until September 2026 and
+had the app ID `it.palsoftware.pastiera.flux`. It's now a separate app, so install Flux Keyboard,
+move your settings over ("Backup now" in Pastiera Flux, then restore that ZIP in Flux
+Keyboard), then uninstall Pastiera Flux.
 
 ## Requirements
 - Android 10 (API 29) or higher.
-- Device with a physical keyboard (profiled on Unihertz Titan 2, adaptable via JSON).
+- Device with a physical keyboard (profiled on Unihertz Titan 2 and Titan 2 Elite, adaptable via JSON).
 
 ## Development / Tests
 - Run core + routing + service modifier regression tests:
@@ -112,6 +160,13 @@ Input method for physical keyboards android devices (e.g. Unihertz Titan 2), des
   - `./scripts/build-nightly-debug.sh 0.86`
   - `./scripts/build-nightly-debug.sh 0.86 --install`
   - `./scripts/build-nightly-debug.sh 0.86 --install --device <adb-serial>`
+
+## Flux Keyboard builds
+- `.github/workflows/fork-build.yml` is run by hand with a version name (for example `0.86-flux.202609261200`) and version code.
+- It builds and signs the stable APK with the fork's own key, names the run after the version, and publishes a GitHub release tagged `flux/v<version>` with notes made from [FORK_CHANGES.md](FORK_CHANGES.md). The app's update check reads that release.
+- After a successful build it deletes earlier runs and earlier `flux/` releases, so only the latest build remains.
+
+The sections below describe upstream Pastiera's workflows and release channels. They need upstream's signing secrets and don't apply to Flux Keyboard builds.
 
 ## Continuous Integration
 - Pushes to `main` and pull requests run `.github/workflows/ci.yml`.
@@ -214,6 +269,8 @@ Input method for physical keyboards android devices (e.g. Unihertz Titan 2), des
   - by default commits and pushes only `apps/docs/public/fdroid/nightly/repo` in `palsoftware-web`, which triggers the GitHub Pages deployment
 
 ## Signing Attestations
+*Upstream only: these cover official Pastiera builds. Flux Keyboard is signed with a different key.*
+
 These attestations document the public signing certificates used for Nightly and official Release builds.
 They are intended to strengthen the project's chain of trust: the markdown files are the browser-friendly reference version rendered directly on GitHub, and the signed PDFs are the archival verification artifacts.
 The `_signed.pdf` variants do not turn the APK signing certificates themselves into identity certificates. They are private attestations: the signer states that the published public key is the one they currently trust for the respective build channel.
@@ -230,3 +287,11 @@ External verification references:
 | --- | --- | --- |
 | EU DSS Validator Demo | [ec.europa.eu/digital-building-blocks/DSS/webapp-demo/validation](https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo/validation) | Validate the signed PDF attestations with the European Commission DSS demo service. |
 | eIDAS overview | [digital-strategy.ec.europa.eu/en/policies/eidas-regulation](https://digital-strategy.ec.europa.eu/en/policies/eidas-regulation) | Background on the EU trust-services framework under which qualified electronic signatures are defined. |
+
+## License and credits
+Pastiera is licensed under the [GNU General Public License v3](LICENSE), and Flux Keyboard is
+distributed under the same license. Pastiera was created by Andrea Palumbo (PalSoftware) and is
+developed by Andrea Palumbo, Patrick Zauner and the contributors credited in the app's About screen
+and in the [upstream repository](https://github.com/palsoftware/pastiera). Third-party components
+are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The fork's modifications are
+described in [FORK_CHANGES.md](FORK_CHANGES.md).
