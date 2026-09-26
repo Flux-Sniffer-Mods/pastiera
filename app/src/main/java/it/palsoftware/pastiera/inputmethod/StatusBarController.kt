@@ -1249,8 +1249,9 @@ class StatusBarController(
 
         // Only scroll to top when view is just added (first open or switching pages)
         // Don't scroll if view is already in container (user is browsing)
-        if (lastSymPageRendered != 4) {
-            view.refresh() // First time or switching from another page
+        if (lastSymPageRendered != 4 || view.isStaleForCurrentEditor()) {
+            // First time, switching from another page, or the field / emoji font changed
+            view.refresh()
         } else if (wasDetachedFromHost) {
             view.scrollToTop() // View was just added (happens when reopening after being removed)
         }

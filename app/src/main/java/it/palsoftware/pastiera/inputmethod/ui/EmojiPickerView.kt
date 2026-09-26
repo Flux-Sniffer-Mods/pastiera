@@ -38,6 +38,7 @@ import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.data.emoji.EmojiRepository
 import it.palsoftware.pastiera.data.emoji.RecentEmojiManager
 import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
+import it.palsoftware.pastiera.data.emoji.EmojiCompatSupport
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -100,6 +101,9 @@ class EmojiPickerView(
     private val columns: Int
     private var regularCategories: List<EmojiRepository.EmojiCategory> = emptyList()
     private var searchIndex: EmojiSearchRepository.EmojiSearchIndex? = null
+    // Emoji beyond the system font that the current field renders via EmojiCompat (null = none)
+    private var extraAvailable: ((String) -> Boolean)? = null
+    private var loadedCompatGeneration: Int = -1
     private var searchQuery: String = ""
     private var searchJob: Job? = null
     private var isSearchMode: Boolean = false
@@ -478,6 +482,21 @@ class EmojiPickerView(
         loadCategories()
     }
 
+    /** True when the focused field (or the downloaded emoji font) changed since the last load. */
+    fun isStaleForCurrentEditor(): Boolean = loadedCompatGeneration != EmojiCompatSupport.generation
+
+    private fun isDisplayable(emoji: String): Boolean =
+        EmojiRepository.isSystemAvailable(emoji) || extraAvailable?.invoke(emoji) == true
+
+    /** Recents can hold emoji picked in a field that supports more than the current one. */
+    private fun displayableRecents(
+        category: EmojiRepository.EmojiCategory?
+    ): EmojiRepository.EmojiCategory? {
+        category ?: return null
+        val entries = category.emojis.mapNotNull { EmojiRepository.filterEntry(it, ::isDisplayable) }
+        return if (entries.isEmpty()) null else category.copy(emojis = entries)
+    }
+
     fun isSearchInputActive(): Boolean {
         return isSearchPanelVisible && searchInputCaptureEnabled
     }
@@ -783,10 +802,17 @@ class EmojiPickerView(
         emptyView.visibility = View.GONE
         recyclerView.visibility = View.GONE
 
+        loadedCompatGeneration = EmojiCompatSupport.generation
+        val extra = EmojiCompatSupport.extraAvailabilityForCurrentEditor()
+        extraAvailable = extra
+
         loadingJob = coroutineScope.launch {
             try {
-                val recentCategory = withContext(Dispatchers.IO) { RecentEmojiManager.getRecentEmojiCategory(context) }
-                val regularCategories = withContext(Dispatchers.IO) { EmojiRepository.getEmojiCategories(context) }
+                // Regular categories first: they load the data the recents filter relies on.
+                val regularCategories = withContext(Dispatchers.IO) { EmojiRepository.getEmojiCategories(context, extra) }
+                val recentCategory = withContext(Dispatchers.IO) {
+                    displayableRecents(RecentEmojiManager.getRecentEmojiCategory(context))
+                }
                 val loadedSearchIndex = withContext(Dispatchers.IO) { EmojiSearchRepository.getSearchIndex(context) }
                 this@EmojiPickerView.regularCategories = regularCategories
                 this@EmojiPickerView.searchIndex = loadedSearchIndex
@@ -914,7 +940,7 @@ class EmojiPickerView(
             return
         }
 
-        val results = EmojiSearchRepository.search(index, query)
+        val results = EmojiSearchRepository.search(index, query, extraAvailable = extraAvailable)
         lastSearchResults = results
         setSearchMode(true)
         searchAdapter.submitList(results)
@@ -1074,7 +1100,7 @@ class EmojiPickerView(
     private fun refreshRecentsFromStorage(allowInsertOrRemove: Boolean) {
         coroutineScope.launch {
             val recentCategory = withContext(Dispatchers.IO) {
-                RecentEmojiManager.getRecentEmojiCategory(context)
+                displayableRecents(RecentEmojiManager.getRecentEmojiCategory(context))
             }
 
             val recentsHeaderIndex = headerPositions[EmojiRepository.RECENTS_CATEGORY_ID]
@@ -1163,10 +1189,10 @@ class EmojiPickerView(
     private fun updateTabsAsync() {
         coroutineScope.launch {
             val recentCategory = withContext(Dispatchers.IO) {
-                RecentEmojiManager.getRecentEmojiCategory(context)
+                displayableRecents(RecentEmojiManager.getRecentEmojiCategory(context))
             }
             val regularCategories = withContext(Dispatchers.IO) {
-                EmojiRepository.getEmojiCategories(context)
+                EmojiRepository.getEmojiCategories(context, extraAvailable)
             }
 
             val allCategories = mutableListOf<EmojiRepository.EmojiCategory>()
@@ -1266,7 +1292,7 @@ class EmojiPickerView(
         val options = listOf(entry.base) + entry.variants
         options.forEach { emoji ->
             val textView = TextView(context).apply {
-                text = emoji
+                text = EmojiCompatSupport.forDisplay(emoji)
                 textSize = 24f
                 gravity = Gravity.CENTER
                 setPadding(itemHorizontalPadding, itemVerticalPadding, itemHorizontalPadding, itemVerticalPadding)
@@ -1421,7 +1447,7 @@ class EmojiPickerView(
                     // Nothing to bind - it's just a spacer
                 }
                 is SectionItem.Emoji -> {
-                    (holder as EmojiViewHolder).textView.text = item.entry.base
+                    (holder as EmojiViewHolder).textView.text = EmojiCompatSupport.forDisplay(item.entry.base)
                     holder.textView.setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
                     holder.textView.setOnClickListener {
                         onEmojiSelected(item.entry.base, item.categoryId)
@@ -1462,7 +1488,7 @@ class EmojiPickerView(
 
         override fun onBindViewHolder(holder: SearchEmojiViewHolder, position: Int) {
             val item = getItem(position)
-            holder.textView.text = item.entry.base
+            holder.textView.text = EmojiCompatSupport.forDisplay(item.entry.base)
             holder.textView.setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
             holder.textView.setOnClickListener {
                 onEmojiSelected(item.entry.base, item.categoryId)
