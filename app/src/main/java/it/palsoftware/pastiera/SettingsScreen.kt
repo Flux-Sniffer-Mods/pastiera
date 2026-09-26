@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.RoundedCorner
@@ -80,7 +81,8 @@ enum class SettingsDestination {
     FluxEmojiGifs,
     FluxTitanScreen,
     FluxHiddenApps,
-    FluxLinuxDesktop
+    FluxLinuxDesktop,
+    FluxOffline
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -240,6 +242,7 @@ fun SettingsScreen(
                     onFluxTitanScreenClick = { navigateTo(SettingsDestination.FluxTitanScreen) },
                     onFluxHiddenAppsClick = { navigateTo(SettingsDestination.FluxHiddenApps) },
                     onFluxLinuxDesktopClick = { navigateTo(SettingsDestination.FluxLinuxDesktop) },
+                    onFluxOfflineClick = { navigateTo(SettingsDestination.FluxOffline) },
                     onBackClick = { navigateBack() },
                     onCustomInputStylesClick = { navigateTo(SettingsDestination.CustomInputStyles) },
                     onAppLanguageClick = { navigateTo(SettingsDestination.AppLanguage) }
@@ -319,6 +322,9 @@ fun SettingsScreen(
             SettingsDestination.FluxLinuxDesktop -> {
                 FluxLinuxDesktopScreen(modifier = modifier, onBack = { navigateBack() })
             }
+            SettingsDestination.FluxOffline -> {
+                FluxOfflineScreen(modifier = modifier, onBack = { navigateBack() })
+            }
             SettingsDestination.About -> {
                 AboutScreen(
                     modifier = modifier,
@@ -388,6 +394,7 @@ private fun SettingsMainScreen(
     onFluxTitanScreenClick: () -> Unit,
     onFluxHiddenAppsClick: () -> Unit,
     onFluxLinuxDesktopClick: () -> Unit,
+    onFluxOfflineClick: () -> Unit,
     onBackClick: () -> Unit,
     onCustomInputStylesClick: () -> Unit,
     onAppLanguageClick: () -> Unit,
@@ -600,6 +607,15 @@ private fun SettingsMainScreen(
                 description = stringResource(R.string.flux_linux_desktop_description),
                 linkId = SettingLinkIds.MAIN_FLUX_LINUX_DESKTOP,
                 onClick = onFluxLinuxDesktopClick
+            )
+            SettingsCategoryRow(
+                icon = Icons.Filled.CloudOff,
+                title = stringResource(R.string.flux_offline_title),
+                description = stringResource(
+                    if (SettingsManager.isOfflineMode(context)) R.string.flux_offline_on else R.string.flux_offline_description
+                ),
+                linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
+                onClick = onFluxOfflineClick
             )
 
             SettingsGroupDivider(stringResource(R.string.settings_group_system))

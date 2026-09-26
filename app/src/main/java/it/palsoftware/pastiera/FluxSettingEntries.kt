@@ -8,6 +8,7 @@ internal fun fluxSettingEntries(): List<SettingEntry> {
     val titan = SettingRoute(SettingsDestination.FluxTitanScreen)
     val hidden = SettingRoute(SettingsDestination.FluxHiddenApps)
     val desktop = SettingRoute(SettingsDestination.FluxLinuxDesktop)
+    val offline = SettingRoute(SettingsDestination.FluxOffline)
     val onTitan: (Context) -> Boolean = ::fluxTitanScreenAvailable
     return listOf(
         // Main screen rows
@@ -19,6 +20,10 @@ internal fun fluxSettingEntries(): List<SettingEntry> {
             summaryRes = R.string.flux_hidden_apps_description, route = hidden),
         SettingEntry(SettingLinkIds.MAIN_FLUX_LINUX_DESKTOP, R.string.flux_linux_desktop_title,
             summaryRes = R.string.flux_linux_desktop_description, route = desktop),
+        SettingEntry(SettingLinkIds.MAIN_FLUX_OFFLINE, R.string.flux_offline_title,
+            summaryRes = R.string.flux_offline_description, route = offline),
+        SettingEntry("offline.enabled", R.string.flux_offline_switch_title,
+            summaryRes = R.string.flux_offline_switch_description, route = offline),
         // Emoji & GIFs
         SettingEntry("flux_emoji.picker_key", R.string.emoji_picker_key_title, route = emoji),
         SettingEntry("flux_emoji.key_target", R.string.emoji_key_target_title, route = emoji),

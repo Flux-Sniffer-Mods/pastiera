@@ -29,6 +29,7 @@ object SettingLinkIds {
     const val MAIN_FLUX_TITAN_SCREEN = "main.flux_titan_screen"
     const val MAIN_FLUX_HIDDEN_APPS = "main.flux_hidden_apps"
     const val MAIN_FLUX_LINUX_DESKTOP = "main.flux_linux_desktop"
+    const val MAIN_FLUX_OFFLINE = "main.flux_offline"
 
     // Text input screen
     const val TEXT_INPUT_TEXT_EXPANSION = "text_input.text_expansion"
@@ -1016,7 +1017,8 @@ object SettingLinkRegistry {
         SettingsDestination.FluxEmojiGifs to R.string.flux_emoji_gifs_title,
         SettingsDestination.FluxTitanScreen to R.string.flux_titan_screen_title,
         SettingsDestination.FluxHiddenApps to R.string.flux_hidden_apps_title,
-        SettingsDestination.FluxLinuxDesktop to R.string.flux_linux_desktop_title
+        SettingsDestination.FluxLinuxDesktop to R.string.flux_linux_desktop_title,
+        SettingsDestination.FluxOffline to R.string.flux_offline_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

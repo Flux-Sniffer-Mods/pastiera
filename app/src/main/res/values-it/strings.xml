@@ -1160,4 +1160,13 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="flux_gif_favourites_description">In cima alla ricerca GIF. Tieni premuta una GIF per aggiungerla o toglierla.</string>
     <string name="flux_gif_recents_title">GIF recenti</string>
     <string name="flux_gif_recents_description">Le GIF inviate di recente, dopo le preferite nella ricerca GIF.</string>
+    <string name="flux_offline_title">Modalità offline</string>
+    <string name="flux_offline_description">Tieni Pastiera lontana da internet</string>
+    <string name="flux_offline_on">Attiva: nulla va online</string>
+    <string name="flux_offline_note">Pastiera non ha analisi né telemetria. Queste sono le sole cose che vanno online, e la modalità offline le spegne tutte.</string>
+    <string name="flux_offline_switch_title">Modalità offline</string>
+    <string name="flux_offline_switch_description">Nulla in Pastiera va online.</string>
+    <string name="flux_section_offline_affects">Mentre è attiva</string>
+    <string name="flux_offline_affects">• La ricerca GIF sparisce, con la sua scheda e il tasto GIF del livello emoji\n• Dizionari e layout non si possono scaricare\n• Nessun controllo degli aggiornamenti né note di rilascio\n• Le emoji vengono solo dal font di sistema, senza il font emoji scaricabile (dal prossimo avvio della tastiera)</string>
+    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Pastiera Flux → Modalità offline).</string>
 </resources>

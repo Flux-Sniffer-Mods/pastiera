@@ -3420,7 +3420,7 @@ class StatusBarController(
         val symbolSearchInPicker = snapshot.symPage == 4 &&
             (pendingSymbolSearch || emojiPickerView?.isSymbolSearchOpen() == true)
         if ((snapshot.symPage == 1 || snapshot.symPage == 4) && !symbolSearchInPicker &&
-            SettingsManager.getGifsEnabled(context)
+            SettingsManager.gifsAvailable(context)
         ) {
             KlipyGifs.prefetchFeatured(context, SettingsManager.getKlipyApiKey(context))
         }

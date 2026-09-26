@@ -13,6 +13,7 @@ import it.palsoftware.pastiera.inputmethod.subtype.AdditionalSubtypeUtils
 class PastieraApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        OfflineMode.load(this)
         SettingsManager.initializeAltShiftLayoutSwitchDefault(this)
         SettingsManager.enforceTitan2EliteRoundedCornersOnce(this)
         AppPackageChangeMonitor.register(this)

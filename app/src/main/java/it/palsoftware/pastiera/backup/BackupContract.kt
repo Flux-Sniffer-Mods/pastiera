@@ -315,6 +315,7 @@ internal object BackupPreferenceContract {
             "symbol_search_enter_picks" to PreferenceValueType.BOOLEAN,
             "gif_search_enter_picks" to PreferenceValueType.BOOLEAN,
             "recents_first_in_search" to PreferenceValueType.BOOLEAN,
+            "offline_mode" to PreferenceValueType.BOOLEAN,
             "gif_show_favourites" to PreferenceValueType.BOOLEAN,
             "gif_show_recents" to PreferenceValueType.BOOLEAN,
             "emoji_picker_focus_search" to PreferenceValueType.BOOLEAN,

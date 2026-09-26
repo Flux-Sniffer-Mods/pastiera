@@ -425,6 +425,9 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         }
 
         SettingsSectionDivider(stringResource(R.string.flux_section_gif_search))
+        if (SettingsManager.isOfflineMode(context)) {
+            FluxNote(stringResource(R.string.flux_gifs_offline_note))
+        }
 
         // GIF search (KLIPY): a GIF key on the emoji layer and a GIF tab in the picker
         Column(
@@ -1105,5 +1108,28 @@ fun FluxLinuxDesktopScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 }
             }
         )
+    }
+}
+
+// ------------------------------------------------------------------ Offline mode
+
+@Composable
+fun FluxOfflineScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var offline by remember { mutableStateOf(SettingsManager.isOfflineMode(context)) }
+    FluxScreenScaffold(stringResource(R.string.flux_offline_title), onBack, modifier) {
+        FluxNote(stringResource(R.string.flux_offline_note))
+        FluxSwitchRow(
+            linkId = "offline.enabled",
+            title = stringResource(R.string.flux_offline_switch_title),
+            description = stringResource(R.string.flux_offline_switch_description),
+            checked = offline,
+            onCheckedChange = { enabled ->
+                offline = enabled
+                SettingsManager.setOfflineMode(context, enabled)
+            }
+        )
+        SettingsSectionDivider(stringResource(R.string.flux_section_offline_affects))
+        FluxNote(stringResource(R.string.flux_offline_affects))
     }
 }

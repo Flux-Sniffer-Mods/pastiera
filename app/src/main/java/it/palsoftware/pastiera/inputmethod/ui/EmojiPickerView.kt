@@ -359,7 +359,7 @@ class EmojiPickerView(
             background = createTabBackground(false)
             isClickable = true
             isFocusable = true
-            visibility = if (SettingsManager.getGifsEnabled(context)) View.VISIBLE else View.GONE
+            visibility = if (SettingsManager.gifsAvailable(context)) View.VISIBLE else View.GONE
             layoutParams = LinearLayout.LayoutParams(dpToPx(40f), ViewGroup.LayoutParams.MATCH_PARENT).apply {
                 marginEnd = spacing
             }
@@ -1042,8 +1042,8 @@ class EmojiPickerView(
 
     /** Opens GIF search (KLIPY): featured GIFs first; typing searches. Needs GIFs turned on. */
     fun openGifs() {
-        log("openGifs: enabled=${SettingsManager.getGifsEnabled(context)} | ${gridState()}")
-        if (!SettingsManager.getGifsEnabled(context)) return
+        log("openGifs: enabled=${SettingsManager.gifsAvailable(context)} | ${gridState()}")
+        if (!SettingsManager.gifsAvailable(context)) return
         setGifMode(true)
         setSearchPanelVisible(true)
         // Its setting: typing searches at once, or only after tapping the search
@@ -1065,7 +1065,7 @@ class EmojiPickerView(
 
     /** Shows or hides the GIF tab as the setting changes; leaves GIF mode when it's turned off. */
     fun refreshGifAvailability() {
-        val enabled = SettingsManager.getGifsEnabled(context)
+        val enabled = SettingsManager.gifsAvailable(context)
         gifTabButton.visibility = if (enabled) View.VISIBLE else View.GONE
         if (!enabled && gifMode) setGifMode(false)
     }

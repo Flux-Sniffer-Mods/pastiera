@@ -159,6 +159,7 @@ object SettingsManager {
     private const val KEY_SYMBOL_SEARCH_ENTER_PICKS = "symbol_search_enter_picks" // Enter: first symbol, close
     private const val KEY_GIF_SEARCH_ENTER_PICKS = "gif_search_enter_picks" // Enter: first GIF (closes)
     private const val KEY_RECENTS_FIRST_IN_SEARCH = "recents_first_in_search" // recently used first in searches
+    private const val KEY_OFFLINE_MODE = "offline_mode" // nothing goes online (see OfflineMode)
     private const val KEY_GIF_SHOW_FAVOURITES = "gif_show_favourites" // Favourites section in GIF search
     private const val KEY_GIF_SHOW_RECENTS = "gif_show_recents" // Recent section in GIF search
     private const val KEY_EMOJI_PICKER_FOCUS_SEARCH = "emoji_picker_focus_search" // typing searches on open
@@ -5414,6 +5415,18 @@ object SettingsManager {
         getPreferences(context).edit().putBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, enabled).apply()
     }
 
+    /** Offline mode (see [OfflineMode]): nothing in Pastiera goes online. Off by default. */
+    fun isOfflineMode(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_OFFLINE_MODE, false)
+
+    fun setOfflineMode(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_OFFLINE_MODE, enabled).apply()
+        OfflineMode.update(enabled)
+    }
+
+    /** GIF search is switched on and allowed online (not in offline mode). */
+    fun gifsAvailable(context: Context): Boolean = getGifsEnabled(context) && !isOfflineMode(context)
+
     /**
      * Emoji, symbols and GIFs used recently (and favourite GIFs) come first in their searches.
      * On by default.
@@ -5481,7 +5494,7 @@ object SettingsManager {
 
     /** The emoji layer's GIF key while GIF search is on and it isn't also the Recents key, else KEYCODE_UNKNOWN. */
     fun activeEmojiLayerGifKey(context: Context): Int {
-        if (!getGifsEnabled(context)) return KeyEvent.KEYCODE_UNKNOWN
+        if (!gifsAvailable(context)) return KeyEvent.KEYCODE_UNKNOWN
         val keyCode = getEmojiLayerGifKey(context)
         return if (keyCode == getEmojiLayerRecentsKey(context)) KeyEvent.KEYCODE_UNKNOWN else keyCode
     }

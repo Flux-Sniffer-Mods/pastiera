@@ -2,6 +2,7 @@ package it.palsoftware.pastiera.data.gif
 
 import android.content.ClipDescription
 import android.content.Context
+import it.palsoftware.pastiera.OfflineMode
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
@@ -171,6 +172,7 @@ object KlipyGifs {
      * network fails. Throws [GifSearchException] saying what each attempt returned.
      */
     suspend fun find(context: Context, apiKey: String, query: String?): List<GifResult> = withContext(Dispatchers.IO) {
+        if (OfflineMode.enabled) throw GifSearchException("offline mode")
         val file = resultsFile(context, query)
         readResults(file, maxAge(query))?.let { return@withContext it }
         try {
@@ -218,7 +220,7 @@ object KlipyGifs {
      * than [FEATURED_MAX_AGE_MS]; tries at most once per 10 minutes. Cheap to call often.
      */
     fun prefetchFeatured(context: Context, apiKey: String) {
-        if (apiKey.isBlank()) return
+        if (apiKey.isBlank() || OfflineMode.enabled) return
         val now = System.currentTimeMillis()
         if (now - lastPrefetchAttempt < PREFETCH_RETRY_MS) return
         if (!prefetching.compareAndSet(false, true)) return
@@ -364,8 +366,10 @@ object KlipyGifs {
      * coroutine (the next keystroke, a preview scrolled away) cancels the request, rather than
      * letting it finish unseen and hold up the ones that matter.
      */
-    private suspend fun <T> call(context: Context, url: String, read: (Response) -> T): T =
-        suspendCancellableCoroutine { continuation ->
+    private suspend fun <T> call(context: Context, url: String, read: (Response) -> T): T {
+        // Offline mode: every request stops here (searches, previews, sending)
+        if (OfflineMode.enabled) throw IOException("offline mode")
+        return suspendCancellableCoroutine { continuation ->
             val call = client.newCall(request(context, url))
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(object : Callback {
@@ -378,6 +382,7 @@ object KlipyGifs {
                 }
             })
         }
+    }
 
     // KLIPY's network requirements ask for a browser-like User-Agent; keys can be tied to an app
     private fun request(context: Context, url: String): Request = Request.Builder()

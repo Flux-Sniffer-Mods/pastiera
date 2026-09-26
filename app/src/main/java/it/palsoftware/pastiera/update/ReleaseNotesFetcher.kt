@@ -78,6 +78,10 @@ fun fetchReleaseNotesForVersion(
     languageTag: String,
     callback: (ReleaseNotesSummary?) -> Unit
 ) {
+    if (it.palsoftware.pastiera.OfflineMode.enabled) {
+        callback(null)
+        return
+    }
     val normalizedVersion = normalizeReleaseVersion(version)
     if (normalizedVersion.isBlank()) {
         postReleaseNotes(callback, null)

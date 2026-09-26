@@ -1843,4 +1843,13 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="flux_gif_favourites_description">At the top of GIF search. Long-press any GIF to add it, or to take it out.</string>
     <string name="flux_gif_recents_title">Recent GIFs</string>
     <string name="flux_gif_recents_description">The GIFs you’ve sent lately, after your favourites in GIF search.</string>
+    <string name="flux_offline_title">Offline mode</string>
+    <string name="flux_offline_description">Keep Pastiera off the internet</string>
+    <string name="flux_offline_on">On: nothing goes online</string>
+    <string name="flux_offline_note">Pastiera has no analytics or telemetry. These are the only things that go online, and offline mode turns them all off.</string>
+    <string name="flux_offline_switch_title">Offline mode</string>
+    <string name="flux_offline_switch_description">Nothing in Pastiera goes online.</string>
+    <string name="flux_section_offline_affects">While it’s on</string>
+    <string name="flux_offline_affects">• GIF search is gone, with its tab and the emoji layer’s GIF key\n• Dictionaries and layouts can’t be downloaded\n• No update checks or release notes\n• Emoji come from the system font only, without the downloadable emoji font (from the next start of the keyboard)</string>
+    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Pastiera Flux → Offline mode).</string>
 </resources>
