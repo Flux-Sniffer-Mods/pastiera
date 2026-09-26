@@ -102,7 +102,6 @@ object SettingLinkIds {
     const val MAIN_LED_COLORS = "main.led_colors"
     const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
     const val RECOMMENDED_SETTINGS = "system.recommended_settings"
-    const val DEFAULT_CONFIG = "system.default_config"
     const val TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode.hide_keyboard"
     const val TERMINAL_MODE_EMOJI_KEY = "terminal_mode.emoji_key"
     const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"

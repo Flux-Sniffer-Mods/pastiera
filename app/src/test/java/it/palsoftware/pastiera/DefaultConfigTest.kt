@@ -56,4 +56,14 @@ class DefaultConfigTest {
     fun niagaraIsHiddenByDefault() {
         assertEquals(listOf("bitpit.launcher"), SettingsManager.getHiddenKeyboardApps(context))
     }
+
+    @Test
+    fun recommendedSettingsCountWhatDiffersThenMatchOnceApplied() {
+        // A fresh start differs from the recommended configuration
+        assertTrue(DefaultConfig.differingSettings(context) > 0)
+        assertTrue(DefaultConfig.apply(context))
+        assertEquals(0, DefaultConfig.differingSettings(context))
+        SettingsManager.setEmojiLayerTypeToSearch(context, true)
+        assertEquals(1, DefaultConfig.differingSettings(context))
+    }
 }

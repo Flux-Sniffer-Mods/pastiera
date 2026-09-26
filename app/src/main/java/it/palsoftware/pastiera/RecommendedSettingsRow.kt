@@ -1,9 +1,6 @@
 package it.palsoftware.pastiera
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -12,77 +9,46 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 
-/** Privacy & system > Backup: shows what the recommended settings would change, then applies them. */
+/**
+ * Privacy & system > Backup: the recommended settings, which are the default configuration
+ * (DefaultConfig, a Titan 2 Elite backup). Says how many of your settings differ, then applies it.
+ */
 @Composable
 internal fun RecommendedSettingsRow() {
     val context = LocalContext.current
-    var pending by remember { mutableStateOf<List<RecommendedSettings.Item>?>(null) }
+    var differing by remember { mutableStateOf<Int?>(null) }
     FluxActionRow(
         linkId = SettingLinkIds.RECOMMENDED_SETTINGS,
         title = stringResource(R.string.recommended_settings_title),
         description = stringResource(R.string.recommended_settings_description),
-        onClick = { pending = RecommendedSettings.pending(context) }
+        onClick = { differing = DefaultConfig.differingSettings(context) }
     )
-    pending?.let { items ->
+    differing?.let { count ->
         AlertDialog(
-            onDismissRequest = { pending = null },
+            onDismissRequest = { differing = null },
             title = { Text(stringResource(R.string.recommended_settings_title)) },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    if (items.isEmpty()) {
-                        Text(stringResource(R.string.recommended_settings_nothing))
-                    } else {
-                        Text(stringResource(R.string.recommended_settings_will_turn_on))
-                        items.forEach { item -> Text("• " + stringResource(item.titleRes)) }
-                    }
-                }
+                Text(
+                    if (count == 0) stringResource(R.string.recommended_settings_nothing)
+                    else pluralStringResource(R.plurals.recommended_settings_differ, count, count)
+                )
             },
-            confirmButton = {
-                if (items.isNotEmpty()) {
-                    TextButton(onClick = {
-                        RecommendedSettings.apply(context)
-                        pending = null
-                        Toast.makeText(context, R.string.recommended_settings_applied, Toast.LENGTH_SHORT).show()
-                    }) { Text(stringResource(R.string.recommended_settings_apply)) }
-                }
-            },
-            dismissButton = { TextButton(onClick = { pending = null }) { Text(stringResource(R.string.cancel)) } }
-        )
-    }
-}
-
-/** Privacy & system > Backup: applies the bundled default configuration (DefaultConfig). */
-@Composable
-internal fun DefaultConfigRow() {
-    val context = LocalContext.current
-    var confirming by remember { mutableStateOf(false) }
-    FluxActionRow(
-        linkId = SettingLinkIds.DEFAULT_CONFIG,
-        title = stringResource(R.string.default_config_title),
-        description = stringResource(R.string.default_config_description),
-        onClick = { confirming = true }
-    )
-    if (confirming) {
-        AlertDialog(
-            onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.default_config_title)) },
-            text = { Text(stringResource(R.string.default_config_confirm)) },
             confirmButton = {
                 TextButton(onClick = {
-                    confirming = false
+                    differing = null
                     val ok = DefaultConfig.apply(context)
                     Toast.makeText(
                         context,
-                        if (ok) R.string.default_config_applied else R.string.default_config_failed,
+                        if (ok) R.string.recommended_settings_applied else R.string.recommended_settings_failed,
                         Toast.LENGTH_SHORT
                     ).show()
-                }) { Text(stringResource(R.string.default_config_apply)) }
+                }) { Text(stringResource(R.string.recommended_settings_apply)) }
             },
-            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } }
+            dismissButton = { TextButton(onClick = { differing = null }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }

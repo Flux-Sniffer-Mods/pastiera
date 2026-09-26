@@ -434,7 +434,6 @@ fun AdvancedSettingsScreen(
 
                         SettingsSectionDivider(stringResource(R.string.settings_section_backup))
                         RecommendedSettingsRow()
-                        DefaultConfigRow()
                         // Backup
                         Surface(
                             modifier = Modifier

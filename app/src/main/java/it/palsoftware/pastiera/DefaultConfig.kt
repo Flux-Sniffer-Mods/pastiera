@@ -50,6 +50,36 @@ object DefaultConfig {
         }
     }
 
+    /**
+     * How many of your settings differ from the recommended configuration (the settings in the
+     * bundled backup that you've set differently, or not at all).
+     */
+    fun differingSettings(context: Context): Int {
+        val entries = runCatching {
+            val json = context.assets.open("$ASSET_DIR/prefs/pastiera_prefs.json").bufferedReader().use { it.readText() }
+            org.json.JSONObject(json).getJSONObject("entries")
+        }.getOrNull() ?: return 0
+        val current = SettingsManager.getPreferences(context).all
+        // Only what applying would set: the same keys the restore leaves out are left out here
+        val skipped = (it.palsoftware.pastiera.backup.BackupPreferencePolicy.runtimeDerivedKeys +
+            if (DeviceSpecific.isTitan2EliteDevice()) emptySet()
+            else it.palsoftware.pastiera.backup.BackupPreferencePolicy.targetDeviceDerivedKeys)
+            .map { it.substringAfter(':') }.toSet()
+        var differing = 0
+        entries.keys().forEach { key ->
+            if (key == PREF_APPLIED || key in skipped) return@forEach
+            val entry = entries.optJSONObject(key) ?: return@forEach
+            val wanted = entry.opt("value")?.toString()
+            val have = current[key]?.let { value ->
+                // Floats read back from JSON as doubles: compare them as numbers
+                if (value is Float) value.toDouble().toString() else value.toString()
+            }
+            val wantedNormalised = if (entry.optString("type") == "float") entry.optDouble("value").toString() else wanted
+            if (have != wantedNormalised) differing++
+        }
+        return differing
+    }
+
     private fun copyAssets(context: Context, assetPath: String, target: File) {
         val children = context.assets.list(assetPath).orEmpty()
         if (children.isEmpty()) {

@@ -1,7 +1,7 @@
 {
   "versionCode": 86,
-  "versionName": "0.86-flux.202609260222",
-  "timestamp": "2026-09-26T02:39:40.862163Z",
+  "versionName": "0.86-flux.202609260329",
+  "timestamp": "2026-09-26T03:43:21.231953Z",
   "components": [
     "files\/ctrl_key_mappings.json",
     "files\/user_defaults.json",
