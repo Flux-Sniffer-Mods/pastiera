@@ -61,6 +61,9 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry(SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS, R.string.emoji_suggestions_title,
         summaryRes = R.string.emoji_suggestions_description,
         route = SettingRoute(SettingsDestination.AutoCorrection)),
+    SettingEntry(SettingLinkIds.AUTO_CORRECTION_SPELL_CHECKER, R.string.spell_checker_title,
+        summaryRes = R.string.spell_checker_description,
+        route = SettingRoute(SettingsDestination.AutoCorrection)),
     SettingEntry(SettingLinkIds.PRIVACY_PASTE_SUGGESTION, R.string.paste_suggestion_title,
         summaryRes = R.string.paste_suggestion_description,
         route = SettingRoute(SettingsDestination.Advanced))

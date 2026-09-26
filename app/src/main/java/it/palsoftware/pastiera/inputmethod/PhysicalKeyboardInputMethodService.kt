@@ -1784,6 +1784,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             activeSuggestionLocalesProvider = { getAdditionalSuggestionLocalesForActiveInputStyle() }
         )
         inputEventRouter.suggestionController = suggestionController
+        // The spell checker reads the loaded dictionary instead of loading its own
+        it.palsoftware.pastiera.spellcheck.PastieraSpellCheckerService.keyboardController =
+            java.lang.ref.WeakReference(suggestionController)
         
         // Preload dictionary in background so it's ready when user focuses a field
         suggestionController.preloadDictionary()
@@ -2886,6 +2889,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        it.palsoftware.pastiera.spellcheck.PastieraSpellCheckerService.keyboardController = null
         gifScope.cancel()
         HiddenAppKeyObserver.sink = null
         HiddenAppKeyObserver.interceptor = null

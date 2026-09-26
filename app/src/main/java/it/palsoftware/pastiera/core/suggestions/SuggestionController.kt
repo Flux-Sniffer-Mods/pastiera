@@ -270,6 +270,21 @@ class SuggestionController(
         if (!repository.isReady) return null
         return if (repository.isKnownWord(candidate)) null else candidate
     }
+    /**
+     * For the spell checker: whether [word] is in this keyboard's dictionary for [language], or
+     * null when that dictionary isn't the loaded one (or isn't loaded yet).
+     */
+    fun spellCheck(language: String, word: String, limit: Int): SpellCheckResult? {
+        if (!currentLocale.language.equals(language, ignoreCase = true)) return null
+        val repository = dictionaryRepository
+        if (!repository.isReady) return null
+        if (repository.isKnownWord(word)) return SpellCheckResult(true, emptyList())
+        val suggestions = suggestionEngine.suggest(word, limit).map { it.candidate }
+        return SpellCheckResult(false, suggestions)
+    }
+
+    data class SpellCheckResult(val known: Boolean, val suggestions: List<String>)
+
     /** The word being typed, as the suggestions see it. */
     fun currentWord(): String = tracker.currentWord
 

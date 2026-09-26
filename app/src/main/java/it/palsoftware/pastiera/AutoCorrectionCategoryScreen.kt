@@ -444,6 +444,13 @@ fun AutoCorrectionCategoryScreen(
                                 }
                             }
 
+                        FluxActionRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SPELL_CHECKER,
+                            title = stringResource(R.string.spell_checker_title),
+                            description = stringResource(R.string.spell_checker_description),
+                            onClick = { it.palsoftware.pastiera.spellcheck.SpellCheckRules.openSystemSettings(context) }
+                        )
+
                         FluxSwitchRow(
                             linkId = SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS,
                             title = stringResource(R.string.emoji_suggestions_title),

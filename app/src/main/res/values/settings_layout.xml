@@ -76,4 +76,8 @@
     <string name="paste_suggestion_description">For a minute after you copy text, a new text field offers it as a suggestion; typing dismisses it. Never in password fields or for text marked sensitive</string>
     <string name="emoji_suggestions_title">Emoji suggestions</string>
     <string name="emoji_suggestions_description">An emoji for the word you\'re typing, e.g. 🍕 for pizza. Picking it adds the emoji after the word.</string>
+    <string name="spell_checker_name">Pastiera spell checker</string>
+    <string name="spell_checker_subtype" translatable="false">%s</string>
+    <string name="spell_checker_title">Spell checker</string>
+    <string name="spell_checker_description">Underline misspelt words in every app using Pastiera\'s dictionaries, including words you added. Tap to choose Pastiera in Android\'s spell checker settings.</string>
 </resources>
