@@ -73,6 +73,8 @@ object SettingsManager {
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
+    private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
+    private const val LED_COLOR_KEY_PREFIX = "led_color_"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
@@ -2834,6 +2836,22 @@ object SettingsManager {
     }
     
     /** Offer what you just copied as a suggestion to paste when you start typing in a field. */
+    /** Each status LED in its own colour (LedColors); off keeps the theme's LED colours. */
+    fun getLedIndividualColorsEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_LED_INDIVIDUAL_COLORS, false)
+
+    fun setLedIndividualColorsEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_LED_INDIVIDUAL_COLORS, enabled).apply()
+    }
+
+    /** One LED's colour ([led]: shift, ctrl, alt or sym). */
+    fun getLedColor(context: Context, led: String, default: Int): Int =
+        getPreferences(context).getInt(LED_COLOR_KEY_PREFIX + led, default)
+
+    fun setLedColor(context: Context, led: String, color: Int) {
+        getPreferences(context).edit().putInt(LED_COLOR_KEY_PREFIX + led, color).apply()
+    }
+
     /** Password managers' chips (logins, one-time codes) in the suggestion bar, Android 11+. */
     fun getInlineAutofillEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_INLINE_AUTOFILL, true)

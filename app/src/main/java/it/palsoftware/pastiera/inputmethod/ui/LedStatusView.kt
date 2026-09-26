@@ -134,7 +134,7 @@ class LedStatusView(
         ledsByState.clear()
         segmentsByView.clear()
         canvas.replaceSegments(layout.segments) { segment ->
-            createLedView(themeOverride?.ledInactive ?: LED_COLOR_GRAY_OFF, segment).also { led ->
+            createLedView(ledColor(segment.state, 0), segment).also { led ->
                 ledsByState.getOrPut(segment.state) { mutableListOf() }.add(led)
             }
         }
@@ -171,11 +171,9 @@ class LedStatusView(
                     val shiftPriority = if (rightSide && !rightShiftIsShift) 0
                         else statePriority[ModifierLedState.SHIFT] ?: 0
                     val priority = maxOf(shiftPriority, statePriority[otherState] ?: 0)
-                    paint.color = when (priority) {
-                        2 -> themeOverride?.ledLocked ?: LED_COLOR_RED_LOCKED
-                        1 -> themeOverride?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-                        else -> themeOverride?.ledInactive ?: LED_COLOR_GRAY_OFF
-                    }
+                    // The colour of whichever modifier lights the shared LED
+                    val shown = if (shiftPriority >= (statePriority[otherState] ?: 0)) ModifierLedState.SHIFT else otherState
+                    paint.color = ledColor(shown, priority)
                 }
                 val width = bounds.width().toFloat()
                 val height = bounds.height().toFloat()
@@ -298,27 +296,41 @@ class LedStatusView(
         }
     }
 
-    private fun updateLeds(state: ModifierLedState, isLocked: Boolean, isActive: Boolean = false) {
-        statePriority[state] = if (isLocked) 2 else if (isActive) 1 else 0
+    /**
+     * An LED's colour at [level] (0 off, 1 active, 2 locked): its own colour when each LED is
+     * coloured individually, otherwise the theme's shared LED colours.
+     */
+    private fun ledColor(state: ModifierLedState, level: Int): Int {
+        if (LedColors.enabled(context)) {
+            val base = LedColors.baseColor(context, LedColors.ledFor(state))
+            return LedColors.shade(base, when (level) {
+                2 -> LedColors.Level.LOCKED
+                1 -> LedColors.Level.ACTIVE
+                else -> LedColors.Level.OFF
+            })
+        }
         val theme = themeOverride
-        val targetColor = when {
-            isLocked -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
-            isActive -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
+        return when (level) {
+            2 -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
+            1 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
             else -> theme?.ledInactive ?: LED_COLOR_GRAY_OFF
         }
+    }
+
+    private fun updateLeds(state: ModifierLedState, isLocked: Boolean, isActive: Boolean = false) {
+        val level = if (isLocked) 2 else if (isActive) 1 else 0
+        statePriority[state] = level
+        val targetColor = ledColor(state, level)
         ledsByState[state].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
     }
 
     private fun updateSymLeds(symPage: Int) {
         statePriority[ModifierLedState.SYM] = if (symPage == 2) 2 else if (symPage > 0) 1 else 0
-        val theme = themeOverride
-        val targetColor = when (symPage) {
-            1 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            2 -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
-            3 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            4 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            else -> theme?.ledInactive ?: LED_COLOR_GRAY_OFF
-        }
+        val targetColor = ledColor(ModifierLedState.SYM, when (symPage) {
+            2 -> 2
+            1, 3, 4 -> 1
+            else -> 0
+        })
         ledsByState[ModifierLedState.SYM].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
         // The visible idle contour depends on both the upper and lower states.
         ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }

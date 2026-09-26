@@ -2272,7 +2272,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
+            if (key != null && key.startsWith("led_")) {
+                // LED colours: repaint the LEDs even though no modifier changed
+                Handler(Looper.getMainLooper()).post {
+                    invalidateRenderedStatusSnapshot()
+                    updateStatusBarText()
+                }
+            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
                 alternateCharacterManager.reloadModifierAndDeviceSymMappings()
                 Handler(Looper.getMainLooper()).post { updateStatusBarText() }
             } else if (key == "sym_mappings_custom") {

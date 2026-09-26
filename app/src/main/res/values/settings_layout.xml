@@ -128,4 +128,17 @@
     <string name="autocorrect_section_tuning">Fine-tuning</string>
     <string name="inline_autofill_title">Autofill in the suggestion bar</string>
     <string name="inline_autofill_description">Your password manager\'s saved logins, one-time codes and addresses appear as chips in the suggestion bar; tap one to fill the field.</string>
+    <string name="led_colors_title">Status LED colours</string>
+    <string name="led_colors_description">One colour for all LEDs from the theme, or a colour for each</string>
+    <string name="led_colors_individual_title">Colour each LED</string>
+    <string name="led_colors_individual_off">Off: all LEDs use the theme\'s LED colours.</string>
+    <string name="led_colors_individual_on">Each LED has its own colour: dim when off, the colour when active, brighter and more saturated when locked.</string>
+    <string name="led_colors_section">LEDs</string>
+    <string name="led_colors_states">Off, active, locked. Tap to change.</string>
+    <string name="led_colors_shift">Shift</string>
+    <string name="led_colors_ctrl">Ctrl</string>
+    <string name="led_colors_alt">Alt</string>
+    <string name="led_colors_sym">SYM</string>
+    <string name="led_colors_reset_title">Reset LED colours</string>
+    <string name="led_colors_reset_description">Back to the suggested blue, orange, green and purple.</string>
 </resources>

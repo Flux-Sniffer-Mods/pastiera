@@ -25,8 +25,11 @@ class SymLayoutController(
          */
         const val RECENTS_KEY_LABEL = "\u21BA"         // ↺
         const val RECENTS_BACK_LABEL = "\u21A9\uFE0E"  // ↩ (text presentation)
-        /** Label of the search key on the emoji layer and the symbols pages. */
-        const val SEARCH_KEY_LABEL = "\uD83D\uDD0D"
+        /**
+         * Label of the search key on the emoji layer and the symbols pages: a text symbol, so it
+         * isn't mistaken for an emoji the key would type.
+         */
+        const val SEARCH_KEY_LABEL = "\u2315"         // ⌕
         /** Label of the emoji layer's GIF key. */
         const val GIF_KEY_LABEL = "GIF"
     }

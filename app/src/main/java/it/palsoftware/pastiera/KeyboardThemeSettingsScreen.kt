@@ -2708,7 +2708,7 @@ private fun KeyboardThemeSwatchButton(
 }
 
 @Composable
-private fun KeyboardThemeColorPickerDialog(
+internal fun KeyboardThemeColorPickerDialog(
     initialColor: Int,
     onDismiss: () -> Unit,
     onColorSelected: (Int) -> Unit,

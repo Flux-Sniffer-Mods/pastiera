@@ -93,6 +93,8 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_EMOJI_SUGGESTIONS = "auto_correction.emoji_suggestions"
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
+    const val MAIN_LED_COLORS = "main.led_colors"
+    const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 
@@ -1065,6 +1067,7 @@ object SettingLinkRegistry {
         SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
         SettingsDestination.Developer to R.string.developer_options_title,
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
+        SettingsDestination.LedColors to R.string.led_colors_title,
         SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 

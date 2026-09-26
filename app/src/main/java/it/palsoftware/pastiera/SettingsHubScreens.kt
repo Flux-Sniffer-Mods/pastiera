@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RoundedCorner
@@ -178,6 +179,13 @@ fun LookSoundHubScreen(
             description = stringResource(R.string.settings_theme_led_colours_description),
             linkId = SettingLinkIds.MAIN_KEYBOARD_THEME,
             onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_KEYBOARD_THEME) }
+        )
+        SettingsCategoryRow(
+            icon = Icons.Filled.Lightbulb,
+            title = stringResource(R.string.led_colors_title),
+            description = stringResource(R.string.led_colors_description),
+            linkId = SettingLinkIds.MAIN_LED_COLORS,
+            onClick = { onNavigate(SettingsDestination.LedColors) }
         )
         SettingsCategoryRow(
             icon = Icons.Filled.SmartButton,

@@ -127,4 +127,13 @@
     <string name="clicks_launcher_interception_service_description">Permette a Pastiera di gestire i tasti che altrimenti un\'app leggerebbe per prima: i pulsanti a cui hai assegnato azioni di Pastiera e, nelle app dove Pastiera è nascosta, i tasti per i LED di stato, il tasto emoji e Sym, se hai attivato queste opzioni.</string>
     <string name="inline_autofill_title">Compilazione automatica nella barra</string>
     <string name="inline_autofill_description">Gli accessi salvati, i codici monouso e gli indirizzi del tuo gestore password compaiono come chip nella barra dei suggerimenti; toccane uno per compilare il campo.</string>
+    <string name="led_colors_title">Colori dei LED di stato</string>
+    <string name="led_colors_description">Un colore per tutti i LED dal tema, o un colore per ciascuno</string>
+    <string name="led_colors_individual_title">Colora ogni LED</string>
+    <string name="led_colors_individual_off">Disattivato: tutti i LED usano i colori LED del tema.</string>
+    <string name="led_colors_individual_on">Ogni LED ha il suo colore: tenue quando è spento, il colore quando è attivo, più luminoso e saturo quando è bloccato.</string>
+    <string name="led_colors_section">LED</string>
+    <string name="led_colors_states">Spento, attivo, bloccato. Tocca per cambiare.</string>
+    <string name="led_colors_reset_title">Ripristina i colori dei LED</string>
+    <string name="led_colors_reset_description">Torna ai colori suggeriti blu, arancio, verde e viola.</string>
 </resources>
