@@ -160,6 +160,12 @@ class StatusBarController(
     var onEmojiLayerRecentsToggled: (() -> Unit)? = null
     // GIF search: the emoji layer's GIF key, and a GIF picked in the picker's GIF mode
     var onEmojiLayerGifRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            variationBarView?.onGifSearchRequested = value
+        }
+    // The status bar's and menu's GIF button: the same GIF search
+    private val onGifSearchRequested: (() -> Unit) get() = { onEmojiLayerGifRequested?.invoke() }
     // Symbol search from the SYM symbols pages
     var onSymbolSearchRequested: (() -> Unit)? = null
     private var pendingSymbolSearch: Boolean = false
@@ -530,6 +536,7 @@ class StatusBarController(
             onClipboardRequested = onClipboardRequested,
             onSpeechRecognitionRequested = onSpeechRecognitionRequested,
             onEmojiPickerRequested = onEmojiPickerRequested,
+            onGifSearchRequested = onGifSearchRequested,
             onLanguageSwitchRequested = onLanguageSwitchRequested,
             onHamburgerMenuRequested = onHamburgerMenuRequested,
             onMinimalUiToggleRequested = { handleMinimalUiToggleFromMenu() },

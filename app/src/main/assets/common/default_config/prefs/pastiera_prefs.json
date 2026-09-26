@@ -9,9 +9,21 @@
       "type": "boolean",
       "value": true
     },
+    "pastierina_status_bar_slots_left": {
+      "type": "string",
+      "value": "[\"microphone\"]"
+    },
     "symbols_type_to_search": {
       "type": "boolean",
-      "value": true
+      "value": false
+    },
+    "keyboard_theme_light_hardware": {
+      "type": "string",
+      "value": "{\"background\":-3353892,\"divider\":-6380113,\"normal_key\":-1,\"special_key\":-5261630,\"text_and_icons\":-16777216,\"led_inactive\":-5327424,\"led_active\":-16745729,\"led_locked\":-27392,\"accent\":-16745729,\"cursor_swipe\":-16745729,\"key_popup\":-1,\"key_popup_selected\":-16745729,\"suggestion\":-3353892,\"status_bar_button\":-5261630,\"key_corner_radius_ratio\":0.11800000071525574,\"chrome_corner_radius_ratio\":0.09000000357627869,\"key_height_scale\":1.2588016986846924,\"number_row_height_scale\":0.9711260199546814,\"key_width_scale\":0.9414876699447632,\"row_gap_scale\":1.0499999523162842,\"distribute_horizontal_spacing\":true,\"ortholinear\":false,\"show_leds\":false,\"suggestions_height_scale\":0.8999999761581421,\"variations_height_scale\":0.8799999952316284,\"key_popup_style\":\"classic\",\"key_popup_attached\":true,\"key_popup_tail_enabled\":true,\"key_preview_after_long_press\":false,\"key_alternates_popup_enabled\":true}"
+    },
+    "double_space_to_period": {
+      "type": "boolean",
+      "value": false
     },
     "titan2_elite_straight_outer_buttons": {
       "type": "boolean",
@@ -25,6 +37,10 @@
       "type": "boolean",
       "value": false
     },
+    "led_locked_animation": {
+      "type": "boolean",
+      "value": true
+    },
     "pastierina_mode_override": {
       "type": "string",
       "value": "pastierina"
@@ -32,6 +48,10 @@
     "auto_correct_enabled": {
       "type": "boolean",
       "value": false
+    },
+    "pastierina_status_bar_slots_right": {
+      "type": "string",
+      "value": "[\"hamburger\"]"
     },
     "gifs_enabled": {
       "type": "boolean",
@@ -43,11 +63,15 @@
     },
     "sym_pages_config": {
       "type": "string",
-      "value": "{\"schemaVersion\":2,\"deviceEnabled\":true,\"emojiEnabled\":false,\"symbolsEnabled\":false,\"clipboardEnabled\":false,\"emojiPickerEnabled\":false,\"emojiFirst\":true,\"symPageOrder\":[\"device\",\"emoji\",\"symbols\",\"clipboard\",\"emoji_picker\"]}"
+      "value": "{\"schemaVersion\":2,\"deviceEnabled\":false,\"emojiEnabled\":false,\"symbolsEnabled\":true,\"clipboardEnabled\":false,\"emojiPickerEnabled\":false,\"emojiFirst\":false,\"symPageOrder\":[\"symbols\",\"emoji\",\"device\",\"clipboard\",\"emoji_picker\"]}"
     },
     "app_enter_behavior_enabled": {
       "type": "boolean",
       "value": true
+    },
+    "keyboard_theme_assignment_mode_hardware": {
+      "type": "string",
+      "value": "follow_system"
     },
     "gif_search_enter_picks": {
       "type": "boolean",
@@ -71,7 +95,7 @@
     },
     "custom_device_sym_profiles": {
       "type": "string",
-      "value": "[{\"id\":\"13c3b233\",\"name\":\"Titan 2 Elite (QWERTY) (copy)\",\"match\":[],\"mappings\":{\"KEYCODE_A\":\"*\",\"KEYCODE_B\":\"!\",\"KEYCODE_C\":\"9\",\"KEYCODE_D\":\"5\",\"KEYCODE_E\":\"2\",\"KEYCODE_F\":\"6\",\"KEYCODE_G\":\"\\/\",\"KEYCODE_H\":\":\",\"KEYCODE_I\":\"-\",\"KEYCODE_J\":\"#\",\"KEYCODE_K\":\"'\",\"KEYCODE_L\":\"\\\"\",\"KEYCODE_M\":\".\",\"KEYCODE_N\":\",\",\"KEYCODE_O\":\"+\",\"KEYCODE_P\":\"@\",\"KEYCODE_Q\":\"0\",\"KEYCODE_R\":\"3\",\"KEYCODE_S\":\"4\",\"KEYCODE_T\":\"(\",\"KEYCODE_U\":\"_\",\"KEYCODE_V\":\"?\",\"KEYCODE_W\":\"1\",\"KEYCODE_X\":\"8\",\"KEYCODE_Y\":\")\",\"KEYCODE_Z\":\"7\"}}]"
+      "value": "[]"
     },
     "smart_ctrl_off_after_shortcut": {
       "type": "boolean",
@@ -87,7 +111,7 @@
     },
     "emoji_layer_type_to_search": {
       "type": "boolean",
-      "value": true
+      "value": false
     },
     "alt_shift_layout_switch": {
       "type": "boolean",
@@ -108,6 +132,10 @@
     "use_keyboard_proximity": {
       "type": "boolean",
       "value": true
+    },
+    "keyboard_theme_dark_hardware": {
+      "type": "string",
+      "value": "{\"background\":-14935010,\"divider\":-11908531,\"normal_key\":-12961220,\"special_key\":-13882322,\"text_and_icons\":-1,\"led_inactive\":-12566460,\"led_active\":-16087809,\"led_locked\":-24822,\"accent\":-16087809,\"cursor_swipe\":-16087809,\"key_popup\":-12961220,\"key_popup_selected\":-16087809,\"suggestion\":-14671580,\"status_bar_button\":-13882322,\"key_corner_radius_ratio\":0.11800000071525574,\"chrome_corner_radius_ratio\":0.09000000357627869,\"key_height_scale\":1.2588016986846924,\"number_row_height_scale\":0.9711260199546814,\"key_width_scale\":0.9414876699447632,\"row_gap_scale\":1.0499999523162842,\"distribute_horizontal_spacing\":true,\"ortholinear\":false,\"show_leds\":false,\"suggestions_height_scale\":0.8999999761581421,\"variations_height_scale\":0.8799999952316284,\"key_popup_style\":\"classic\",\"key_popup_attached\":true,\"key_popup_tail_enabled\":true,\"key_preview_after_long_press\":false,\"key_alternates_popup_enabled\":true}"
     },
     "titan2_elite_status_bar_lift_dp": {
       "type": "int",

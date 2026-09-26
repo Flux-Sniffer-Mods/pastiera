@@ -608,16 +608,6 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         )
     ),
     SettingEntry(
-        id = "keyboard_theme.hardware.led_colors",
-        titleRes = R.string.setting_link_theme_hardware_led_colors,
-        route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "keyboard_theme",
-            keyboardThemeTarget = SettingsManager.KeyboardThemeTarget.HARDWARE,
-            keyboardThemeTab = KeyboardThemeEditorTab.Colors
-        )
-    ),
-    SettingEntry(
         id = "keyboard_theme.hardware.assignment",
         titleRes = R.string.setting_link_theme_hardware_assignment,
         route = SettingRoute(
@@ -655,16 +645,6 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
             destination = SettingsDestination.Customization,
             customizationDestination = "keyboard_theme_assignment",
             keyboardThemeTarget = SettingsManager.KeyboardThemeTarget.HARDWARE
-        )
-    ),
-    SettingEntry(
-        id = "keyboard_theme.software.led_colors",
-        titleRes = R.string.setting_link_theme_software_led_colors,
-        route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "keyboard_theme",
-            keyboardThemeTarget = SettingsManager.KeyboardThemeTarget.SOFTWARE,
-            keyboardThemeTab = KeyboardThemeEditorTab.Colors
         )
     ),
     SettingEntry(

@@ -919,9 +919,8 @@ object SettingLinkRegistry {
             SettingLinkIds.KEYBOARD_THEME_LED_COLORS,
             R.string.keyboard_theme_wizard_leds,
             R.string.keyboard_theme_wizard_leds_description,
-            destination = SettingsDestination.Customization,
-            customizationDestination = SettingsActivity.CUSTOMIZATION_DESTINATION_KEYBOARD_THEME,
-            keyboardThemeTab = KeyboardThemeEditorTab.Colors
+            // LED colours moved to Look & sound > Status LED colours
+            destination = SettingsDestination.LedColors
         ),
 
         // Modifier indicator chips (rendered on the modifiers screen)

@@ -51,6 +51,9 @@ object RecommendedSettings {
         add(switch(R.string.emoji_key_auto_close_title, SettingsManager::getEmojiKeyAutoClose, SettingsManager::setEmojiKeyAutoClose))
         add(switch(R.string.sym_auto_close_title, SettingsManager::getSymAutoClose, SettingsManager::setSymAutoClose))
         add(switch(R.string.emoji_profiles_switch_by_app_title, EmojiLayerProfiles::switchByApp, EmojiLayerProfiles::setSwitchByApp))
+        // Letters on the emoji layer and symbols pages type their mappings; search is a tap away
+        add(switch(R.string.flux_type_to_search_layer_title, SettingsManager::getEmojiLayerTypeToSearch, SettingsManager::setEmojiLayerTypeToSearch, on = false))
+        add(switch(R.string.flux_type_to_search_symbols_title, SettingsManager::getSymbolsTypeToSearch, SettingsManager::setSymbolsTypeToSearch, on = false))
 
         // Apps: the same shortcuts everywhere, Enter by app, terminals
         add(switch(R.string.app_shortcuts_enabled_title, { AppShortcutSettings.config(it).enabled }, AppShortcutSettings::setEnabled))

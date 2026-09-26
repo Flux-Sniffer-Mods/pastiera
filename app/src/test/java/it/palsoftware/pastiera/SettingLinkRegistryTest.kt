@@ -224,11 +224,11 @@ class SettingLinkRegistryTest {
     }
 
     @Test
-    fun ledColorsRouteToColorsTab() {
+    fun ledColorsRouteToStatusLedColours() {
         val route = requireNotNull(
             SettingLinkRegistry.byId(SettingLinkIds.KEYBOARD_THEME_LED_COLORS)
         ).route
 
-        assertEquals(KeyboardThemeEditorTab.Colors, route.keyboardThemeTab)
+        assertEquals(SettingsDestination.LedColors, route.destination)
     }
 }

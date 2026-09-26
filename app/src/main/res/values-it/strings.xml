@@ -958,6 +958,8 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="status_bar_button_settings_description">Apri impostazioni</string>
     <string name="status_bar_button_symbols">Simboli</string>
     <string name="status_bar_button_symbols_description">Tastiera simboli</string>
+    <string name="status_bar_button_gif">GIF</string>
+    <string name="status_bar_button_gif_description">Cerca GIF</string>
     <string name="status_bar_button_undo">Annulla</string>
     <string name="status_bar_button_undo_description">Invia Ctrl+Z</string>
     <string name="status_bar_button_redo">Ripeti</string>

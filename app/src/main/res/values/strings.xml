@@ -1612,6 +1612,8 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="status_bar_button_settings_description">Open settings</string>
     <string name="status_bar_button_symbols">Symbols</string>
     <string name="status_bar_button_symbols_description">Symbols keyboard</string>
+    <string name="status_bar_button_gif">GIFs</string>
+    <string name="status_bar_button_gif_description">GIF search</string>
     <string name="status_bar_button_undo">Undo</string>
     <string name="status_bar_button_undo_description">Send Ctrl+Z</string>
     <string name="status_bar_button_redo">Redo</string>

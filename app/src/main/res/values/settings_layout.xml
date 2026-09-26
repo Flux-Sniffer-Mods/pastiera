@@ -10,7 +10,7 @@
     <string name="settings_emoji_symbols_gifs_title">Emoji, symbols &amp; GIFs</string>
     <string name="settings_emoji_symbols_gifs_description">Emoji key and layer, the picker, symbol and GIF search</string>
     <string name="settings_look_sound_title">Look &amp; sound</string>
-    <string name="settings_look_sound_description">Theme and LED colours, status bar, sound and haptics</string>
+    <string name="settings_look_sound_description">Theme, status LEDs, status bar, sound and haptics</string>
     <string name="settings_trackpad_gestures_title">Trackpad &amp; gestures</string>
     <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words; the status bar swipe pad</string>
     <string name="settings_apps_title">Apps</string>
@@ -29,8 +29,8 @@
     <string name="settings_text_expansion_hub_description">Snippets, and emoji and symbol shortcodes</string>
     <string name="settings_section_enter">Enter</string>
 
-    <string name="settings_theme_led_colours_title">Theme &amp; LED colours</string>
-    <string name="settings_theme_led_colours_description">Keyboard colours, key shapes and the modifier LEDs</string>
+    <string name="settings_theme_led_colours_title">Theme</string>
+    <string name="settings_theme_led_colours_description">Keyboard colours and key shapes</string>
     <string name="settings_section_status_bar">Status bar</string>
     <string name="settings_section_sound_popups">Sound &amp; popups</string>
     <string name="settings_variations_popup_description">The characters offered when you hold a key</string>

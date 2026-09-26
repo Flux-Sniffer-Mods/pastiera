@@ -1968,10 +1968,7 @@ private fun KeyboardThemeDraftColorsEditor(
         KeyboardThemeDraftColorItem(DRAFT_STATUS_BUTTON, stringResource(R.string.keyboard_theme_status_bar_buttons), theme.statusBarButton) { theme.copy(statusBarButton = it) },
         KeyboardThemeDraftColorItem(DRAFT_CURSOR_SWIPE, stringResource(R.string.keyboard_theme_cursor_swipe), theme.cursorSwipe) { theme.copy(cursorSwipe = it) },
         KeyboardThemeDraftColorItem(DRAFT_KEY_POPUP, stringResource(R.string.keyboard_theme_key_popup), theme.keyPopup) { theme.copy(keyPopup = it) },
-        KeyboardThemeDraftColorItem(DRAFT_KEY_POPUP_SELECTED, stringResource(R.string.keyboard_theme_key_popup_selected), theme.keyPopupSelected) { theme.copy(keyPopupSelected = it) },
-        KeyboardThemeDraftColorItem(DRAFT_LED_INACTIVE, stringResource(R.string.keyboard_theme_led_inactive), theme.ledInactive) { theme.copy(ledInactive = it) },
-        KeyboardThemeDraftColorItem(DRAFT_LED_ACTIVE, stringResource(R.string.keyboard_theme_led_active), theme.ledActive) { theme.copy(ledActive = it) },
-        KeyboardThemeDraftColorItem(DRAFT_LED_LOCKED, stringResource(R.string.keyboard_theme_led_locked), theme.ledLocked) { theme.copy(ledLocked = it) }
+        KeyboardThemeDraftColorItem(DRAFT_KEY_POPUP_SELECTED, stringResource(R.string.keyboard_theme_key_popup_selected), theme.keyPopupSelected) { theme.copy(keyPopupSelected = it) }
     )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items.chunked(2).forEach { rowItems ->
@@ -1985,12 +1982,7 @@ private fun KeyboardThemeDraftColorsEditor(
                         color = item.color,
                         populated = item.field in populatedFields,
                         onColorChanged = { color -> onFieldChanged(item.field, item.onColorChanged(color)) },
-                        modifier = Modifier.weight(1f),
-                        linkId = if (item.field == DRAFT_LED_INACTIVE) {
-                            "keyboard_theme.software.led_colors"
-                        } else {
-                            null
-                        }
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 if (rowItems.size == 1) Box(modifier = Modifier.weight(1f))
@@ -2228,35 +2220,6 @@ private fun KeyboardThemeColorsEditor(
                 )
             )
         }
-        add(
-            KeyboardThemeColorEditorItem(
-                label = stringResource(R.string.keyboard_theme_led_inactive),
-                color = theme.ledInactive,
-                presetColor = preset.ledInactive,
-                onColorChanged = { onThemeChanged(theme.copy(ledInactive = it)) },
-                linkId = if (LocalSettingHighlightId.current == SettingLinkIds.KEYBOARD_THEME_LED_COLORS) {
-                    SettingLinkIds.KEYBOARD_THEME_LED_COLORS
-                } else {
-                    if (isSoftware) "keyboard_theme.software.led_colors" else "keyboard_theme.hardware.led_colors"
-                }
-            )
-        )
-        add(
-            KeyboardThemeColorEditorItem(
-                label = stringResource(R.string.keyboard_theme_led_active),
-                color = theme.ledActive,
-                presetColor = preset.ledActive,
-                onColorChanged = { onThemeChanged(theme.copy(ledActive = it)) }
-            )
-        )
-        add(
-            KeyboardThemeColorEditorItem(
-                label = stringResource(R.string.keyboard_theme_led_locked),
-                color = theme.ledLocked,
-                presetColor = preset.ledLocked,
-                onColorChanged = { onThemeChanged(theme.copy(ledLocked = it)) }
-            )
-        )
     }
 
     Column(

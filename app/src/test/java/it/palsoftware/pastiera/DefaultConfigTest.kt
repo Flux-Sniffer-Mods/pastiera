@@ -30,6 +30,9 @@ class DefaultConfigTest {
         assertFalse(SettingsManager.getEmojiSuggestionsEnabled(context))
         assertTrue(SettingsManager.getLedIndividualColorsEnabled(context))
         assertEquals(listOf("com.termux.x11", "bitpit.launcher"), SettingsManager.getHiddenKeyboardApps(context))
+        // Letters on the emoji layer and symbols pages type their mappings, not a search
+        assertFalse(SettingsManager.getEmojiLayerTypeToSearch(context))
+        assertFalse(SettingsManager.getSymbolsTypeToSearch(context))
     }
 
     @Test

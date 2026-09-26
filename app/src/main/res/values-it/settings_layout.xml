@@ -9,7 +9,7 @@
     <string name="settings_emoji_symbols_gifs_title">Emoji, simboli e GIF</string>
     <string name="settings_emoji_symbols_gifs_description">Tasto e livello emoji, selettore, ricerca simboli e GIF</string>
     <string name="settings_look_sound_title">Aspetto e suono</string>
-    <string name="settings_look_sound_description">Tema e colori dei LED, barra di stato, suono e vibrazione</string>
+    <string name="settings_look_sound_description">Tema, LED di stato, barra di stato, suono e vibrazione</string>
     <string name="settings_trackpad_gestures_title">Trackpad e gesti</string>
     <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole; lo swipe pad della barra di stato</string>
     <string name="settings_apps_title">App</string>
@@ -28,8 +28,8 @@
     <string name="settings_text_expansion_hub_description">Snippet e codici brevi per emoji e simboli</string>
     <string name="settings_section_enter">Invio</string>
 
-    <string name="settings_theme_led_colours_title">Tema e colori dei LED</string>
-    <string name="settings_theme_led_colours_description">Colori della tastiera, forma dei tasti e LED dei modificatori</string>
+    <string name="settings_theme_led_colours_title">Tema</string>
+    <string name="settings_theme_led_colours_description">Colori della tastiera e forma dei tasti</string>
     <string name="settings_section_status_bar">Barra di stato</string>
     <string name="settings_section_sound_popups">Suono e popup</string>
     <string name="settings_variations_popup_description">I caratteri proposti tenendo premuto un tasto</string>
