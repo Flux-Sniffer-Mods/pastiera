@@ -780,6 +780,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
 
     @Test
     fun deviceSanity_symACyclesDeviceThenEmojiThenSymbols_exactMappings() {
+        // This checks A's mapping on each page: the search key (A by default) is off here
+        SettingsManager.setSearchKey(RuntimeEnvironment.getApplication(), KeyEvent.KEYCODE_UNKNOWN)
         val t0 = 4_000L
 
         tapSym(t0)

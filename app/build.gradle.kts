@@ -271,6 +271,11 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // File names with non-ASCII characters (layout names) need a UTF-8 locale on every host
+        unitTests.all { test ->
+            test.environment("LC_ALL", "C.UTF-8")
+            test.environment("LANG", "C.UTF-8")
+        }
     }
 }
 

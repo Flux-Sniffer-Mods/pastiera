@@ -3,6 +3,7 @@ package it.palsoftware.pastiera.shortcuts
 import android.content.Context
 import android.view.KeyEvent
 import it.palsoftware.pastiera.SettingsManager
+import it.palsoftware.pastiera.backup.BackupPreferenceContract
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -56,5 +57,12 @@ class AppShortcutSettingsTest {
         assertTrue(AppShortcutSettings.parseApps("not json").isEmpty())
         val parsed = AppShortcutSettings.parseApps("""{"com.a":{"map":{"Nope":"ctrl:29","Search":"bad"}}}""")
         assertEquals(AppShortcutAppSettings(), parsed["com.a"])
+    }
+
+    @Test
+    fun settingsAreInBackups() {
+        listOf(AppShortcutSettings.KEY_ENABLED, AppShortcutSettings.KEY_SUGGESTIONS, AppShortcutSettings.KEY_APPS).forEach {
+            assertTrue(it, BackupPreferenceContract.isExportable("pastiera_prefs", it))
+        }
     }
 }
