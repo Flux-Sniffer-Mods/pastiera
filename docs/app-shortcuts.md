@@ -131,6 +131,27 @@ chat-room apps by download count; Bluesky and Mastodon rank below its top 100.
 
 **Weather:** Weather (1B+), The Weather Channel (100M+), Weather & Radar Forecast (100M+), AccuWeather (100M+), 1Weather Forecasts & Radar (100M+), Weather (100M+), Weather Radar (50M+), Transparent clock and weather (50M+), Yandex Weather & Rain Radar (50M+), Windy.com (50M+)
 
+## Enter by category
+
+Settings > Apps > Enter per app, next to App shortcuts, uses the same app list. Each app gets a standard from its Play category, and per-app overrides always win.
+
+| Standard | Apps | What Enter does |
+| --- | --- | --- |
+| Chat | Social, Dating and Communication apps, plus chat apps ranked elsewhere (Telegram, Signal, Discord, Slack, Teams, Google Chat, Viber, LINE, KakaoTalk, WeChat, Element, Threema, LinkedIn, Zoom) | Your messaging preset (by default Enter sends, Shift+Enter is a new line), only in fields whose IME action is Send. Post composers, bios and note fields don't declare Send, so Enter stays a new line there. |
+| Email | Gmail, Outlook | Enter is a new line, Ctrl+Enter sends (the send shortcut both document). |
+| App default | Everything else, including Chrome, Contacts, Truecaller and the dialer (listed under Communication but not chats) | The app's own Enter: new line, search, next field. |
+
+The native defaults the standards follow:
+
+- WhatsApp: Settings > Chats > "Enter is send".
+- Telegram: Settings > Chat settings > "Send by Enter".
+- Signal: Settings > Chats > "Send with enter".
+- Google Messages: Settings > "Press Enter to send".
+- Discord: Enter is a new line on Android; the send button sends.
+- Gmail and Outlook: Ctrl+Enter sends from compose.
+
+The curated messengers (WhatsApp, Telegram, Signal, Discord, Element, Google Messages, Threema, Instagram and Messenger) keep their tested strategies. Installed apps under a standard are listed on the screen; tapping one turns it into an override you can change.
+
 ## Research: which apps document Android keyboard shortcuts
 
 Only shortcuts an app documents for Android, or ships in its own source code,

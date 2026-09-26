@@ -42,8 +42,7 @@ fun TextInputSettingsScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
     page: TextInputPage = TextInputPage.CapitalisationPunctuation,
-    onNavModeSettingsClick: () -> Unit = {},
-    onEnterBehaviorClick: () -> Unit = {}
+    onNavModeSettingsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showTextExpansion by remember { mutableStateOf(settingsChild(context, "text") == "expansion") }
@@ -586,13 +585,6 @@ fun TextInputSettingsScreen(
                 }
             }
 
-            SettingsSectionHeader(text = stringResource(R.string.settings_section_enter))
-            SettingsNavigationRow(
-                title = stringResource(R.string.app_enter_behaviour_title),
-                description = stringResource(R.string.app_enter_behaviour_description),
-                linkId = SettingLinkIds.MAIN_APP_ENTER_BEHAVIOR,
-                onClick = onEnterBehaviorClick
-            )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

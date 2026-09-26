@@ -302,6 +302,15 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         )
     ),
     SettingEntry(
+        id = "app_enter_behavior.standards",
+        titleRes = R.string.enter_standards_title,
+        summaryRes = R.string.enter_standards_description,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "app_enter_behavior"
+        )
+    ),
+    SettingEntry(
         id = "sounds.typing_mode",
         titleRes = R.string.typing_sound_title,
         route = SettingRoute(

@@ -52,6 +52,7 @@ import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import it.palsoftware.pastiera.BuildConfig
+import it.palsoftware.pastiera.AppEnterStandards
 import it.palsoftware.pastiera.R
 import it.palsoftware.pastiera.inputmethod.NotificationHelper
 import it.palsoftware.pastiera.core.AutoCorrectionManager
@@ -896,7 +897,16 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (override != null && override != SettingsManager.ENTER_BEHAVIOR_APP_DEFAULT) {
             return override
         }
-        if (packageName !in MESSENGER_ENTER_BEHAVIOR_PACKAGES) return null
+        if (packageName !in MESSENGER_ENTER_BEHAVIOR_PACKAGES) {
+            // An app you set to "App default" keeps its own Enter
+            if (override != null) return null
+            // Every other app follows its category's standard (AppEnterStandards)
+            return AppEnterStandards.behaviorFor(
+                packageName,
+                SettingsManager.getAppEnterBehaviorPreset(this),
+                fieldSends = resolveEditorAction(info) == EditorInfo.IME_ACTION_SEND
+            )
+        }
 
         return when (SettingsManager.getAppEnterBehaviorPreset(this)) {
             SettingsManager.ENTER_BEHAVIOR_PRESET_ENTER_SEND_SHIFT_NEWLINE ->
@@ -940,7 +950,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             packageName in ENTER_BEHAVIOR_SEND_ACTION_PACKAGES ->
                 SettingsManager.ENTER_SEND_STRATEGY_EDITOR_ACTION
             override != null -> SettingsManager.ENTER_SEND_STRATEGY_EDITOR_ACTION
-            else -> null
+            else -> AppEnterStandards.sendStrategyFor(packageName)
         }
     }
 

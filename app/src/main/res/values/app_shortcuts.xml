@@ -97,4 +97,9 @@
     <string name="app_shortcuts_category_weather">Weather</string>
     <string name="app_shortcuts_category_terminal">Terminal</string>
     <string name="app_shortcuts_category_other">Added by you</string>
+    <string name="enter_standards_title">Standard by category</string>
+    <string name="enter_standards_description">Installed apps from the app shortcut list follow their category: chat and social apps use your messaging preset in message boxes (post and note fields keep Enter as a new line), email apps use Ctrl+Enter to send, and other apps keep their own Enter. Tap an app to fine-tune it.</string>
+    <string name="enter_standards_empty">No other installed chat or email apps from the list.</string>
+    <string name="enter_standard_chat">Chat: %1$s in message boxes</string>
+    <string name="enter_standard_email">Email: Enter is a new line, Ctrl+Enter sends</string>
 </resources>

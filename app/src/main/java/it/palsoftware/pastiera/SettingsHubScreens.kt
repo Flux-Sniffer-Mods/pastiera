@@ -205,6 +205,13 @@ fun AppsHubScreen(
             onClick = { onNavigate(SettingsDestination.AppShortcuts) }
         )
         SettingsCategoryRow(
+            icon = Icons.AutoMirrored.Filled.KeyboardReturn,
+            title = stringResource(R.string.app_enter_behaviour_title),
+            description = stringResource(R.string.app_enter_behaviour_description),
+            linkId = SettingLinkIds.MAIN_APP_ENTER_BEHAVIOR,
+            onClick = { onOpenCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_APP_ENTER_BEHAVIOR) }
+        )
+        SettingsCategoryRow(
             icon = Icons.AutoMirrored.Filled.ManageSearch,
             title = stringResource(R.string.starter_launcher_shortcuts_title),
             description = stringResource(R.string.settings_quick_launcher_description),

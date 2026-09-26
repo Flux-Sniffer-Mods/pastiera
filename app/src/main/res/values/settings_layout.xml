@@ -14,7 +14,7 @@
     <string name="settings_trackpad_gestures_title">Trackpad &amp; gestures</string>
     <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words</string>
     <string name="settings_apps_title">Apps</string>
-    <string name="settings_apps_description">App shortcuts, Quick Launcher, hidden keyboard apps, Linux desktop</string>
+    <string name="settings_apps_description">App shortcuts, Enter per app, Quick Launcher, hidden keyboard apps, Linux desktop</string>
     <string name="settings_privacy_system_title">Privacy &amp; system</string>
     <string name="settings_privacy_system_description">Offline mode, backup, clipboard, accessibility, updates, about</string>
 
@@ -24,7 +24,7 @@
     <string name="settings_capitalisation_punctuation_title">Capitals &amp; punctuation</string>
     <string name="settings_capitalisation_punctuation_description">Capital letters, spacing, dashes and quotes</string>
     <string name="settings_editing_keys_title">Editing keys</string>
-    <string name="settings_editing_keys_description">Backspace combinations and Enter per app</string>
+    <string name="settings_editing_keys_description">Backspace combinations and navigation</string>
     <string name="settings_auto_correction_description">Replacements, suggestions and dictionaries</string>
     <string name="settings_text_expansion_hub_description">Snippets, and emoji and symbol shortcodes</string>
     <string name="settings_section_enter">Enter</string>

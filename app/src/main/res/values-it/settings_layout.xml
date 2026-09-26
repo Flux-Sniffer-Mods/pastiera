@@ -13,7 +13,7 @@
     <string name="settings_trackpad_gestures_title">Trackpad e gesti</string>
     <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole</string>
     <string name="settings_apps_title">App</string>
-    <string name="settings_apps_description">Scorciatoie delle app, QuickLauncher, app con tastiera nascosta, desktop Linux</string>
+    <string name="settings_apps_description">Scorciatoie delle app, Invio per app, QuickLauncher, app con tastiera nascosta, desktop Linux</string>
     <string name="settings_privacy_system_title">Privacy e sistema</string>
     <string name="settings_privacy_system_description">Modalità offline, backup, appunti, accessibilità, aggiornamenti, informazioni</string>
 
@@ -23,7 +23,7 @@
     <string name="settings_capitalisation_punctuation_title">Maiuscole e punteggiatura</string>
     <string name="settings_capitalisation_punctuation_description">Lettere maiuscole, spazi, trattini e virgolette</string>
     <string name="settings_editing_keys_title">Tasti di modifica</string>
-    <string name="settings_editing_keys_description">Combinazioni di Backspace e Invio per app</string>
+    <string name="settings_editing_keys_description">Combinazioni di Backspace e navigazione</string>
     <string name="settings_auto_correction_description">Sostituzioni, suggerimenti e dizionari</string>
     <string name="settings_text_expansion_hub_description">Snippet e codici brevi per emoji e simboli</string>
     <string name="settings_section_enter">Invio</string>

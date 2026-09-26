@@ -228,10 +228,7 @@ fun SettingsScreen(
                     modifier = modifier,
                     onBack = { navigateBack() },
                     page = TextInputPage.EditingKeys,
-                    onNavModeSettingsClick = { navigateToNavMode(null) },
-                    onEnterBehaviorClick = {
-                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_APP_ENTER_BEHAVIOR)
-                    }
+                    onNavModeSettingsClick = { navigateToNavMode(null) }
                 )
             }
             SettingsDestination.TextExpansion -> {
