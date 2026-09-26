@@ -239,6 +239,13 @@ fun AppsHubScreen(
 
         SettingsSectionDivider(stringResource(R.string.settings_section_terminals))
         SettingsCategoryRow(
+            icon = Icons.Filled.Code,
+            title = stringResource(R.string.exact_typing_title),
+            description = stringResource(R.string.exact_typing_description),
+            linkId = SettingLinkIds.MAIN_EXACT_TYPING,
+            onClick = { onNavigate(SettingsDestination.ExactTyping) }
+        )
+        SettingsCategoryRow(
             icon = Icons.Filled.Terminal,
             title = stringResource(R.string.terminal_mode_title),
             description = stringResource(R.string.terminal_mode_description),
@@ -564,6 +571,62 @@ fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 showPicker = false
                 apps = apps + app.packageName
                 SettingsManager.setTerminalModeApps(context, apps)
+            },
+            onDismiss = { showPicker = false }
+        )
+    }
+}
+
+/**
+ * Exact typing (Settings > Apps): in the apps you pick (SSH clients, code editors, AI agents),
+ * every character stays as typed. Suggestions still show and only apply when you pick one.
+ */
+@Composable
+fun ExactTypingScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var apps by remember { mutableStateOf(SettingsManager.getExactTypingApps(context)) }
+    var noSuggestionFields by remember { mutableStateOf(SettingsManager.getExactTypingForNoSuggestionFields(context)) }
+    var showPicker by remember { mutableStateOf(false) }
+    val installed = remember { AppListHelper.getInstalledApps(context).associate { it.packageName to it.appName } }
+    FluxScreenScaffold(stringResource(R.string.exact_typing_title), onBack, modifier) {
+        FluxNote(stringResource(R.string.exact_typing_note))
+        FluxSwitchRow(
+            linkId = SettingLinkIds.EXACT_TYPING_NO_SUGGESTION_FIELDS,
+            title = stringResource(R.string.exact_typing_no_suggestions_title),
+            description = stringResource(R.string.exact_typing_no_suggestions_description),
+            checked = noSuggestionFields,
+            onCheckedChange = {
+                noSuggestionFields = it
+                SettingsManager.setExactTypingForNoSuggestionFields(context, it)
+            }
+        )
+        SettingsSectionDivider(stringResource(R.string.exact_typing_apps))
+        apps.forEach { packageName ->
+            FluxActionRow(
+                linkId = null,
+                title = installed[packageName] ?: packageName,
+                description = stringResource(R.string.terminal_mode_remove_app, packageName),
+                onClick = {
+                    apps = apps - packageName
+                    SettingsManager.setExactTypingApps(context, apps)
+                }
+            )
+        }
+        FluxActionRow(
+            linkId = null,
+            title = stringResource(R.string.exact_typing_add_app),
+            description = stringResource(R.string.exact_typing_add_app_description),
+            onClick = { showPicker = true }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+    if (showPicker) {
+        AppPickerDialog(
+            excludePackages = remember(apps) { apps.toSet() },
+            onAppSelected = { app ->
+                showPicker = false
+                apps = apps + app.packageName
+                SettingsManager.setExactTypingApps(context, apps)
             },
             onDismiss = { showPicker = false }
         )

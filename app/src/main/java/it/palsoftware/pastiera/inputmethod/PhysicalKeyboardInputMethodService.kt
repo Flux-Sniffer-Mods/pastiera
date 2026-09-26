@@ -445,7 +445,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         get() = if (::symLayoutController.isInitialized) symLayoutController.currentSymPage() else 0
 
     private fun updateInputContextState(info: EditorInfo?) {
-        inputContextState = InputContextState.fromEditorInfo(info)
+        val state = InputContextState.fromEditorInfo(info)
+        inputContextState = if (info != null && SettingsManager.isExactTypingField(this, info.packageName, info.inputType)) {
+            state.copy(exactTyping = true)
+        } else {
+            state
+        }
     }
 
     private fun markSelectionUpdateSkipAfterCommit() {
@@ -820,18 +825,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     private fun getSuggestionSettings(): SuggestionSettings {
         val suggestionsEnabled = SettingsManager.getSuggestionsEnabled(this)
+        // Exact typing: suggestions stay, but nothing rewrites or spaces what you typed
+        val exact = inputContextState.exactTyping
         return SuggestionSettings(
-            textReplacementsEnabled = SettingsManager.getAutoCorrectEnabled(this),
+            textReplacementsEnabled = SettingsManager.getAutoCorrectEnabled(this) && !exact,
             suggestionsEnabled = suggestionsEnabled,
             accentMatching = SettingsManager.getAccentMatchingEnabled(this),
-            autoReplaceOnSpaceEnter = SettingsManager.getAutoReplaceOnSpaceEnter(this),
+            autoReplaceOnSpaceEnter = SettingsManager.getAutoReplaceOnSpaceEnter(this) && !exact,
             maxAutoReplaceDistance = SettingsManager.getMaxAutoReplaceDistance(this),
             maxSuggestions = 3,
             useKeyboardProximity = SettingsManager.getUseKeyboardProximity(this),
             useEditTypeRanking = SettingsManager.getUseEditTypeRanking(this),
             frenchPunctuationSpacing = SettingsManager.shouldApplyFrenchPunctuationSpacing(this),
-            commaSpace = SettingsManager.getCommaSpace(this),
-            autoSpacePunctuation = SettingsManager.getAutoSpacePunctuation(this)
+            commaSpace = SettingsManager.getCommaSpace(this) && !exact,
+            autoSpacePunctuation = if (exact) "" else SettingsManager.getAutoSpacePunctuation(this)
         )
     }
 

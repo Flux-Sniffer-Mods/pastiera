@@ -210,4 +210,12 @@
     <string name="default_config_apply">Replace my settings</string>
     <string name="default_config_applied">Default configuration applied</string>
     <string name="default_config_failed">Couldn\'t apply the default configuration</string>
+    <string name="exact_typing_title">Exact typing</string>
+    <string name="exact_typing_description">Apps where what you type stays as typed: SSH, code, AI agents</string>
+    <string name="exact_typing_note">In these apps nothing rewrites what you type: no auto-correct, text replacements, auto-capitals, double-space full stop or automatic spaces. Suggestions still show, and only change a word when you pick one.</string>
+    <string name="exact_typing_no_suggestions_title">Also where apps ask for no suggestions</string>
+    <string name="exact_typing_no_suggestions_description">Fields that tell keyboards not to suggest (code editors, terminals, some search boxes) get exact typing too</string>
+    <string name="exact_typing_apps">Apps</string>
+    <string name="exact_typing_add_app">Add an app</string>
+    <string name="exact_typing_add_app_description">Choose an app where every character should stay as typed</string>
 </resources>

@@ -348,6 +348,8 @@ internal object BackupPreferenceContract {
             "default_config_applied" to PreferenceValueType.BOOLEAN,
             "terminal_mode_enabled" to PreferenceValueType.BOOLEAN,
             "terminal_mode_apps" to PreferenceValueType.STRING,
+            "exact_typing_apps" to PreferenceValueType.STRING,
+            "exact_typing_no_suggestions" to PreferenceValueType.BOOLEAN,
             "app_shortcuts_enabled" to PreferenceValueType.BOOLEAN,
             "app_shortcuts_suggestions" to PreferenceValueType.BOOLEAN,
             "app_shortcuts_apps" to PreferenceValueType.STRING,

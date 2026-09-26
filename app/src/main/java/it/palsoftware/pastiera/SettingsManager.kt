@@ -156,6 +156,8 @@ object SettingsManager {
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
     private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
     private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
+    private const val KEY_EXACT_TYPING_APPS = "exact_typing_apps" // Apps where every character stays as typed
+    private const val KEY_EXACT_TYPING_NO_SUGGESTIONS = "exact_typing_no_suggestions" // Honour the app's no-suggestions flag
     private const val KEY_TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode_hide_keyboard"
     private const val KEY_TERMINAL_MODE_EMOJI_KEY = "terminal_mode_emoji_key"
     const val TERMUX_PACKAGE = "com.termux"
@@ -5443,6 +5445,29 @@ object SettingsManager {
         val clean = packages.joinToString("\n").let(::parsePackageList)
         getPreferences(context).edit().putString(KEY_TERMINAL_MODE_APPS, clean.joinToString("\n")).apply()
     }
+
+    /** Apps where Pastiera types exactly what you key: no auto-correct, replacements or auto-capitals. */
+    fun getExactTypingApps(context: Context): List<String> =
+        parsePackageList(getPreferences(context).getString(KEY_EXACT_TYPING_APPS, "") ?: "")
+
+    fun setExactTypingApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit().putString(KEY_EXACT_TYPING_APPS, clean.joinToString("\n")).apply()
+    }
+
+    /** Fields that ask for no suggestions (TYPE_TEXT_FLAG_NO_SUGGESTIONS) also get exact typing. Off by default. */
+    fun getExactTypingForNoSuggestionFields(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, false)
+
+    fun setExactTypingForNoSuggestionFields(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, enabled).apply()
+    }
+
+    /** Exact typing applies to this field: its app is on the list, or it asks for no suggestions and that's honoured. */
+    fun isExactTypingField(context: Context, packageName: String?, inputType: Int): Boolean =
+        (!packageName.isNullOrBlank() && packageName in getExactTypingApps(context)) ||
+            (getExactTypingForNoSuggestionFields(context) &&
+                (inputType and android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0)
 
     /** Terminal mode applies to [packageName] (never while Pastiera is hidden for it). */
     fun isTerminalModeApp(context: Context, packageName: String?): Boolean =

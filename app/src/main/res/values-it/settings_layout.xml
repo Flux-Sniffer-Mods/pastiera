@@ -205,4 +205,12 @@
     <string name="default_config_apply">Sostituisci le mie impostazioni</string>
     <string name="default_config_applied">Configurazione predefinita applicata</string>
     <string name="default_config_failed">Impossibile applicare la configurazione predefinita</string>
+    <string name="exact_typing_title">Digitazione esatta</string>
+    <string name="exact_typing_description">App in cui ciò che scrivi resta com\'è: SSH, codice, agenti AI</string>
+    <string name="exact_typing_note">In queste app niente modifica ciò che scrivi: niente correzione automatica, sostituzioni, maiuscole automatiche, punto con doppio spazio o spazi automatici. I suggerimenti restano e cambiano una parola solo quando ne scegli uno.</string>
+    <string name="exact_typing_no_suggestions_title">Anche dove le app chiedono niente suggerimenti</string>
+    <string name="exact_typing_no_suggestions_description">I campi che chiedono alle tastiere di non suggerire (editor di codice, terminali, alcune ricerche) usano anche la digitazione esatta</string>
+    <string name="exact_typing_apps">App</string>
+    <string name="exact_typing_add_app">Aggiungi un\'app</string>
+    <string name="exact_typing_add_app_description">Scegli un\'app in cui ogni carattere deve restare com\'è</string>
 </resources>

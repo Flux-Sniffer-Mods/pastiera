@@ -38,6 +38,8 @@ object SettingLinkIds {
     const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
     const val MAIN_DEVELOPER = "main.developer"
     const val MAIN_TERMINAL_MODE = "main.terminal_mode"
+    const val MAIN_EXACT_TYPING = "main.exact_typing"
+    const val EXACT_TYPING_NO_SUGGESTION_FIELDS = "exact_typing.no_suggestion_fields"
     const val PRIVACY_INCOGNITO_ALWAYS = "privacy.incognito_always"
     const val PRIVACY_PASTE_SUGGESTION = "privacy.paste_suggestion"
     const val PRIVACY_INCOGNITO_FOLLOW_APPS = "privacy.incognito_follow_apps"
@@ -1076,7 +1078,8 @@ object SettingLinkRegistry {
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
         SettingsDestination.LedColors to R.string.led_colors_title,
         SettingsDestination.EmojiProfiles to R.string.emoji_profiles_title,
-        SettingsDestination.TerminalMode to R.string.terminal_mode_title
+        SettingsDestination.TerminalMode to R.string.terminal_mode_title,
+        SettingsDestination.ExactTyping to R.string.exact_typing_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

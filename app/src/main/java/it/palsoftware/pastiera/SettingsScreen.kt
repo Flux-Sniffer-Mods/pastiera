@@ -80,7 +80,8 @@ enum class SettingsDestination {
     Apps,
     AppShortcuts,
     Developer,
-    TerminalMode
+    TerminalMode,
+    ExactTyping
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -258,6 +259,9 @@ fun SettingsScreen(
             }
             SettingsDestination.TerminalMode -> {
                 TerminalModeScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.ExactTyping -> {
+                ExactTypingScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.Developer -> {
                 DeveloperOptionsScreen(modifier = modifier, onBack = { navigateBack() })
