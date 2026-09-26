@@ -157,6 +157,7 @@ object SettingsManager {
     private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
     private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
     private const val KEY_TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode_hide_keyboard"
+    private const val KEY_TERMINAL_MODE_EMOJI_KEY = "terminal_mode_emoji_key"
     const val TERMUX_PACKAGE = "com.termux"
     // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
@@ -5413,6 +5414,14 @@ object SettingsManager {
 
     fun setTerminalModeHideKeyboard(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_HIDE_KEYBOARD, enabled).apply()
+    }
+
+    /** What the emoji key does in terminal mode, a TerminalMode.EmojiKeyAction id. */
+    fun getTerminalModeEmojiKeyAction(context: Context): String =
+        getPreferences(context).getString(KEY_TERMINAL_MODE_EMOJI_KEY, "emoji_picker") ?: "emoji_picker"
+
+    fun setTerminalModeEmojiKeyAction(context: Context, id: String) {
+        getPreferences(context).edit().putString(KEY_TERMINAL_MODE_EMOJI_KEY, id).apply()
     }
 
     fun setTerminalModeEnabled(context: Context, enabled: Boolean) {

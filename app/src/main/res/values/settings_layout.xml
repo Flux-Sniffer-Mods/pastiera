@@ -184,4 +184,15 @@
     <string name="titan2_elite_section_status_bar">Rounded status bar</string>
     <string name="titan2_elite_section_screen">Screen fit</string>
     <string name="titan2_elite_section_calibration">Calibration</string>
+    <string name="terminal_mode_emoji_key_title">Emoji key</string>
+    <string name="terminal_mode_emoji_key_description">What your emoji key does in terminals</string>
+    <string name="terminal_emoji_key_picker">Emoji picker (as elsewhere)</string>
+    <string name="terminal_emoji_key_esc">Esc</string>
+    <string name="terminal_emoji_key_tab">Tab (complete)</string>
+    <string name="terminal_emoji_key_up">↑ Previous command (repeats while held)</string>
+    <string name="terminal_emoji_key_ctrl_c">Ctrl+C (interrupt)</string>
+    <string name="terminal_emoji_key_ctrl_d">Ctrl+D (end of input, exit)</string>
+    <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (suspend)</string>
+    <string name="terminal_emoji_key_ctrl_l">Ctrl+L (clear the screen)</string>
+    <string name="terminal_emoji_key_ctrl_r">Ctrl+R (search history)</string>
 </resources>

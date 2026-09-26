@@ -37,4 +37,30 @@ internal object TerminalMode {
         in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12 -> true
         else -> false
     }
+
+    /**
+     * What the emoji key does in a terminal (Terminal mode > Emoji key): the emoji picker, or a
+     * key terminals use all the time, sent as pressed. Holding ↑ repeats it.
+     */
+    enum class EmojiKeyAction(val id: String, val keyCode: Int, val ctrl: Boolean = false) {
+        EmojiPicker("emoji_picker", KeyEvent.KEYCODE_UNKNOWN),
+        Escape("esc", KeyEvent.KEYCODE_ESCAPE),
+        Tab("tab", KeyEvent.KEYCODE_TAB),
+        PreviousCommand("up", KeyEvent.KEYCODE_DPAD_UP),
+        Interrupt("ctrl_c", KeyEvent.KEYCODE_C, ctrl = true),
+        EndOfInput("ctrl_d", KeyEvent.KEYCODE_D, ctrl = true),
+        Suspend("ctrl_z", KeyEvent.KEYCODE_Z, ctrl = true),
+        ClearScreen("ctrl_l", KeyEvent.KEYCODE_L, ctrl = true),
+        SearchHistory("ctrl_r", KeyEvent.KEYCODE_R, ctrl = true);
+
+        /** Only the arrow repeats while held; a held Ctrl+C sends one interrupt. */
+        val repeats: Boolean get() = this == PreviousCommand
+
+        val metaState: Int
+            get() = if (ctrl) KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON else 0
+
+        companion object {
+            fun byId(id: String?): EmojiKeyAction = entries.firstOrNull { it.id == id } ?: EmojiPicker
+        }
+    }
 }

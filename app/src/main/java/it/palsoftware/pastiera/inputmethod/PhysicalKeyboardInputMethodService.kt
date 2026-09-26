@@ -3792,6 +3792,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         terminalCtrlKeysDown.clear()
         terminalCtrlSent.clear()
         terminalRawKeysDown.clear()
+        terminalEmojiKeysDown.clear()
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onStartInput(info, restarting)
@@ -4909,6 +4910,34 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         return true
     }
 
+    // Emoji keys pressed in a terminal and sent as its terminal key (pressed key -> action)
+    private val terminalEmojiKeysDown = mutableMapOf<Int, TerminalMode.EmojiKeyAction>()
+
+    /** The emoji key in a terminal, when it's set to a terminal key instead of the emoji picker. */
+    private fun sendTerminalEmojiKeyAction(pressedKeyCode: Int, keyCode: Int, event: KeyEvent?): Boolean {
+        if (event == null || event.action != KeyEvent.ACTION_DOWN) return false
+        val emojiKey = SettingsManager.getEmojiPickerKey(this)
+        if (emojiKey == KeyEvent.KEYCODE_UNKNOWN || keyCode != emojiKey) return false
+        val action = TerminalMode.EmojiKeyAction.byId(SettingsManager.getTerminalModeEmojiKeyAction(this))
+        if (action == TerminalMode.EmojiKeyAction.EmojiPicker) return false
+        if (event.repeatCount > 0) {
+            if (action.repeats) sendTerminalActionKey(action, KeyEvent.ACTION_DOWN, event.repeatCount)
+            return true
+        }
+        terminalEmojiKeysDown[pressedKeyCode] = action
+        sendTerminalActionKey(action, KeyEvent.ACTION_DOWN, 0)
+        return true
+    }
+
+    private fun sendTerminalActionKey(action: TerminalMode.EmojiKeyAction, keyAction: Int, repeat: Int) {
+        val ic = currentInputConnection ?: return
+        val now = SystemClock.uptimeMillis()
+        ic.sendKeyEvent(
+            KeyEvent(now, now, keyAction, action.keyCode, repeat, action.metaState,
+                KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE)
+        )
+    }
+
     private fun sendTerminalCtrlKey(source: KeyEvent, action: Int, pressedKeyCode: Int) {
         val (keyCode, meta) = (if (action == KeyEvent.ACTION_UP) terminalCtrlSent.remove(pressedKeyCode)
             else terminalCtrlSent[pressedKeyCode]) ?: return
@@ -5145,6 +5174,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 origin = "bounce_keys",
                 outputKeyCodeName = suppressed.debugOutput()
             )
+            return true
+        }
+
+        if (terminalModeActive && sendTerminalEmojiKeyAction(keyCode_, keyCode, event)) {
             return true
         }
 
@@ -5856,6 +5889,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // The release of a key sent to the app as its own shortcut, or to a terminal with Ctrl
         if (appShortcutKeysDown.remove(keyCode_)) return true
         if (terminalRawKeysDown.remove(keyCode_)) return super.onKeyUp(keyCode_, event_)
+        terminalEmojiKeysDown.remove(keyCode_)?.let { action ->
+            sendTerminalActionKey(action, KeyEvent.ACTION_UP, 0)
+            return true
+        }
         if (terminalCtrlKeysDown.remove(keyCode_)) {
             event_?.let { sendTerminalCtrlKey(it, KeyEvent.ACTION_UP, keyCode_) }
             return true

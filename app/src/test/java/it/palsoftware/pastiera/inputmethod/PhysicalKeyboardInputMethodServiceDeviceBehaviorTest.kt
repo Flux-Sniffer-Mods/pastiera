@@ -466,6 +466,28 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun terminalMode_emojiKeySendsTheChosenTerminalKey() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setTerminalModeEnabled(context, true)
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_GRAVE)
+        SettingsManager.setTerminalModeEmojiKeyAction(context, TerminalMode.EmojiKeyAction.Interrupt.id)
+        focusNewField(
+            newRecorder = RecordingInputConnection(),
+            inputType = InputType.TYPE_NULL,
+            packageName = "com.termux"
+        )
+
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_000L)))
+        // Holding it doesn't send more interrupts
+        service.onKeyDown(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_500L, repeatCount = 1))
+        assertTrue(service.onKeyUp(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_600L)))
+
+        assertEquals(listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP), recorder.sentKeyEvents.map { it.action })
+        assertTrue(recorder.sentKeyEvents.all { it.keyCode == KeyEvent.KEYCODE_C && it.isCtrlPressed })
+        assertTrue(recorder.committedTexts.isEmpty())
+    }
+
+    @Test
     fun autoCap_manualShiftOff_survivesRestartOfCurrentField() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setAutoCapitalizeFirstLetter(context, true)

@@ -179,4 +179,15 @@
     <string name="titan2_elite_section_status_bar">Barra di stato arrotondata</string>
     <string name="titan2_elite_section_screen">Adattamento allo schermo</string>
     <string name="titan2_elite_section_calibration">Calibrazione</string>
+    <string name="terminal_mode_emoji_key_title">Tasto emoji</string>
+    <string name="terminal_mode_emoji_key_description">Cosa fa il tasto emoji nei terminali</string>
+    <string name="terminal_emoji_key_picker">Selettore emoji (come altrove)</string>
+    <string name="terminal_emoji_key_esc">Esc</string>
+    <string name="terminal_emoji_key_tab">Tab (completa)</string>
+    <string name="terminal_emoji_key_up">↑ Comando precedente (si ripete tenendolo premuto)</string>
+    <string name="terminal_emoji_key_ctrl_c">Ctrl+C (interrompi)</string>
+    <string name="terminal_emoji_key_ctrl_d">Ctrl+D (fine input, esci)</string>
+    <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (sospendi)</string>
+    <string name="terminal_emoji_key_ctrl_l">Ctrl+L (pulisci lo schermo)</string>
+    <string name="terminal_emoji_key_ctrl_r">Ctrl+R (cerca nella cronologia)</string>
 </resources>

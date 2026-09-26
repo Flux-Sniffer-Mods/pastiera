@@ -2,6 +2,7 @@ package it.palsoftware.pastiera
 
 import android.content.SharedPreferences
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material.icons.automirrored.filled.ManageSearch
@@ -443,10 +445,31 @@ fun DeveloperOptionsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
  * symbols and Ctrl reaches the shell as a real Ctrl.
  */
 @Composable
+private fun terminalEmojiKeyLabel(action: it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction): String =
+    stringResource(
+        when (action) {
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.EmojiPicker -> R.string.terminal_emoji_key_picker
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.Escape -> R.string.terminal_emoji_key_esc
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.Tab -> R.string.terminal_emoji_key_tab
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.PreviousCommand -> R.string.terminal_emoji_key_up
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.Interrupt -> R.string.terminal_emoji_key_ctrl_c
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.EndOfInput -> R.string.terminal_emoji_key_ctrl_d
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.Suspend -> R.string.terminal_emoji_key_ctrl_z
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.ClearScreen -> R.string.terminal_emoji_key_ctrl_l
+            it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.SearchHistory -> R.string.terminal_emoji_key_ctrl_r
+        }
+    )
+
+@Composable
 fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val context = LocalContext.current
     var enabled by remember { mutableStateOf(SettingsManager.getTerminalModeEnabled(context)) }
     var hideKeyboard by remember { mutableStateOf(SettingsManager.getTerminalModeHideKeyboard(context)) }
+    var emojiKeyAction by remember {
+        mutableStateOf(it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.byId(
+            SettingsManager.getTerminalModeEmojiKeyAction(context)))
+    }
+    var choosingEmojiKey by remember { mutableStateOf(false) }
     var apps by remember { mutableStateOf(SettingsManager.getTerminalModeApps(context)) }
     var showPicker by remember { mutableStateOf(false) }
     val installed = remember { AppListHelper.getInstalledApps(context).associate { it.packageName to it.appName } }
@@ -471,6 +494,42 @@ fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 onCheckedChange = {
                     hideKeyboard = it
                     SettingsManager.setTerminalModeHideKeyboard(context, it)
+                }
+            )
+            FluxActionRow(
+                linkId = SettingLinkIds.TERMINAL_MODE_EMOJI_KEY,
+                title = stringResource(R.string.terminal_mode_emoji_key_title),
+                description = terminalEmojiKeyLabel(emojiKeyAction) + " · " +
+                    stringResource(R.string.terminal_mode_emoji_key_description),
+                onClick = { choosingEmojiKey = true }
+            )
+        }
+        if (choosingEmojiKey) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { choosingEmojiKey = false },
+                title = { Text(stringResource(R.string.terminal_mode_emoji_key_title)) },
+                text = {
+                    Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                        it.palsoftware.pastiera.inputmethod.TerminalMode.EmojiKeyAction.entries.forEach { action ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    emojiKeyAction = action
+                                    SettingsManager.setTerminalModeEmojiKeyAction(context, action.id)
+                                    choosingEmojiKey = false
+                                }.padding(vertical = 4.dp)
+                            ) {
+                                androidx.compose.material3.RadioButton(selected = action == emojiKeyAction, onClick = null)
+                                Text(terminalEmojiKeyLabel(action), modifier = Modifier.padding(start = 12.dp))
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { choosingEmojiKey = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
                 }
             )
         }

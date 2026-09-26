@@ -335,6 +335,7 @@ internal object BackupPreferenceContract {
             "led_individual_colors" to PreferenceValueType.BOOLEAN,
             "led_locked_animation" to PreferenceValueType.BOOLEAN,
             "terminal_mode_hide_keyboard" to PreferenceValueType.BOOLEAN,
+            "terminal_mode_emoji_key" to PreferenceValueType.STRING,
             "emoji_layer_profiles" to PreferenceValueType.STRING,
             "emoji_layer_active_profile" to PreferenceValueType.STRING,
             "emoji_layer_switch_by_app" to PreferenceValueType.BOOLEAN,
