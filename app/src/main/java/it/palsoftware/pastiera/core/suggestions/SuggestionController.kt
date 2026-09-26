@@ -555,7 +555,7 @@ class SuggestionController(
     }
 
     fun handleBackspaceUndo(keyCode: Int, inputConnection: InputConnection?): Boolean {
-        if (!isEnabled()) return false
+        // Text replacements apply with suggestions off too, so their undo does as well
         val undone = autoReplaceController.handleBackspaceUndo(keyCode, inputConnection)
         if (undone) {
             pendingAddUserWord = autoReplaceController.consumeLastUndoOriginalWord()
