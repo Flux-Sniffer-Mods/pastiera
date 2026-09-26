@@ -231,4 +231,6 @@
     <string name="suggestion_keys_ctrl_shift_qwe">Ctrl+Shift+Q, W or E: the left, middle or right suggestion</string>
     <string name="suggestion_keys_ctrl_digits">Ctrl+1, 2 or 3: the left, middle or right suggestion (number row)</string>
     <string name="suggestion_keys_off">Off</string>
+    <string name="speech_keep_listening_title">Voice input keeps listening</string>
+    <string name="speech_keep_listening_description">Pauses don\'t end dictation: it carries on sentence by sentence until you tap the mic or stay silent</string>
 </resources>

@@ -68,6 +68,7 @@ fun ModifierSettingsScreen(
     var smartAltOff by remember { mutableStateOf(SettingsManager.getSmartAltOffAfterOpening(context)) }
     var smartCtrlOff by remember { mutableStateOf(SettingsManager.getSmartCtrlOffAfterShortcut(context)) }
     var altCtrlSpeechShortcut by remember { mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) }
+    var speechKeepListening by remember { mutableStateOf(SettingsManager.getSpeechKeepListening(context)) }
     var showSymShortcutCompatibilityInfo by remember { mutableStateOf(false) }
     var longPressExpanded by remember { mutableStateOf(false) }
     var altBindingExpanded by remember { mutableStateOf(false) }
@@ -266,6 +267,15 @@ fun ModifierSettingsScreen(
             ) {
                 altCtrlSpeechShortcut = it
                 SettingsManager.setAltCtrlSpeechShortcutEnabled(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.speech_keep_listening_title),
+                description = stringResource(R.string.speech_keep_listening_description),
+                checked = speechKeepListening,
+                linkId = SettingLinkIds.TEXT_INPUT_SPEECH_KEEP_LISTENING
+            ) {
+                speechKeepListening = it
+                SettingsManager.setSpeechKeepListening(context, it)
             }
 
             SettingsSectionDivider(stringResource(R.string.nav_mode_title))

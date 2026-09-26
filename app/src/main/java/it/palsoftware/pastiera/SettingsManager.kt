@@ -75,6 +75,7 @@ object SettingsManager {
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
     private const val KEY_SUGGESTION_KEYS = "suggestion_keys" // Keys that pick a suggestion
+    private const val KEY_SPEECH_KEEP_LISTENING = "speech_keep_listening" // Voice input carries on through pauses
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
     private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
@@ -2904,6 +2905,14 @@ object SettingsManager {
 
     fun setSuggestionKeys(context: Context, option: String) {
         getPreferences(context).edit().putString(KEY_SUGGESTION_KEYS, option).apply()
+    }
+
+    /** Voice input keeps listening through pauses until you stop it or stay silent. On by default. */
+    fun getSpeechKeepListening(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SPEECH_KEEP_LISTENING, true)
+
+    fun setSpeechKeepListening(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SPEECH_KEEP_LISTENING, enabled).apply()
     }
 
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =

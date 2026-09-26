@@ -70,6 +70,7 @@ object SettingLinkIds {
     const val TEXT_INPUT_CLEAR_ALT_ON_SPACE = "text_input.clear_alt_on_space"
     const val TEXT_INPUT_AUTO_SHOW_KEYBOARD = "text_input.auto_show_keyboard"
     const val TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT = "text_input.alt_ctrl_speech_shortcut"
+    const val TEXT_INPUT_SPEECH_KEEP_LISTENING = "text_input.speech_keep_listening"
     const val TEXT_INPUT_SHIFT_BACKSPACE_DELETE = "text_input.shift_backspace_delete"
     const val TEXT_INPUT_ALT_BACKSPACE_DELETE = "text_input.alt_backspace_delete"
     const val TEXT_INPUT_BACKSPACE_AT_START_DELETE = "text_input.backspace_at_start_delete"
@@ -470,6 +471,12 @@ object SettingLinkRegistry {
             SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT,
             R.string.alt_ctrl_speech_shortcut_title,
             R.string.alt_ctrl_speech_shortcut_description,
+            destination = SettingsDestination.Modifiers
+        ),
+        entry(
+            SettingLinkIds.TEXT_INPUT_SPEECH_KEEP_LISTENING,
+            R.string.speech_keep_listening_title,
+            R.string.speech_keep_listening_description,
             destination = SettingsDestination.Modifiers
         ),
         entry(
