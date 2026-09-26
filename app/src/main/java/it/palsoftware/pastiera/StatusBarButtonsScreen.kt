@@ -284,7 +284,6 @@ fun StatusBarButtonsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                FeatureStatusIcon(FeatureStatus.Construction)
                 Switch(
                     checked = titan2EliteRoundedCornerInsetsEnabled,
                     onCheckedChange = { enabled ->

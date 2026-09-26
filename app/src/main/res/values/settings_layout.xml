@@ -80,4 +80,41 @@
     <string name="spell_checker_subtype" translatable="false">%s</string>
     <string name="spell_checker_title">Spell checker</string>
     <string name="spell_checker_description">Underline misspelt words in every app using Pastiera\'s dictionaries, including words you added. Tap to choose Pastiera in Android\'s spell checker settings.</string>
+    <string name="alt_key_editor_intro">Make your own Device SYM layer: what each key types with SYM, and with Alt when Alt uses the Device SYM layer. A profile can replace a keyboard\'s own layer automatically, and Pastiera\'s backup includes it.</string>
+    <string name="alt_key_editor_keys_description">Tap a key to set what it types. Leave it empty to type nothing.</string>
+    <string name="alt_key_editor_import_title">Import a profile</string>
+    <string name="alt_key_editor_import_failed">That file isn\'t a Device SYM profile.</string>
+    <string name="alt_key_editor_new_profile_name">My profile %1$d</string>
+    <string name="alt_key_editor_copy_name">%1$s (copy)</string>
+    <string name="alt_key_editor_your_profiles_section">Your profiles</string>
+    <string name="alt_key_editor_key_unset">Nothing</string>
+    <string name="alt_key_editor_export_title">Export to a file</string>
+    <string name="alt_key_editor_export_description">Save this profile as a JSON file you can import on another phone.</string>
+    <string name="alt_key_editor_exported">Profile exported</string>
+    <string name="alt_key_editor_export_failed">Couldn\'t save the file</string>
+    <string name="alt_key_editor_share_title">Share</string>
+    <string name="alt_key_editor_share_description">Send this profile as text to another app.</string>
+    <string name="alt_key_editor_delete_title">Delete profile</string>
+    <string name="alt_key_editor_delete_description">Keyboards it replaced go back to their curated profile.</string>
+    <string name="alt_key_editor_delete_confirm">Delete %1$s?</string>
+    <string name="alt_key_editor_key_dialog_title">Key %1$s</string>
+    <string name="alt_key_editor_key_dialog_label">Types</string>
+    <string name="alt_key_editor_name_label">Name</string>
+    <string name="alt_key_editor_match_label">Use instead of the curated profile on:</string>
+    <string name="alt_key_editor_this_keyboard">this keyboard</string>
+    <string name="alt_key_editor_applies_manually">Only where you choose it (Alt layer)</string>
+    <string name="alt_key_editor_applies_to">Replaces %1$s</string>
+    <string name="alt_key_editor_virtual_profile">Other keyboards</string>
+    <string name="alt_key_editor_details_title">Name and keyboards</string>
+    <string name="alt_key_editor_summary_ready">Make your own Device SYM layer, blank or from a curated profile.</string>
+    <plurals name="alt_key_editor_key_count">
+        <item quantity="one">%d key</item>
+        <item quantity="other">%d keys</item>
+    </plurals>
+    <plurals name="alt_key_editor_profile_count">
+        <item quantity="one">%d custom profile</item>
+        <item quantity="other">%d custom profiles</item>
+    </plurals>
+    <string name="clicks_all_key_mappings_ready_description">Your own Alt and SYM characters for every key, in a custom Device SYM profile. Ctrl shortcuts are under Key shortcuts.</string>
+    <string name="alt_key_editor_no_profiles">No profiles yet. Start one above.</string>
 </resources>

@@ -2272,7 +2272,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key == "sym_mappings_custom") {
+            if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
+                alternateCharacterManager.reloadModifierAndDeviceSymMappings()
+                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
+            } else if (key == "sym_mappings_custom") {
                 Log.d(TAG, "SYM mappings page 1 changed, reloading...")
                 // Reload SYM mappings for page 1
                 alternateCharacterManager.reloadSymMappings()

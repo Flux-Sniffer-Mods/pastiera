@@ -78,4 +78,41 @@
     <string name="spell_checker_name">Controllo ortografico Pastiera</string>
     <string name="spell_checker_title">Controllo ortografico</string>
     <string name="spell_checker_description">Sottolinea le parole sbagliate in ogni app con i dizionari di Pastiera, comprese le parole che hai aggiunto. Tocca per scegliere Pastiera nelle impostazioni del controllo ortografico di Android.</string>
+    <string name="alt_key_editor_intro">Crea il tuo livello SYM del dispositivo: cosa scrive ogni tasto con SYM, e con Alt quando Alt usa il livello SYM del dispositivo. Un profilo può sostituire automaticamente quello di una tastiera, e il backup di Pastiera lo include.</string>
+    <string name="alt_key_editor_keys_description">Tocca un tasto per scegliere cosa scrive. Lascialo vuoto per non scrivere nulla.</string>
+    <string name="alt_key_editor_import_title">Importa un profilo</string>
+    <string name="alt_key_editor_import_failed">Quel file non è un profilo SYM del dispositivo.</string>
+    <string name="alt_key_editor_new_profile_name">Il mio profilo %1$d</string>
+    <string name="alt_key_editor_copy_name">%1$s (copia)</string>
+    <string name="alt_key_editor_your_profiles_section">I tuoi profili</string>
+    <string name="alt_key_editor_key_unset">Niente</string>
+    <string name="alt_key_editor_export_title">Esporta in un file</string>
+    <string name="alt_key_editor_export_description">Salva questo profilo come file JSON da importare su un altro telefono.</string>
+    <string name="alt_key_editor_exported">Profilo esportato</string>
+    <string name="alt_key_editor_export_failed">Impossibile salvare il file</string>
+    <string name="alt_key_editor_share_title">Condividi</string>
+    <string name="alt_key_editor_share_description">Invia questo profilo come testo a un\'altra app.</string>
+    <string name="alt_key_editor_delete_title">Elimina profilo</string>
+    <string name="alt_key_editor_delete_description">Le tastiere che sostituiva tornano al loro profilo curato.</string>
+    <string name="alt_key_editor_delete_confirm">Eliminare %1$s?</string>
+    <string name="alt_key_editor_key_dialog_title">Tasto %1$s</string>
+    <string name="alt_key_editor_key_dialog_label">Scrive</string>
+    <string name="alt_key_editor_name_label">Nome</string>
+    <string name="alt_key_editor_match_label">Usa al posto del profilo curato su:</string>
+    <string name="alt_key_editor_this_keyboard">questa tastiera</string>
+    <string name="alt_key_editor_applies_manually">Solo dove lo scegli (livello Alt)</string>
+    <string name="alt_key_editor_applies_to">Sostituisce %1$s</string>
+    <string name="alt_key_editor_virtual_profile">Altre tastiere</string>
+    <string name="alt_key_editor_details_title">Nome e tastiere</string>
+    <string name="alt_key_editor_summary_ready">Crea il tuo livello SYM del dispositivo, vuoto o da un profilo curato.</string>
+    <plurals name="alt_key_editor_key_count">
+        <item quantity="one">%d tasto</item>
+        <item quantity="other">%d tasti</item>
+    </plurals>
+    <plurals name="alt_key_editor_profile_count">
+        <item quantity="one">%d profilo personalizzato</item>
+        <item quantity="other">%d profili personalizzati</item>
+    </plurals>
+    <string name="clicks_all_key_mappings_ready_description">I tuoi caratteri Alt e SYM per ogni tasto, in un profilo SYM del dispositivo personalizzato. Le scorciatoie Ctrl sono in Scorciatoie da tastiera.</string>
+    <string name="alt_key_editor_no_profiles">Ancora nessun profilo. Creane uno qui sopra.</string>
 </resources>

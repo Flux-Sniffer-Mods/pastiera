@@ -415,9 +415,6 @@ fun SymCustomizationScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            if (pageId == SymPagesConfig.PAGE_DEVICE) {
-                                FeatureStatusIcon(FeatureStatus.Construction)
-                            }
                             if (pageId == SymPagesConfig.PAGE_DEVICE ||
                                 pageId == SymPagesConfig.PAGE_EMOJI ||
                                 pageId == SymPagesConfig.PAGE_SYMBOLS

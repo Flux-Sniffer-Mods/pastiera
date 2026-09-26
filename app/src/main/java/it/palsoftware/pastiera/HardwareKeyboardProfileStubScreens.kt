@@ -615,10 +615,12 @@ fun ClicksPowerKeyboardSettingsScreen(
                 null
             }
         )
-        PlannedSettingsRow(
+        ClicksDeviceInfoRow(
             icon = Icons.Filled.Edit,
             title = stringResource(R.string.clicks_all_key_mappings_title),
-            description = stringResource(R.string.clicks_all_key_mappings_description)
+            linkId = "clicks.all_key_mappings",
+            description = stringResource(R.string.clicks_all_key_mappings_ready_description),
+            onClick = { openSettingsPage(context, SettingsPage(SettingsDestination.DeviceSymLayerEditor)) }
         )
 
         StubSection(stringResource(R.string.clicks_section_backlight_power))
@@ -2133,48 +2135,6 @@ private fun ClicksChoiceButtonGrid(
 }
 
 @Composable
-fun DeviceSymLayerEditorStubScreen(
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit
-) {
-    HardwareProfileScaffold(
-        modifier = modifier,
-        title = stringResource(R.string.alt_key_editor_title),
-        description = stringResource(R.string.alt_key_editor_stub_description),
-        onBack = onBack
-    ) {
-        StubSection(stringResource(R.string.alt_key_editor_create_section))
-        PlannedSettingsRow(
-            icon = Icons.Filled.Edit,
-            title = stringResource(R.string.alt_key_editor_blank_profile_title),
-            description = stringResource(R.string.alt_key_editor_blank_profile_description)
-        )
-        PlannedSettingsRow(
-            icon = Icons.Filled.Keyboard,
-            title = stringResource(R.string.alt_key_editor_clone_profile_title),
-            description = stringResource(R.string.alt_key_editor_clone_profile_description)
-        )
-
-        StubSection(stringResource(R.string.alt_key_editor_scope_section))
-        PlannedSettingsRow(
-            icon = Icons.Filled.Settings,
-            title = stringResource(R.string.alt_key_editor_matching_title),
-            description = stringResource(R.string.alt_key_editor_matching_description)
-        )
-        PlannedSettingsRow(
-            icon = Icons.Filled.Edit,
-            title = stringResource(R.string.alt_key_editor_mappings_title),
-            description = stringResource(R.string.alt_key_editor_mappings_description)
-        )
-        PlannedSettingsRow(
-            icon = Icons.Filled.Settings,
-            title = stringResource(R.string.alt_key_editor_transfer_title),
-            description = stringResource(R.string.alt_key_editor_transfer_description)
-        )
-    }
-}
-
-@Composable
 private fun HardwareProfileScaffold(
     modifier: Modifier,
     title: String,
@@ -2260,39 +2220,3 @@ private fun StubSection(title: String) {
     }
 }
 
-@Composable
-private fun PlannedSettingsRow(
-    icon: ImageVector,
-    title: String,
-    description: String
-) {
-    Surface(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            FeatureStatusIcon(FeatureStatus.Construction)
-        }
-    }
-}
