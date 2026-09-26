@@ -987,6 +987,23 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun hiddenApp_holdingALetterInATextFieldDoesNotRepeatIntoTheApp() {
+        setField(service, "keyboardHiddenForApp", true)
+
+        // The first press goes to the app; its repeats would open Android's accent picker there
+        val first = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(14_000L, 14_000L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 0))
+        val repeat = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(14_000L, 14_500L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 1))
+        assertFalse(first)
+        assertTrue(repeat)
+
+        // Views that read raw keys (terminals, X11) still get every repeat
+        val rawView = EditorInfo().apply { inputType = InputType.TYPE_NULL }
+        setField(service, "mInputEditorInfo", rawView)
+        val rawRepeat = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(15_000L, 15_500L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 1))
+        assertFalse(rawRepeat)
+    }
+
+    @Test
     fun hiddenApp_withPanels_emojiKeyOpensPickerAndClosesItAgain() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)

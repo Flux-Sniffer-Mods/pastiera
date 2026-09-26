@@ -3081,6 +3081,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
     }
 
+    /**
+     * In a hidden app, a held character key repeats into the app, and an ordinary text field
+     * (not a terminal or X11 view, which read raw keys) answers a held letter with Android's
+     * accent picker. Pastiera is hidden there, so the repeats are dropped instead.
+     */
+    private fun hiddenAppHoldOpensAccentPicker(keyCode: Int): Boolean {
+        if (hiddenAppKeyGoesToPastiera(keyCode)) return false
+        if (!it.palsoftware.pastiera.shortcuts.KeyCombo.isCharacterKey(keyCode) || keyCode == KeyEvent.KEYCODE_SPACE) return false
+        val inputType = currentInputEditorInfo?.inputType ?: EditorInfo.TYPE_NULL
+        return inputType and android.text.InputType.TYPE_MASK_CLASS != EditorInfo.TYPE_NULL
+    }
+
     /** Show Pastiera while a panel is open in a hidden app; hide it (or back to LEDs) afterwards. */
     private fun syncHiddenAppPanel() {
         if (!keyboardHiddenForApp) return
@@ -4881,6 +4893,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
         if (keyboardHiddenForApp) {
             val firstPress = (event_?.repeatCount ?: 0) == 0
+            if (!firstPress && hiddenAppHoldOpensAccentPicker(keyCode_)) {
+                // Holding a letter in a hidden app's text field would open Android's own accent
+                // picker there (the key repeats reach its TextView): the first press is enough
+                return true
+            }
             if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
                 if (translateHiddenAppKey(event_)) return true
                 if (firstPress) hiddenAppPassedThroughKeys += keyCode_
