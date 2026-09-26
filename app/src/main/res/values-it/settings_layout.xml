@@ -56,7 +56,7 @@
     <string name="smart_ctrl_off_description">Un Ctrl toccato si spegne dopo una scorciatoia come copia, incolla o annulla; gli spostamenti di cursore e selezione lo lasciano attivo</string>
     <string name="developer_options_title">Opzioni sviluppatore</string>
     <string name="developer_options_description">Mostra strumenti di calibrazione, debug e anteprima</string>
-    <string name="developer_options_row_description">Calibrazione degli angoli, debug del trackpad, anteprima delle novità</string>
+    <string name="developer_options_row_description">Debug del trackpad e anteprima delle novità</string>
     <string name="developer_options_note">Strumenti per calibrare, fare il debug e provare Pastiera in anteprima. Alla maggior parte delle persone non servono.</string>
     <string name="terminal_mode_title">Modalità terminale</string>
     <string name="terminal_mode_description">Termux e altri terminali: Alt e SYM digitano simboli, Ctrl resta Ctrl</string>
@@ -176,4 +176,7 @@
     <string name="terminal_mode_hide_keyboard_description">Come per il desktop Linux: Pastiera resta nascosta nei terminali. Alt scrive comunque il tuo livello Alt e SYM i suoi simboli, senza mostrarli; Ctrl resta Ctrl. Appunti e selettore emoji si mostrano mentre sono aperti.</string>
     <string name="led_locked_animation_title">Anima i LED bloccati</string>
     <string name="led_locked_animation_description">Il LED di un modificatore bloccato scorre un gradiente tra il suo colore e una versione più intensa, così un blocco non passa inosservato.</string>
+    <string name="titan2_elite_section_status_bar">Barra di stato arrotondata</string>
+    <string name="titan2_elite_section_screen">Adattamento allo schermo</string>
+    <string name="titan2_elite_section_calibration">Calibrazione</string>
 </resources>

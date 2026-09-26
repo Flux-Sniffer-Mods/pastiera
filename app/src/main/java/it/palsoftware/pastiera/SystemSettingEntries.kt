@@ -3,7 +3,7 @@ package it.palsoftware.pastiera
 /** Entries for system controls whose screens also expose the same stable IDs. */
 internal fun systemSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry("advanced.corner_calibration", R.string.corner_calibration_title,
-        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.Developer),
+        summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.FluxTitanScreen),
         availabilityCheck = { context ->
             SettingsManager.getDeveloperOptionsEnabled(context) &&
                 (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() ||

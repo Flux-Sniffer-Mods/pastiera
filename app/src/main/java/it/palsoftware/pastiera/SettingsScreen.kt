@@ -567,13 +567,13 @@ internal fun SettingsCategoryRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (description == null) 56.dp else 64.dp)
+            .heightIn(min = if (description == null) 56.dp else 72.dp)
             .settingRow(linkId?.takeIf { enabled }, onClick.takeIf { enabled })
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -608,6 +608,7 @@ internal fun SettingsCategoryRow(
                 if (description != null) {
                     Text(
                         text = description,
+                        modifier = Modifier.padding(top = 2.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -627,7 +628,7 @@ internal fun SettingsGroupDivider(label: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {

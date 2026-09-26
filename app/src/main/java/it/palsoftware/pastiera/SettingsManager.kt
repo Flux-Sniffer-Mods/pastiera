@@ -226,6 +226,7 @@ object SettingsManager {
     const val KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS = "titan2_elite_straight_outer_buttons"
     const val KEY_TITAN2_ELITE_STATUS_BAR_LIFT = "titan2_elite_status_bar_lift_dp"
     const val TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP = 16
+    const val TITAN2_ELITE_DEFAULT_LIFT_DP = 5
     private const val KEY_ACCESSIBILITY_LIVE_ANNOUNCEMENTS_ENABLED = "accessibility_live_announcements_enabled" // Whether status bar accessibility live announcements are enabled
     private const val KEY_ACCESSIBILITY_READ_SECOND_ROW_ENABLED = "accessibility_read_second_row_enabled" // Whether TalkBack should read quick settings/variations row
     private const val KEY_ACCESSIBILITY_SUGGESTIONS_ANNOUNCEMENT_DELAY_MS = "accessibility_suggestions_announcement_delay_ms" // Delay before suggestions become accessible again while typing
@@ -1517,8 +1518,9 @@ object SettingsManager {
     }
 
     /** Paint the keyboard background into the display's rounded corners instead of clipping to them. */
+    /** On by default on a Titan 2 Elite, like the rounded status bar. */
     fun getTitan2EliteFillCorners(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, false)
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, DeviceSpecific.isTitan2EliteDevice())
 
     fun setTitan2EliteFillCorners(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_FILL_CORNERS, enabled).apply()
@@ -1528,16 +1530,21 @@ object SettingsManager {
      * Rounded corners for sizing and spacing only: the outer bar buttons are plain buttons
      * reaching straight down into the corners instead of shapes following the display curve.
      */
+    /** On by default on a Titan 2 Elite. */
     fun getTitan2EliteStraightOuterButtons(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, false)
+        getPreferences(context).getBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, DeviceSpecific.isTitan2EliteDevice())
 
     fun setTitan2EliteStraightOuterButtons(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_TITAN2_ELITE_STRAIGHT_OUTER_BUTTONS, enabled).apply()
     }
 
     /** How far the status bar sits above the modifier LEDs, in dp (0 = LEDs hug the bar). */
+    /** A Titan 2 Elite starts with the bar lifted by [TITAN2_ELITE_DEFAULT_LIFT_DP]; other phones at 0. */
     fun getTitan2EliteStatusBarLiftDp(context: Context): Int =
-        getPreferences(context).getInt(KEY_TITAN2_ELITE_STATUS_BAR_LIFT, 0)
+        getPreferences(context).getInt(
+            KEY_TITAN2_ELITE_STATUS_BAR_LIFT,
+            if (DeviceSpecific.isTitan2EliteDevice()) TITAN2_ELITE_DEFAULT_LIFT_DP else 0
+        )
             .coerceIn(0, TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP)
 
     fun setTitan2EliteStatusBarLiftDp(context: Context, dp: Int) {

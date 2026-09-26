@@ -380,7 +380,7 @@ private fun ModifierNavigationRow(
 ) {
     Surface(modifier = Modifier.fillMaxWidth().settingRow(linkId, onClick)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {

@@ -1550,7 +1550,7 @@ private fun ClicksRemapDropdownRow(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         OutlinedTextField(
             value = selected.label,
@@ -1589,7 +1589,7 @@ private fun ClicksIntDropdownRow(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { if (enabled) expanded = it },
-        modifier = Modifier.settingRow(linkId).fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.settingRow(linkId).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         OutlinedTextField(
             value = selected?.let { label(it) } ?: "–",
@@ -1631,7 +1631,7 @@ private fun ClicksButtonBindingRow(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { if (enabled) expanded = it },
-        modifier = Modifier.settingRow(linkId).fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.settingRow(linkId).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         OutlinedTextField(
             value = if (applying) {
@@ -1780,7 +1780,7 @@ private fun ClicksNumberRowInputModeRow(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.settingRow("clicks.number_row_input_mode").fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.settingRow("clicks.number_row_input_mode").fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         OutlinedTextField(
             value = clicksNumberRowInputModeLabel(selected),
@@ -1815,7 +1815,7 @@ private fun ClicksOverlappingKeysModeRow(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = Modifier.settingRow("clicks.release_order").fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.settingRow("clicks.release_order").fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         OutlinedTextField(
             value = clicksOverlappingKeysModeLabel(selected),

@@ -391,8 +391,8 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         titleRes = R.string.titan2_elite_rounded_corners_title,
         summaryRes = R.string.titan2_elite_rounded_corners_description,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         )
     ),
     SettingEntry(
@@ -432,8 +432,8 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         titleRes = R.string.titan2_elite_top_corner_title,
         summaryRes = R.string.titan2_elite_top_corner_description,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         ),
         availabilityCheck = { SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(it) },
         unavailableFallbackId = "status_bar.rounded_corners"
@@ -442,8 +442,8 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         id = "status_bar.max_icon_shrink",
         titleRes = R.string.setting_link_max_icon_shrink,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         ),
         availabilityCheck = { SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(it) },
         unavailableFallbackId = "status_bar.rounded_corners"

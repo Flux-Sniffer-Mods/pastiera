@@ -65,6 +65,12 @@ object RecommendedSettings {
         if (DeviceSpecific.isTitan2EliteDevice()) {
             add(switch(R.string.titan2_elite_rounded_corners_title, SettingsManager::getTitan2EliteRoundedCornerInsetsEnabled, SettingsManager::setTitan2EliteRoundedCornerInsetsEnabled))
             add(switch(R.string.titan2_elite_fill_corners_title, SettingsManager::getTitan2EliteFillCorners, SettingsManager::setTitan2EliteFillCorners))
+            add(switch(R.string.titan2_elite_straight_outer_buttons_title, SettingsManager::getTitan2EliteStraightOuterButtons, SettingsManager::setTitan2EliteStraightOuterButtons))
+            add(Item(
+                R.string.titan2_elite_status_bar_lift_title,
+                { SettingsManager.getTitan2EliteStatusBarLiftDp(it) == SettingsManager.TITAN2_ELITE_DEFAULT_LIFT_DP },
+                { SettingsManager.setTitan2EliteStatusBarLiftDp(it, SettingsManager.TITAN2_ELITE_DEFAULT_LIFT_DP) }
+            ))
         }
     }
 

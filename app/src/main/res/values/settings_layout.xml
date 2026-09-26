@@ -57,7 +57,7 @@
     <string name="smart_ctrl_off_description">A tapped Ctrl switches off after one shortcut such as copy, paste or undo; cursor and selection moves keep it on</string>
     <string name="developer_options_title">Developer options</string>
     <string name="developer_options_description">Show calibration, debugging and preview tools</string>
-    <string name="developer_options_row_description">Display corner calibration, trackpad debug, release notes preview</string>
+    <string name="developer_options_row_description">Trackpad debug and the release notes preview</string>
     <string name="developer_options_note">Tools for calibrating, debugging and previewing Pastiera. Most people never need them.</string>
     <string name="terminal_mode_title">Terminal mode</string>
     <string name="terminal_mode_description">Termux and other terminals: Alt and SYM type symbols, Ctrl stays Ctrl</string>
@@ -181,4 +181,7 @@
     <string name="terminal_mode_hide_keyboard_description">Like the Linux desktop: Pastiera stays out of sight in terminals. Alt still types your Alt layer and SYM its symbols, unseen; Ctrl stays Ctrl. The clipboard and emoji picker show while open.</string>
     <string name="led_locked_animation_title">Animate locked LEDs</string>
     <string name="led_locked_animation_description">A locked modifier\'s LED sweeps a gradient between its colour and a more intense version, so a lock is hard to miss.</string>
+    <string name="titan2_elite_section_status_bar">Rounded status bar</string>
+    <string name="titan2_elite_section_screen">Screen fit</string>
+    <string name="titan2_elite_section_calibration">Calibration</string>
 </resources>

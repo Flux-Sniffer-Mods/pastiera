@@ -939,8 +939,12 @@ fun FluxTitanScreenSettingsScreen(modifier: Modifier = Modifier, onBack: () -> U
     val context = LocalContext.current
     FluxScreenScaffold(stringResource(R.string.flux_titan_screen_title), onBack, modifier) {
         FluxNote(stringResource(R.string.flux_titan_screen_note))
-        if (DeviceSpecific.isTitan2EliteDevice() ||
-            SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)) {
+        // Every Titan 2 Elite setting lives here: the rounded status bar first, then the screen fit
+        var roundedCorners by remember { mutableStateOf(SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)) }
+        SettingsSectionDivider(stringResource(R.string.titan2_elite_section_status_bar))
+        Titan2EliteRoundedCornerRows(onRoundedCornersChanged = { roundedCorners = it })
+        if (DeviceSpecific.isTitan2EliteDevice() || roundedCorners) {
+            SettingsSectionDivider(stringResource(R.string.titan2_elite_section_screen))
 
             var fillCorners by remember {
                 mutableStateOf(SettingsManager.getTitan2EliteFillCorners(context))
@@ -1039,6 +1043,15 @@ fun FluxTitanScreenSettingsScreen(modifier: Modifier = Modifier, onBack: () -> U
                     }
                 }
             }
+        }
+        if (SettingsManager.getDeveloperOptionsEnabled(context)) {
+            SettingsSectionDivider(stringResource(R.string.titan2_elite_section_calibration))
+            FluxActionRow(
+                linkId = "advanced.corner_calibration",
+                title = stringResource(R.string.corner_calibration_title),
+                description = stringResource(R.string.corner_calibration_description),
+                onClick = { context.startActivity(android.content.Intent(context, CornerCalibrationActivity::class.java)) }
+            )
         }
     }
 }
