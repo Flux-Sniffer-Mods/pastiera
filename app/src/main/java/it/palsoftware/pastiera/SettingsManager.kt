@@ -67,6 +67,8 @@ object SettingsManager {
     private const val KEY_SWIPE_TO_DELETE_PROVIDER = "swipe_to_delete_provider"
     private const val KEY_AUTO_SHOW_KEYBOARD = "auto_show_keyboard"
     private const val KEY_CLEAR_ALT_ON_SPACE = "clear_alt_on_space"
+    private const val KEY_SMART_ALT_OFF_AFTER_OPENING = "smart_alt_off_after_opening"
+    private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
     private const val KEY_LAYOUT_AWARE_CTRL_SHORTCUTS = "layout_aware_ctrl_shortcuts"
     private const val KEY_SYM_MAPPINGS_CUSTOM = "sym_mappings_custom"
@@ -2822,6 +2824,22 @@ object SettingsManager {
             .apply()
     }
     
+    /** Smart toggle: Alt lock switches off after an opening quote or bracket typed with Alt. */
+    fun getSmartAltOffAfterOpening(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SMART_ALT_OFF_AFTER_OPENING, false)
+
+    fun setSmartAltOffAfterOpening(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SMART_ALT_OFF_AFTER_OPENING, enabled).apply()
+    }
+
+    /** Smart toggle: a tapped Ctrl latch switches off after one shortcut (not after cursor moves). */
+    fun getSmartCtrlOffAfterShortcut(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SMART_CTRL_OFF_AFTER_SHORTCUT, false)
+
+    fun setSmartCtrlOffAfterShortcut(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SMART_CTRL_OFF_AFTER_SHORTCUT, enabled).apply()
+    }
+
     /**
      * Returns custom SYM mappings.
      * Returns an empty map if there are no custom mappings.

@@ -29,5 +29,11 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         route = SettingRoute(SettingsDestination.AppShortcuts)),
     SettingEntry(SettingLinkIds.APP_SHORTCUTS_SUGGESTIONS, R.string.app_shortcuts_suggestions_title,
         summaryRes = R.string.app_shortcuts_suggestions_description,
-        route = SettingRoute(SettingsDestination.AppShortcuts))
+        route = SettingRoute(SettingsDestination.AppShortcuts)),
+    SettingEntry(SettingLinkIds.MODIFIERS_SMART_ALT_OFF, R.string.smart_alt_off_title,
+        summaryRes = R.string.smart_alt_off_description,
+        route = SettingRoute(SettingsDestination.Modifiers)),
+    SettingEntry(SettingLinkIds.MODIFIERS_SMART_CTRL_OFF, R.string.smart_ctrl_off_title,
+        summaryRes = R.string.smart_ctrl_off_description,
+        route = SettingRoute(SettingsDestination.Modifiers))
 )

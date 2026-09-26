@@ -64,6 +64,8 @@ fun ModifierSettingsScreen(
     var ctrlLatchStaysOnSpace by remember { mutableStateOf(SettingsManager.getCtrlLatchStaysOnSpace(context)) }
     var modifierIndicators by remember { mutableStateOf(SettingsManager.getModifierIndicators(context)) }
     var clearAltOnSpace by remember { mutableStateOf(SettingsManager.getClearAltOnSpace(context)) }
+    var smartAltOff by remember { mutableStateOf(SettingsManager.getSmartAltOffAfterOpening(context)) }
+    var smartCtrlOff by remember { mutableStateOf(SettingsManager.getSmartCtrlOffAfterShortcut(context)) }
     var altCtrlSpeechShortcut by remember { mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) }
     var showSymShortcutCompatibilityInfo by remember { mutableStateOf(false) }
     var longPressExpanded by remember { mutableStateOf(false) }
@@ -177,6 +179,24 @@ fun ModifierSettingsScreen(
                     ctrlLatchStaysOnSpace = it
                     SettingsManager.setCtrlLatchStaysOnSpace(context, it)
                 }
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.smart_alt_off_title),
+                description = stringResource(R.string.smart_alt_off_description),
+                checked = smartAltOff,
+                linkId = SettingLinkIds.MODIFIERS_SMART_ALT_OFF
+            ) {
+                smartAltOff = it
+                SettingsManager.setSmartAltOffAfterOpening(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.smart_ctrl_off_title),
+                description = stringResource(R.string.smart_ctrl_off_description),
+                checked = smartCtrlOff,
+                linkId = SettingLinkIds.MODIFIERS_SMART_CTRL_OFF
+            ) {
+                smartCtrlOff = it
+                SettingsManager.setSmartCtrlOffAfterShortcut(context, it)
             }
             ModifierDropdownRow(
                 title = stringResource(R.string.long_press_modifier_title),

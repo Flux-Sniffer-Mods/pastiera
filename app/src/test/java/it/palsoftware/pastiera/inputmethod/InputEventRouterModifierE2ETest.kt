@@ -213,6 +213,48 @@ class InputEventRouterModifierE2ETest {
     }
 
     @Test
+    fun smartToggle_altLockTurnsOffAfterAnOpeningBracket() {
+        SettingsManager.setSmartAltOffAfterOpening(context, true)
+        val bracketKey = alternateCharacterManager.getAltModifierMappings().entries.first { it.value == "(" }.key
+        modifierStateController.altLatchActive = true
+
+        val result = routeKeyDown(bracketKey, keyDown(bracketKey), TestCallbacks(modifierStateController))
+
+        assertTrue(result is InputEventRouter.EditableFieldRoutingResult.Consume)
+        assertEquals("(", inputConnectionRecorder.committedTexts.last())
+        assertFalse(modifierStateController.altLatchActive)
+    }
+
+    @Test
+    fun smartToggle_altLockStaysForOtherSymbolsAndWhenOff() {
+        val mappings = alternateCharacterManager.getAltModifierMappings()
+        val digitKey = mappings.entries.first { it.value == "1" }.key
+        SettingsManager.setSmartAltOffAfterOpening(context, true)
+        modifierStateController.altLatchActive = true
+        routeKeyDown(digitKey, keyDown(digitKey), TestCallbacks(modifierStateController))
+        assertTrue(modifierStateController.altLatchActive)
+
+        SettingsManager.setSmartAltOffAfterOpening(context, false)
+        val bracketKey = mappings.entries.first { it.value == "(" }.key
+        routeKeyDown(bracketKey, keyDown(bracketKey), TestCallbacks(modifierStateController))
+        assertTrue(modifierStateController.altLatchActive)
+    }
+
+    @Test
+    fun smartToggle_ctrlLatchTurnsOffAfterAShortcutButNotAfterCursorMoves() {
+        SettingsManager.setSmartCtrlOffAfterShortcut(context, true)
+        val moveKey = ctrlKeyMap.entries.first { it.value.type == "keycode" && it.value.value == "DPAD_UP" }.key
+        val copyKey = ctrlKeyMap.entries.first { it.value.type == "action" && it.value.value == "copy" }.key
+        modifierStateController.ctrlLatchActive = true
+
+        routeKeyDown(moveKey, keyDown(moveKey), TestCallbacks(modifierStateController))
+        assertTrue(modifierStateController.ctrlLatchActive)
+
+        routeKeyDown(copyKey, keyDown(copyKey), TestCallbacks(modifierStateController))
+        assertFalse(modifierStateController.ctrlLatchActive)
+    }
+
+    @Test
     fun stickyCtrlThenA_consumesOneShot_andPerformsMappedAction() {
         val callbacks = TestCallbacks(modifierStateController)
 
