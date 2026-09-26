@@ -72,6 +72,7 @@ object SettingsManager {
     private const val KEY_INCOGNITO_ALWAYS = "incognito_always"
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
+    private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
     private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
@@ -2885,6 +2886,14 @@ object SettingsManager {
     }
 
     /** An emoji for the word you're typing, in the suggestion bar. */
+    /** Suggestion bar words in bold, easier to spot when typing fast (palsoftware/pastiera#310). */
+    fun getSuggestionsBold(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SUGGESTIONS_BOLD, false)
+
+    fun setSuggestionsBold(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SUGGESTIONS_BOLD, enabled).apply()
+    }
+
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_EMOJI_SUGGESTIONS, true)
 

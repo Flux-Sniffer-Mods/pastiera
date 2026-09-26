@@ -59,6 +59,7 @@ fun AutoCorrectionCategoryScreen(
     var inlineAutofillEnabled by remember {
         mutableStateOf(SettingsManager.getInlineAutofillEnabled(context))
     }
+    var suggestionsBold by remember { mutableStateOf(SettingsManager.getSuggestionsBold(context)) }
     var emojiSuggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getEmojiSuggestionsEnabled(context))
     }
@@ -309,6 +310,16 @@ fun AutoCorrectionCategoryScreen(
                                 }
                             }
                         }
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SUGGESTIONS_BOLD,
+                            title = stringResource(R.string.suggestions_bold_title),
+                            description = stringResource(R.string.suggestions_bold_description),
+                            checked = suggestionsBold,
+                            onCheckedChange = { enabled ->
+                                suggestionsBold = enabled
+                                SettingsManager.setSuggestionsBold(context, enabled)
+                            }
+                        )
 
                         FluxSwitchRow(
                             linkId = SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS,

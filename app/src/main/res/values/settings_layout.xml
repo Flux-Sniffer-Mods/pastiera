@@ -223,4 +223,6 @@
     <string name="menu_bar_move_up">Move up (further left in the bar)</string>
     <string name="menu_bar_move_down">Move down (further right in the bar)</string>
     <string name="menu_bar_reset">Reset the menu bar</string>
+    <string name="suggestions_bold_title">Bold suggestions</string>
+    <string name="suggestions_bold_description">Suggestion bar words in bold, easier to spot at a glance</string>
 </resources>

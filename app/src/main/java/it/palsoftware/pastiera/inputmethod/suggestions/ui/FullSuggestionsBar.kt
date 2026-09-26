@@ -750,7 +750,11 @@ class FullSuggestionsBar(
                 includeFontPadding = false
                 minHeight = 0
                 setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
-                setTypeface(null, android.graphics.Typeface.NORMAL)
+                setTypeface(
+                    null,
+                    if (it.palsoftware.pastiera.SettingsManager.getSuggestionsBold(context)) android.graphics.Typeface.BOLD
+                    else android.graphics.Typeface.NORMAL
+                )
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
                 setPadding(padH, padV, padH, padV)

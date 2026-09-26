@@ -93,6 +93,7 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_SUGGESTIONS = "auto_correction.suggestions"
     const val AUTO_CORRECTION_ACCENT_MATCHING = "auto_correction.accent_matching"
     const val AUTO_CORRECTION_EMOJI_SUGGESTIONS = "auto_correction.emoji_suggestions"
+    const val AUTO_CORRECTION_SUGGESTIONS_BOLD = "auto_correction.suggestions_bold"
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
     const val MAIN_LED_COLORS = "main.led_colors"

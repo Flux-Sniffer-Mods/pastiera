@@ -331,6 +331,7 @@ internal object BackupPreferenceContract {
             "incognito_follow_apps" to PreferenceValueType.BOOLEAN,
             "paste_suggestion_enabled" to PreferenceValueType.BOOLEAN,
             "emoji_suggestions_enabled" to PreferenceValueType.BOOLEAN,
+            "suggestions_bold" to PreferenceValueType.BOOLEAN,
             "inline_autofill_enabled" to PreferenceValueType.BOOLEAN,
             "led_individual_colors" to PreferenceValueType.BOOLEAN,
             "led_locked_animation" to PreferenceValueType.BOOLEAN,

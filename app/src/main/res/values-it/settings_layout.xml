@@ -218,4 +218,6 @@
     <string name="menu_bar_move_up">Sposta su (più a sinistra nella barra)</string>
     <string name="menu_bar_move_down">Sposta giù (più a destra nella barra)</string>
     <string name="menu_bar_reset">Ripristina la barra del menu</string>
+    <string name="suggestions_bold_title">Suggerimenti in grassetto</string>
+    <string name="suggestions_bold_description">Parole della barra dei suggerimenti in grassetto, più facili da vedere</string>
 </resources>
