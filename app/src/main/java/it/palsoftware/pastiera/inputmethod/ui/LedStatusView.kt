@@ -87,6 +87,50 @@ class LedStatusView(
             ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }
         }
 
+    // Locked LEDs' moving gradient (Status LED colours > Animate locked LEDs): 0..1, one sweep
+    private var lockPhase = 0f
+    private var lockAnimator: ValueAnimator? = null
+
+    private fun lockAnimationOn(): Boolean = LedColors.lockedAnimationEnabled(context)
+
+    /** Runs the sweep while an LED is locked and the option is on; stops it otherwise. */
+    private fun syncLockAnimation() {
+        val wanted = lockAnimationOn() && statePriority.values.any { it == 2 } && container?.isAttachedToWindow == true
+        if (wanted == (lockAnimator != null)) return
+        if (!wanted) {
+            lockAnimator?.cancel()
+            lockAnimator = null
+            invalidateAllLeds()
+            return
+        }
+        lockAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1800
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+            addUpdateListener {
+                lockPhase = it.animatedValue as Float
+                invalidateAllLeds()
+            }
+            start()
+        }
+    }
+
+    private fun invalidateAllLeds() {
+        container?.let { canvas -> for (index in 0 until canvas.childCount) canvas.getChildAt(index).invalidate() }
+    }
+
+    /** The gradient a locked LED sweeps: its colour, a more intense version, and back. */
+    private fun lockShader(color: Int, width: Float): android.graphics.Shader {
+        val intense = LedColors.intensify(color)
+        val span = width.coerceAtLeast(1f)
+        val offset = lockPhase * span * 2f
+        return android.graphics.LinearGradient(
+            offset - span, 0f, offset + span, 0f,
+            intArrayOf(color, intense, color), floatArrayOf(0f, 0.5f, 1f),
+            android.graphics.Shader.TileMode.MIRROR
+        )
+    }
+
     var onLongPressListener: (() -> Unit)? = null
     var themeOverride: KeyboardThemeColors? = null
 
@@ -127,6 +171,7 @@ class LedStatusView(
         updateLeds(ModifierLedState.ALT, altLocked, altActive)
 
         updateSymLeds(snapshot.symPage)
+        syncLockAnimation()
     }
 
     private fun rebuildSegments() {
@@ -156,12 +201,22 @@ class LedStatusView(
                 strokeCap = Paint.Cap.ROUND
             }
 
+            private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
             override fun draw(canvas: Canvas) {
                 val radii = bottomCornerRadiiPx
                 if (radii == null) {
+                    if (lockAnimator != null && statePriority[segment.state] == 2) {
+                        // Locked: the LED's colour sweeps to a more intense version and back
+                        fillPaint.shader = lockShader(color, bounds.width().toFloat())
+                        val box = android.graphics.RectF(bounds)
+                        canvas.drawRoundRect(box, this@LedStatusView.cornerRadius, this@LedStatusView.cornerRadius, fillPaint)
+                        return
+                    }
                     super.draw(canvas)
                     return
                 }
+                paint.shader = null
                 // One physical contour per side in rounded mode. Alt/Sym and
                 // Shift share it; a locked modifier wins over an active one.
                 if (layout == ModifierLedLayouts.TITAN_2_ELITE && segment.y == 0f) return
@@ -174,6 +229,7 @@ class LedStatusView(
                     // The colour of whichever modifier lights the shared LED
                     val shown = if (shiftPriority >= (statePriority[otherState] ?: 0)) ModifierLedState.SHIFT else otherState
                     paint.color = ledColor(shown, priority)
+                    if (lockAnimator != null && priority == 2) paint.shader = lockShader(paint.color, bounds.width().toFloat())
                 }
                 val width = bounds.width().toFloat()
                 val height = bounds.height().toFloat()
@@ -204,6 +260,11 @@ class LedStatusView(
                             width - inset, height - inset, 90f, -90f, false)
                     }
                     if (!cornersAndBottomOnly) lineTo(width - inset, 0f)
+                }
+                if (lockAnimator != null && statePriority[segment.state] == 2 && paint.shader == null &&
+                    !(layout == ModifierLedLayouts.TITAN_2_ELITE && segment.state == ModifierLedState.SHIFT)
+                ) {
+                    paint.shader = lockShader(paint.color, width)
                 }
                 val measure = PathMeasure(contour, false)
                 paint.strokeWidth = segment.height * ledHeight

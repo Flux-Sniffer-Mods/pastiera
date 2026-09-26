@@ -101,45 +101,6 @@ jobs:
             out/*.apk
             out/RELEASE_NOTES.md
 
-      # Optional: also put the APK in Google Drive (a "Pastiera builds" folder), when the three
-      # GDRIVE_* secrets are set. Uses the drive.file scope: it only sees files it creates.
-      - name: Upload APK to Google Drive
-        env:
-          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
-          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
-          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
-        run: |
-          if [ -z "$GDRIVE_REFRESH_TOKEN" ]; then
-            echo "No Google Drive secrets set; skipping the Drive upload."
-            exit 0
-          fi
-          set -euo pipefail
-          apk=$(ls out/*.apk | head -1)
-          name=$(basename "$apk")
-          token=$(curl -sS --fail https://oauth2.googleapis.com/token \
-            -d client_id="$GDRIVE_CLIENT_ID" -d client_secret="$GDRIVE_CLIENT_SECRET" \
-            -d refresh_token="$GDRIVE_REFRESH_TOKEN" -d grant_type=refresh_token | jq -r .access_token)
-          api=https://www.googleapis.com/drive/v3/files
-          # The folder this workflow made before, or a new one
-          query="name='Pastiera builds' and mimeType='application/vnd.google-apps.folder' and trashed=false"
-          folder=$(curl -sS --fail -G "$api" -H "Authorization: Bearer $token" \
-            --data-urlencode "q=$query" --data-urlencode "fields=files(id)" | jq -r '.files[0].id // empty')
-          if [ -z "$folder" ]; then
-            folder=$(curl -sS --fail -X POST "$api?fields=id" -H "Authorization: Bearer $token" \
-              -H "Content-Type: application/json" \
-              -d '{"name":"Pastiera builds","mimeType":"application/vnd.google-apps.folder"}' | jq -r .id)
-          fi
-          # Resumable upload: fine for any APK size
-          session=$(curl -sS --fail -D - -o /dev/null -X POST \
-            "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink" \
-            -H "Authorization: Bearer $token" -H "Content-Type: application/json; charset=UTF-8" \
-            -H "X-Upload-Content-Type: application/vnd.android.package-archive" \
-            -d "{\"name\":\"$name\",\"parents\":[\"$folder\"]}" | grep -i '^location:' | cut -d' ' -f2 | tr -d '\r')
-          link=$(curl -sS --fail -X PUT "$session" -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary @"$apk" | jq -r .webViewLink)
-          echo "Uploaded $name to Google Drive: $link"
-          echo "### Google Drive" >> "$GITHUB_STEP_SUMMARY"
-          echo "[$name]($link)" >> "$GITHUB_STEP_SUMMARY"
 
   tests:
     name: tests

@@ -74,6 +74,7 @@ object SettingsManager {
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
+    private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
     private const val LED_COLOR_KEY_PREFIX = "led_color_"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
@@ -155,6 +156,7 @@ object SettingsManager {
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
     private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
     private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
+    private const val KEY_TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode_hide_keyboard"
     const val TERMUX_PACKAGE = "com.termux"
     // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
@@ -2844,6 +2846,14 @@ object SettingsManager {
         getPreferences(context).edit().putBoolean(KEY_LED_INDIVIDUAL_COLORS, enabled).apply()
     }
 
+    /** Locked LEDs sweep a gradient of their colour (off: a steady colour). */
+    fun getLedLockedAnimationEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_LED_LOCKED_ANIMATION, false)
+
+    fun setLedLockedAnimationEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_LED_LOCKED_ANIMATION, enabled).apply()
+    }
+
     /** One LED's colour ([led]: shift, ctrl, alt or sym). */
     fun getLedColor(context: Context, led: String, default: Int): Int =
         getPreferences(context).getInt(LED_COLOR_KEY_PREFIX + led, default)
@@ -5386,6 +5396,17 @@ object SettingsManager {
      */
     fun getTerminalModeEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_TERMINAL_MODE_ENABLED, true)
+
+    /**
+     * Terminal mode keeps Pastiera out of sight, as for the Linux desktop: Alt and SYM still type
+     * Pastiera's characters, only the clipboard and emoji picker show while open.
+     */
+    fun getTerminalModeHideKeyboard(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TERMINAL_MODE_HIDE_KEYBOARD, true)
+
+    fun setTerminalModeHideKeyboard(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_HIDE_KEYBOARD, enabled).apply()
+    }
 
     fun setTerminalModeEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_ENABLED, enabled).apply()

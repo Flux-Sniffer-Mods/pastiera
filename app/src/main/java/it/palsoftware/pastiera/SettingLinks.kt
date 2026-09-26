@@ -96,9 +96,11 @@ object SettingLinkIds {
     const val MAIN_LED_COLORS = "main.led_colors"
     const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
     const val RECOMMENDED_SETTINGS = "system.recommended_settings"
+    const val TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode.hide_keyboard"
     const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
     const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
     const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
+    const val LED_LOCKED_ANIMATION = "led_colors.locked_animation"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 

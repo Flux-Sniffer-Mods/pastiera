@@ -29,6 +29,16 @@ class LedColorsTest {
     }
 
     @Test
+    fun theLockedSweepGoesToAMoreIntenseVersion() {
+        val base = Color.rgb(120, 90, 160)
+        val intense = LedColors.intensify(base)
+        assertTrue(hsv(intense)[1] > hsv(base)[1])
+        assertTrue(hsv(intense)[2] > hsv(base)[2])
+        assertEquals(hsv(base)[0], hsv(intense)[0], 1f)
+        assertEquals(Color.alpha(base), Color.alpha(intense))
+    }
+
+    @Test
     fun everyLedHasItsOwnDefault() {
         assertEquals(LedColors.Led.entries.size, LedColors.Led.entries.map { it.defaultColor }.toSet().size)
     }

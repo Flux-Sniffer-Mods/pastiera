@@ -21,6 +21,18 @@ object LedColors {
 
     fun enabled(context: Context): Boolean = SettingsManager.getLedIndividualColorsEnabled(context)
 
+    fun lockedAnimationEnabled(context: Context): Boolean = SettingsManager.getLedLockedAnimationEnabled(context)
+
+    /** A more intense version of [color] for the locked sweep: more saturated and brighter. */
+    fun intensify(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        return Color.HSVToColor(
+            Color.alpha(color),
+            floatArrayOf(hsv[0], (hsv[1] * 1.3f + 0.15f).coerceAtMost(1f), (hsv[2] * 1.35f + 0.2f).coerceAtMost(1f))
+        )
+    }
+
     fun baseColor(context: Context, led: Led): Int = SettingsManager.getLedColor(context, led.key, led.defaultColor)
 
     /** The colour of [base] at [level]: dimmed when off, boosted when locked. */

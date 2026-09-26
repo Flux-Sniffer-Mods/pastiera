@@ -172,4 +172,8 @@
     <string name="recommended_settings_nothing">Tutto quello che è consigliato è già attivo.</string>
     <string name="recommended_settings_apply">Attiva</string>
     <string name="recommended_settings_applied">Impostazioni consigliate attivate</string>
+    <string name="terminal_mode_hide_keyboard_title">Nascondi la tastiera</string>
+    <string name="terminal_mode_hide_keyboard_description">Come per il desktop Linux: Pastiera resta nascosta nei terminali. Alt scrive comunque il tuo livello Alt e SYM i suoi simboli, senza mostrarli; Ctrl resta Ctrl. Appunti e selettore emoji si mostrano mentre sono aperti.</string>
+    <string name="led_locked_animation_title">Anima i LED bloccati</string>
+    <string name="led_locked_animation_description">Il LED di un modificatore bloccato scorre un gradiente tra il suo colore e una versione più intensa, così un blocco non passa inosservato.</string>
 </resources>

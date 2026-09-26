@@ -3136,7 +3136,18 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     /** Hidden apps keep Pastiera's surface closed, except for the status LEDs or an open panel. */
     private fun hiddenAppSurfaceBlocked(): Boolean =
-        keyboardHiddenForApp && !hiddenAppShowsLeds && !hiddenAppPanelOpen()
+        (keyboardHiddenForApp && !hiddenAppShowsLeds && !hiddenAppPanelOpen()) || terminalSurfaceHidden()
+
+    /**
+     * Terminal mode, like the Linux desktop: Pastiera out of sight while its keys keep working
+     * (Alt layer, SYM layers typed blind, real Ctrl). The clipboard (3) and emoji picker (4) need
+     * to be seen, so they show while open.
+     */
+    private fun terminalSurfaceHidden(): Boolean =
+        terminalModeActive && !keyboardHiddenForApp && terminalHidesKeyboard && symPage != 3 && symPage != 4
+
+    private var terminalHidesKeyboard = false
+    private var terminalSurfaceShown = false
 
     /** In a hidden app with the panels option: its panel keys, and every key while a panel is open. */
     private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
@@ -3160,6 +3171,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     /** Show Pastiera while a panel is open in a hidden app; hide it (or back to LEDs) afterwards. */
     private fun syncHiddenAppPanel() {
+        if (terminalModeActive && terminalHidesKeyboard && !keyboardHiddenForApp) {
+            val show = !terminalSurfaceHidden()
+            if (show == terminalSurfaceShown) return
+            terminalSurfaceShown = show
+            invalidateRenderedStatusSnapshot()
+            if (show) ensureImeSurfaceVisible() else hideSurfaceIfHiddenForApp()
+            return
+        }
         if (!keyboardHiddenForApp) return
         val panelOpen = hiddenAppPanelOpen()
         if (::candidatesBarController.isInitialized) {
@@ -3768,6 +3787,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             } else null
         )
         terminalModeActive = SettingsManager.isTerminalModeApp(this, info?.packageName) && TerminalMode.apply(info)
+        terminalHidesKeyboard = terminalModeActive && SettingsManager.getTerminalModeHideKeyboard(this)
+        terminalSurfaceShown = false
         terminalCtrlKeysDown.clear()
         terminalCtrlSent.clear()
         terminalRawKeysDown.clear()
@@ -5067,7 +5088,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             if (firstPress) hiddenAppPastieraKeys += keyCode_
         }
         val handled = handleKeyDown(keyCode_, event_)
-        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        if (keyboardHiddenForApp || terminalHidesKeyboard) syncHiddenAppPanel()
         return handled
     }
 
@@ -5827,7 +5848,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             }
         }
         val handled = handleKeyUp(keyCode_, event_)
-        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        if (keyboardHiddenForApp || terminalHidesKeyboard) syncHiddenAppPanel()
         return handled
     }
 

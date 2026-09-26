@@ -333,6 +333,8 @@ internal object BackupPreferenceContract {
             "emoji_suggestions_enabled" to PreferenceValueType.BOOLEAN,
             "inline_autofill_enabled" to PreferenceValueType.BOOLEAN,
             "led_individual_colors" to PreferenceValueType.BOOLEAN,
+            "led_locked_animation" to PreferenceValueType.BOOLEAN,
+            "terminal_mode_hide_keyboard" to PreferenceValueType.BOOLEAN,
             "emoji_layer_profiles" to PreferenceValueType.STRING,
             "emoji_layer_active_profile" to PreferenceValueType.STRING,
             "emoji_layer_switch_by_app" to PreferenceValueType.BOOLEAN,

@@ -177,4 +177,8 @@
     <string name="recommended_settings_nothing">Everything recommended is already on.</string>
     <string name="recommended_settings_apply">Turn on</string>
     <string name="recommended_settings_applied">Recommended settings turned on</string>
+    <string name="terminal_mode_hide_keyboard_title">Hide the keyboard</string>
+    <string name="terminal_mode_hide_keyboard_description">Like the Linux desktop: Pastiera stays out of sight in terminals. Alt still types your Alt layer and SYM its symbols, unseen; Ctrl stays Ctrl. The clipboard and emoji picker show while open.</string>
+    <string name="led_locked_animation_title">Animate locked LEDs</string>
+    <string name="led_locked_animation_description">A locked modifier\'s LED sweeps a gradient between its colour and a more intense version, so a lock is hard to miss.</string>
 </resources>

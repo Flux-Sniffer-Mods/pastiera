@@ -444,6 +444,28 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun terminalMode_keepsTheKeyboardOutOfSightInTermux() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setTerminalModeEnabled(context, true)
+        val termux = EditorInfo().apply {
+            packageName = "com.termux"
+            // A terminal view: no text field, as Termux reports it
+            inputType = android.text.InputType.TYPE_NULL
+        }
+
+        SettingsManager.setTerminalModeHideKeyboard(context, true)
+        service.onStartInput(termux, false)
+        assertFalse(service.onEvaluateInputViewShown())
+
+        // The option off: terminal mode no longer forces the keyboard away
+        SettingsManager.setTerminalModeHideKeyboard(context, false)
+        service.onStartInput(termux, false)
+        val shownWithoutHiding = service.onEvaluateInputViewShown()
+        service.onStartInput(editorInfo, false)
+        assertEquals(service.onEvaluateInputViewShown(), shownWithoutHiding)
+    }
+
+    @Test
     fun autoCap_manualShiftOff_survivesRestartOfCurrentField() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setAutoCapitalizeFirstLetter(context, true)

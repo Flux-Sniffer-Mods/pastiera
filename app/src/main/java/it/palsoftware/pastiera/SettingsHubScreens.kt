@@ -454,6 +454,7 @@ fun DeveloperOptionsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
 fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     val context = LocalContext.current
     var enabled by remember { mutableStateOf(SettingsManager.getTerminalModeEnabled(context)) }
+    var hideKeyboard by remember { mutableStateOf(SettingsManager.getTerminalModeHideKeyboard(context)) }
     var apps by remember { mutableStateOf(SettingsManager.getTerminalModeApps(context)) }
     var showPicker by remember { mutableStateOf(false) }
     val installed = remember { AppListHelper.getInstalledApps(context).associate { it.packageName to it.appName } }
@@ -469,6 +470,18 @@ fun TerminalModeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                 SettingsManager.setTerminalModeEnabled(context, it)
             }
         )
+        if (enabled) {
+            FluxSwitchRow(
+                linkId = SettingLinkIds.TERMINAL_MODE_HIDE_KEYBOARD,
+                title = stringResource(R.string.terminal_mode_hide_keyboard_title),
+                description = stringResource(R.string.terminal_mode_hide_keyboard_description),
+                checked = hideKeyboard,
+                onCheckedChange = {
+                    hideKeyboard = it
+                    SettingsManager.setTerminalModeHideKeyboard(context, it)
+                }
+            )
+        }
         SettingsSectionDivider(stringResource(R.string.terminal_mode_apps))
         apps.forEach { packageName ->
             FluxActionRow(

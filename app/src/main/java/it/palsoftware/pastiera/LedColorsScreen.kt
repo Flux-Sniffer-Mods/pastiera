@@ -41,6 +41,7 @@ fun LedColorsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         mutableStateOf(LedColors.Led.entries.associateWith { LedColors.baseColor(context, it) })
     }
     var editing by remember { mutableStateOf<LedColors.Led?>(null) }
+    var lockedAnimation by remember { mutableStateOf(LedColors.lockedAnimationEnabled(context)) }
 
     FluxScreenScaffold(stringResource(R.string.led_colors_title), onBack, modifier) {
         FluxSwitchRow(
@@ -53,6 +54,16 @@ fun LedColorsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
             onCheckedChange = {
                 enabled = it
                 SettingsManager.setLedIndividualColorsEnabled(context, it)
+            }
+        )
+        FluxSwitchRow(
+            linkId = SettingLinkIds.LED_LOCKED_ANIMATION,
+            title = stringResource(R.string.led_locked_animation_title),
+            description = stringResource(R.string.led_locked_animation_description),
+            checked = lockedAnimation,
+            onCheckedChange = {
+                lockedAnimation = it
+                SettingsManager.setLedLockedAnimationEnabled(context, it)
             }
         )
         if (enabled) {
