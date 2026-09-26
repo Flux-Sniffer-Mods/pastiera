@@ -340,17 +340,7 @@ fun TextInputSettingsScreen(
                             SettingsManager.setAutoCapitalizeRespectManualShiftOff(context, enabled)
                         }
                     )
-                    SettingsSwitchRow(
-                        title = stringResource(R.string.auto_capitalize_restricted_fields_title),
-                        description = stringResource(R.string.auto_capitalize_restricted_fields_description),
-                        checked = autoCapitalizeRestrictedFields,
-                        inset = 52.dp,
-                        linkId = SettingLinkIds.TEXT_INPUT_AUTO_CAPITALIZE_RESTRICTED_FIELDS,
-                        onCheckedChange = { enabled ->
-                            autoCapitalizeRestrictedFields = enabled
-                            SettingsManager.setAutoCapitalizeRestrictedFields(context, enabled)
-                        }
-                    )
+                    AutoShiftFieldTypesRow()
                 }
             }
             SettingsSwitchRow(
@@ -911,5 +901,62 @@ internal fun toggleAutoSpacePunctuation(current: String, punctuation: Char): Str
         current.filterNot { it == punctuation }
     } else {
         addAutoSpacePunctuation(current, punctuation)
+    }
+}
+
+/** Automatic Shift by kind of text field: a summary row opening a checklist. */
+@Composable
+private fun AutoShiftFieldTypesRow() {
+    val context = LocalContext.current
+    var types by remember { mutableStateOf(it.palsoftware.pastiera.inputmethod.ShiftFieldTypes.enabled(context)) }
+    var picking by remember { mutableStateOf(false) }
+    val all = it.palsoftware.pastiera.inputmethod.ShiftFieldTypes.Type.entries
+    val summary = all.filter { type -> type in types }
+        .map { type -> stringResource(type.labelRes) }
+        .ifEmpty { listOf(stringResource(R.string.shift_field_none)) }
+        .joinToString(", ")
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .settingRow(SettingLinkIds.TEXT_INPUT_AUTO_CAPITALIZE_RESTRICTED_FIELDS) { picking = true }
+    ) {
+        Column(modifier = Modifier.padding(start = 52.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
+            Text(
+                stringResource(R.string.auto_capitalize_restricted_fields_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    if (picking) {
+        AlertDialog(
+            onDismissRequest = { picking = false },
+            title = { Text(stringResource(R.string.auto_capitalize_restricted_fields_title)) },
+            text = {
+                Column {
+                    Text(
+                        stringResource(R.string.auto_capitalize_restricted_fields_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    all.forEach { type ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    types = if (type in types) types - type else types + type
+                                    it.palsoftware.pastiera.inputmethod.ShiftFieldTypes.setEnabled(context, types)
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(checked = type in types, onCheckedChange = null)
+                            Text(stringResource(type.labelRes), style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.whats_new_done)) } }
+        )
     }
 }

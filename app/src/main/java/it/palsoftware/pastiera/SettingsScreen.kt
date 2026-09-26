@@ -89,7 +89,8 @@ enum class SettingsDestination {
     Apps,
     AppShortcuts,
     Developer,
-    TerminalMode
+    TerminalMode,
+    ExactTyping
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -249,6 +250,63 @@ fun SettingsScreen(
                     onCustomInputStylesClick = { navigateTo(SettingsDestination.CustomInputStyles) },
                     onAppLanguageClick = { navigateTo(SettingsDestination.AppLanguage) }
                 )
+            }
+            SettingsDestination.KeyboardsLayouts -> {
+                KeyboardsLayoutsHubScreen(
+                    modifier = modifier,
+                    onBack = { navigateBack() },
+                    onNavigate = { destination -> navigateTo(destination) }
+                )
+            }
+            SettingsDestination.Typing -> {
+                TypingHubScreen(
+                    modifier = modifier,
+                    onBack = { navigateBack() },
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onOpenCustomization = { destination -> openCustomization(destination) }
+                )
+            }
+            SettingsDestination.EditingKeys -> {
+                TextInputSettingsScreen(
+                    modifier = modifier,
+                    onBack = { navigateBack() },
+                    page = TextInputPage.EditingKeys,
+                    onNavModeSettingsClick = { navigateToNavMode(null) }
+                )
+            }
+            SettingsDestination.TextExpansion -> {
+                TextExpansionSettingsScreen(onBack = { navigateBack() })
+            }
+            SettingsDestination.LookSound -> {
+                LookSoundHubScreen(
+                    modifier = modifier,
+                    onBack = { navigateBack() },
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onOpenCustomization = { destination -> openCustomization(destination) }
+                )
+            }
+            SettingsDestination.TrackpadGestures -> {
+                TrackpadGestureSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.Apps -> {
+                AppsHubScreen(
+                    modifier = modifier,
+                    onBack = { navigateBack() },
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onOpenCustomization = { destination -> openCustomization(destination) }
+                )
+            }
+            SettingsDestination.TerminalMode -> {
+                TerminalModeScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.ExactTyping -> {
+                ExactTypingScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.Developer -> {
+                DeveloperOptionsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.AppShortcuts -> {
+                AppShortcutsSettingsScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.KeyboardsDevices -> {
                 KeyboardsDevicesSettingsScreen(

@@ -38,8 +38,8 @@
     <string name="auto_capitalize_description">Capitalize the first letter when starting in an empty text field.</string>
     <string name="auto_capitalize_respect_manual_shift_off_title">Respect manual Shift off</string>
     <string name="auto_capitalize_respect_manual_shift_off_description">Keep automatic Shift off while you remain in the same text field.</string>
-    <string name="auto_capitalize_restricted_fields_title">Shift in all text fields</string>
-    <string name="auto_capitalize_restricted_fields_description">Also start address bars, email, and search fields with Shift. Password fields remain unchanged.</string>
+    <string name="auto_capitalize_restricted_fields_title">Automatic Shift in</string>
+    <string name="auto_capitalize_restricted_fields_description">Choose which kinds of text field start with Shift. Password fields never do.</string>
 
     <!-- Auto Capitalize After Period Section -->
     <string name="auto_capitalize_after_period_title">Capitalize after sentence end</string>
@@ -388,14 +388,14 @@
     <string name="keyboard_layout_no_conversion_description">Standard QWERTY layout (no conversion)</string>
     <string name="keyboard_layout_conversions_title">Layout Conversions</string>
     <string name="keyboard_layout_conversions_description">Convert letter keys to match the selected layout</string>
-    <string name="keyboard_layout_viewer_title">Keyboard map</string>
+    <string name="keyboard_layout_viewer_title">Edit layout</string>
     <string name="keyboard_layout_viewer_subtitle">Layout: %1$s</string>
     <string name="keyboard_layout_viewer_unavailable">Unable to load this layout mapping.</string>
     <string name="keyboard_layout_viewer_empty">No key mappings found for this layout.</string>
     <string name="keyboard_layout_multitap_badge">multitap</string>
     <string name="keyboard_layout_viewer_multitap_on">multitap</string>
     <string name="keyboard_layout_viewer_multitap_off">single</string>
-    <string name="keyboard_layout_viewer_open">View mapping</string>
+    <string name="keyboard_layout_viewer_open">Edit layout</string>
     <string name="keyboard_layout_settings_button">Keyboard Layout Settings</string>
     <string name="keyboard_layout_mode_title">Automatic Layout Mapping</string>
     <string name="keyboard_layout_mode_auto_description">ON: follow subtype/locale mapping defaults.</string>
@@ -405,7 +405,7 @@
     <string name="alt_enter_layout_switch_title">Alt+Enter Layout Switch</string>
     <string name="alt_enter_layout_switch_description">Cycle languages/layouts with Alt+Enter.</string>
     <string name="ctrl_space_layout_switch_title">Ctrl+Space Layout Switch</string>
-    <string name="ctrl_space_layout_switch_description">Cycle languages/layouts with Ctrl+Space.</string>
+    <string name="ctrl_space_layout_switch_description">Cycle languages/layouts with Ctrl+Space; Ctrl+Shift+Space goes back.</string>
     <string name="layout_switch_shortcuts_title">Layout Switch Shortcuts</string>
     <string name="toast_on_layout_switch_title">Layout Switch Toast</string>
     <string name="toast_on_layout_switch_description">Show a toast when switching languages/layouts.</string>
@@ -1650,7 +1650,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="snippets_prefix_description">One printable symbol. A colon is reserved for emoji and symbol shortcodes.</string>
     <string name="snippets_prefix_error">Choose one non-whitespace symbol other than a colon.</string>
     <string name="snippets_manage_title">Manage snippets</string>
-    <string name="snippets_manage_description">Add global shortcuts and multiline replacement text.</string>
+    <string name="snippets_manage_description">Add global shortcuts and multiline replacement text. {date}, {time}, {datetime}, {isodate}, {day} and {clipboard} fill in when a snippet expands.</string>
     <string name="snippets_add">Add snippet</string>
     <string name="snippets_edit">Edit snippet</string>
     <string name="snippets_delete">Delete snippet</string>

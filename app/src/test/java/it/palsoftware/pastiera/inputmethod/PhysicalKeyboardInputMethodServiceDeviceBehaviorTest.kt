@@ -942,6 +942,30 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun emojiPickerKey_rightShiftHeldForAChordDoesNotOpenThePicker() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+
+        service.onKeyDown(
+            KeyEvent.KEYCODE_SHIFT_RIGHT,
+            keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_RIGHT, 7_800L, 7_800L)
+        )
+        assertEquals("Opens on release, so it can be held for a chord", 0, symLayout().currentSymPage())
+        pressKey(KeyEvent.KEYCODE_W, 7_850L)
+        val upHandled = service.onKeyUp(
+            KeyEvent.KEYCODE_SHIFT_RIGHT,
+            keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_RIGHT, 7_800L, 7_900L)
+        )
+
+        assertTrue(upHandled)
+        assertEquals(0, symLayout().currentSymPage())
+
+        // The next plain tap opens it again
+        pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 7_950L)
+        assertEquals(EMOJI_PICKER_PAGE, symLayout().currentSymPage())
+    }
+
+    @Test
     fun emojiPickerKey_autoRepeatDoesNotRetoggle() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
@@ -985,6 +1009,37 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
         assertFalse(emojiKeyUp)
         assertFalse(letterDown)
         assertEquals(0, symLayout().currentSymPage())
+    }
+
+    @Test
+    fun layoutSwitchChords_notFromEmojiScreensOrWithTheEmojiKey() {
+        val context = RuntimeEnvironment.getApplication()
+        val blocked = PhysicalKeyboardInputMethodService::class.java
+            .getDeclaredMethod("layoutSwitchChordBlocked", Int::class.java, Boolean::class.java)
+            .apply { isAccessible = true }
+        fun isBlocked(keyCode: Int, symOpen: Boolean) = blocked.invoke(service, keyCode, symOpen) as Boolean
+
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_ALT_RIGHT)
+        assertFalse(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_RIGHT, false))
+        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, true))
+    }
+
+    @Test
+    fun hiddenApp_holdingALetterInATextFieldDoesNotRepeatIntoTheApp() {
+        setField(service, "keyboardHiddenForApp", true)
+
+        // The first press goes to the app; its repeats would open Android's accent picker there
+        val first = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(14_000L, 14_000L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 0))
+        val repeat = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(14_000L, 14_500L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 1))
+        assertFalse(first)
+        assertTrue(repeat)
+
+        // Views that read raw keys (terminals, X11) still get every repeat
+        val rawView = EditorInfo().apply { inputType = InputType.TYPE_NULL }
+        setField(service, "mInputEditorInfo", rawView)
+        val rawRepeat = service.onKeyDown(KeyEvent.KEYCODE_C, KeyEvent(15_000L, 15_500L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_C, 1))
+        assertFalse(rawRepeat)
     }
 
     @Test
