@@ -5,6 +5,7 @@ import android.content.Intent
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,9 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -748,7 +752,7 @@ fun SymCustomizationScreen(
                         maxLines = 1
                     )
                     Text(
-                        text = stringResource(emojiPickerKeyLabelRes(emojiPickerKey)),
+                        text = emojiPickerKeyLabel(context, emojiPickerKey),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
@@ -761,41 +765,73 @@ fun SymCustomizationScreen(
 
         }
 
-        // Dedicated emoji picker key chooser
+        // Dedicated emoji picker key: press the key to use (works with whatever keys the device has)
         if (showEmojiPickerKeyDialog) {
+            val keyCaptureFocus = remember { FocusRequester() }
+            var rejectedKey by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { showEmojiPickerKeyDialog = false },
                 title = { Text(stringResource(R.string.emoji_picker_key_title)) },
                 text = {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(keyCaptureFocus)
+                            .focusable()
+                            .onPreviewKeyEvent { event ->
+                                val native = event.nativeKeyEvent
+                                // Let Back close the dialog as usual
+                                if (native.keyCode == KeyEvent.KEYCODE_BACK) return@onPreviewKeyEvent false
+                                if (native.action == KeyEvent.ACTION_DOWN && native.repeatCount == 0) {
+                                    if (SettingsManager.isAllowedEmojiPickerKey(native.keyCode, native.isPrintingKey)) {
+                                        SettingsManager.setEmojiPickerKey(context, native.keyCode)
+                                        emojiPickerKey = native.keyCode
+                                        showEmojiPickerKeyDialog = false
+                                    } else {
+                                        rejectedKey = true
+                                    }
+                                }
+                                true
+                            },
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.emoji_picker_key_description),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                        SettingsManager.EMOJI_PICKER_KEY_CHOICES.forEach { choice ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        emojiPickerKey = choice
-                                        SettingsManager.setEmojiPickerKey(context, choice)
-                                        showEmojiPickerKeyDialog = false
-                                    }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = emojiPickerKey == choice,
-                                    onClick = null
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(stringResource(emojiPickerKeyLabelRes(choice)))
-                            }
-                        }
+                        Text(
+                            text = stringResource(
+                                R.string.emoji_picker_key_current,
+                                emojiPickerKeyLabel(context, emojiPickerKey)
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(
+                                if (rejectedKey) R.string.emoji_picker_key_rejected
+                                else R.string.emoji_picker_key_press_prompt
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (rejectedKey) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    LaunchedEffect(Unit) {
+                        runCatching { keyCaptureFocus.requestFocus() }
                     }
                 },
-                confirmButton = {},
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                            emojiPickerKey = KeyEvent.KEYCODE_UNKNOWN
+                            showEmojiPickerKeyDialog = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.emoji_picker_key_turn_off))
+                    }
+                },
                 dismissButton = {
                     TextButton(onClick = { showEmojiPickerKeyDialog = false }) {
                         Text(stringResource(R.string.cancel))
@@ -922,10 +958,18 @@ fun SymCustomizationScreen(
     }
 }
 
-private fun emojiPickerKeyLabelRes(keyCode: Int): Int = when (keyCode) {
-    KeyEvent.KEYCODE_SHIFT_RIGHT -> R.string.emoji_picker_key_right_shift
-    KeyEvent.KEYCODE_SHIFT_LEFT -> R.string.emoji_picker_key_left_shift
-    KeyEvent.KEYCODE_ALT_RIGHT -> R.string.emoji_picker_key_right_alt
-    KeyEvent.KEYCODE_CTRL_RIGHT -> R.string.emoji_picker_key_right_ctrl
-    else -> R.string.emoji_picker_key_off
+internal fun emojiPickerKeyLabel(context: Context, keyCode: Int): String = when (keyCode) {
+    KeyEvent.KEYCODE_UNKNOWN -> context.getString(R.string.emoji_picker_key_off)
+    KeyEvent.KEYCODE_SHIFT_RIGHT -> context.getString(R.string.emoji_picker_key_right_shift)
+    KeyEvent.KEYCODE_SHIFT_LEFT -> context.getString(R.string.emoji_picker_key_left_shift)
+    KeyEvent.KEYCODE_ALT_RIGHT -> context.getString(R.string.emoji_picker_key_right_alt)
+    KeyEvent.KEYCODE_ALT_LEFT -> context.getString(R.string.emoji_picker_key_left_alt)
+    KeyEvent.KEYCODE_CTRL_RIGHT -> context.getString(R.string.emoji_picker_key_right_ctrl)
+    KeyEvent.KEYCODE_CTRL_LEFT -> context.getString(R.string.emoji_picker_key_left_ctrl)
+    KeyEvent.KEYCODE_FUNCTION -> "Fn"
+    else -> KeyEvent.keyCodeToString(keyCode)
+        .removePrefix("KEYCODE_")
+        .replace('_', ' ')
+        .lowercase()
+        .replaceFirstChar { it.uppercase() }
 }

@@ -5152,25 +5152,55 @@ object SettingsManager {
             .apply()
     }
 
-    /** Keys that can be dedicated to toggling the emoji picker. KEYCODE_UNKNOWN means off. */
-    val EMOJI_PICKER_KEY_CHOICES: List<Int> = listOf(
-        KeyEvent.KEYCODE_UNKNOWN,
-        KeyEvent.KEYCODE_SHIFT_RIGHT,
-        KeyEvent.KEYCODE_SHIFT_LEFT,
-        KeyEvent.KEYCODE_ALT_RIGHT,
-        KeyEvent.KEYCODE_CTRL_RIGHT
+    /** Keys that type or edit text, or that Android and Pastiera need while typing. */
+    private val EMOJI_PICKER_KEY_DENYLIST: Set<Int> = setOf(
+        KeyEvent.KEYCODE_SPACE,
+        KeyEvent.KEYCODE_ENTER,
+        KeyEvent.KEYCODE_NUMPAD_ENTER,
+        KeyEvent.KEYCODE_DEL,
+        KeyEvent.KEYCODE_FORWARD_DEL,
+        KeyEvent.KEYCODE_TAB,
+        KeyEvent.KEYCODE_ESCAPE,
+        KeyEvent.KEYCODE_BACK,
+        KeyEvent.KEYCODE_HOME,
+        KeyEvent.KEYCODE_POWER,
+        KeyEvent.KEYCODE_APP_SWITCH,
+        KeyEvent.KEYCODE_SYM,
+        KeyEvent.KEYCODE_DPAD_UP,
+        KeyEvent.KEYCODE_DPAD_DOWN,
+        KeyEvent.KEYCODE_DPAD_LEFT,
+        KeyEvent.KEYCODE_DPAD_RIGHT,
+        KeyEvent.KEYCODE_DPAD_CENTER
     )
 
+    /**
+     * True if [keyCode] can be dedicated to the emoji picker. Any key the device has is fine
+     * except ones that type text ([isPrintingKey], letters, digits) or are needed while typing.
+     */
+    fun isAllowedEmojiPickerKey(keyCode: Int, isPrintingKey: Boolean = false): Boolean =
+        keyCode > KeyEvent.KEYCODE_UNKNOWN &&
+            !isPrintingKey &&
+            keyCode !in EMOJI_PICKER_KEY_DENYLIST &&
+            keyCode !in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 &&
+            keyCode !in KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z
+
+    /** The dedicated emoji picker key, or KEYCODE_UNKNOWN when the feature is off. */
     fun getEmojiPickerKey(context: Context): Int {
         val keyCode = getPreferences(context).getInt(KEY_EMOJI_PICKER_KEY, DEFAULT_EMOJI_PICKER_KEY)
-        return if (keyCode in EMOJI_PICKER_KEY_CHOICES) keyCode else DEFAULT_EMOJI_PICKER_KEY
+        return if (keyCode == KeyEvent.KEYCODE_UNKNOWN || isAllowedEmojiPickerKey(keyCode)) {
+            keyCode
+        } else {
+            DEFAULT_EMOJI_PICKER_KEY
+        }
     }
 
-    fun setEmojiPickerKey(context: Context, keyCode: Int) {
-        val sanitized = if (keyCode in EMOJI_PICKER_KEY_CHOICES) keyCode else DEFAULT_EMOJI_PICKER_KEY
+    /** Stores [keyCode] (KEYCODE_UNKNOWN turns the feature off). Returns false if not allowed. */
+    fun setEmojiPickerKey(context: Context, keyCode: Int): Boolean {
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && !isAllowedEmojiPickerKey(keyCode)) return false
         getPreferences(context).edit()
-            .putInt(KEY_EMOJI_PICKER_KEY, sanitized)
+            .putInt(KEY_EMOJI_PICKER_KEY, keyCode)
             .apply()
+        return true
     }
 
     /**

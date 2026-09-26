@@ -207,6 +207,12 @@
     <string name="emoji_picker_key_left_shift">Shift sinistro</string>
     <string name="emoji_picker_key_right_alt">Alt destro</string>
     <string name="emoji_picker_key_right_ctrl">Ctrl destro</string>
+    <string name="emoji_picker_key_left_alt">Alt sinistro</string>
+    <string name="emoji_picker_key_left_ctrl">Ctrl sinistro</string>
+    <string name="emoji_picker_key_current">Tasto attuale: %1$s</string>
+    <string name="emoji_picker_key_press_prompt">Premi ora il tasto che vuoi usare.</string>
+    <string name="emoji_picker_key_rejected">Quel tasto scrive testo o serve durante la digitazione. Provane un altro.</string>
+    <string name="emoji_picker_key_turn_off">Disattiva</string>
     <string name="sym_swap_pages_title">Scambia Ordine Pagine SYM</string>
     <string name="sym_swap_pages_description">Scegli quale pagina SYM appare per prima quando si alterna.</string>
     <string name="sym_order_emoji_first">Emoji prima</string>

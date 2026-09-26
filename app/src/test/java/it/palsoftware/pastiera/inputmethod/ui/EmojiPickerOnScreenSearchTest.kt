@@ -2,6 +2,7 @@ package it.palsoftware.pastiera.inputmethod.ui
 
 import android.os.Bundle
 import android.view.KeyEvent
+import it.palsoftware.pastiera.SettingsManager
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.CompletionInfo
@@ -74,6 +75,9 @@ class EmojiPickerOnScreenSearchTest {
 
     @Test
     fun emojiCommitRunsSynchronouslyBeforeAutoClose() {
+        // Auto-close on, whether the picker follows SYM auto-close (no emoji key) or the emoji
+        // key's own setting (an emoji key is set; the fork defaults to Right Shift)
+        SettingsManager.setEmojiKeyAutoClose(RuntimeEnvironment.getApplication(), true)
         val events = mutableListOf<String>()
         var viewRef: EmojiPickerView? = null
         val view = EmojiPickerView(RuntimeEnvironment.getApplication()) {
@@ -90,6 +94,22 @@ class EmojiPickerOnScreenSearchTest {
 
         assertEquals(listOf("commit", "close"), events)
         assertEquals(listOf("\uD83D\uDE00"), ic.committedTexts)
+    }
+
+    @Test
+    fun withAnEmojiKeyThePickerStaysOpenUnlessItsOwnAutoCloseIsOn() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        SettingsManager.setEmojiKeyAutoClose(context, false)
+        val events = mutableListOf<String>()
+        val view = EmojiPickerView(context) { events.add("close") }
+        val ic = RecordingInputConnection { events.add("commit") }
+        view.setInputConnection(ic)
+
+        invokeOnEmojiSelected(view, "\uD83D\uDE00", "smileys")
+
+        // Typed, and the picker stays open for the next emoji (SYM auto-close doesn't apply)
+        assertEquals(listOf("commit"), events)
     }
 
     @Test

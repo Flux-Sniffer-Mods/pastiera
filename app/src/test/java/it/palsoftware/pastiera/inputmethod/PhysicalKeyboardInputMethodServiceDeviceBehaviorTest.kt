@@ -963,6 +963,15 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun emojiPickerKey_anyAssignedKeyWorks_notJustListedOnes() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_FUNCTION)
+
+        assertTrue(pressKey(KeyEvent.KEYCODE_FUNCTION, 8_800L).first)
+        assertEquals(EMOJI_PICKER_PAGE, symLayout().currentSymPage())
+    }
+
+    @Test
     fun emojiPickerKey_off_rightShiftDoesNotOpenPicker() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)
