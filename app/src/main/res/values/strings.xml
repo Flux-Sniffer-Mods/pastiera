@@ -1081,7 +1081,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <!-- Settings Categories -->
     <string name="settings_category_text_input">Smart Features</string>
     <string name="settings_category_accessibility">Accessibility</string>
-    <string name="settings_category_auto_correction">Auto-correction</string>
+    <string name="settings_category_auto_correction">Suggestions &amp; auto-correction</string>
     <string name="settings_category_customization">More Customization</string>
     <string name="settings_category_sounds">Sound &amp; Haptics</string>
     <string name="settings_sounds_description">Typing sounds, vibration, and sound pack import</string>

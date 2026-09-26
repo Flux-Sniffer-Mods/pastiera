@@ -27,7 +27,7 @@ class SettingsLayoutTest {
     @Test
     fun movedRowsRouteToTheirNewScreens() {
         val expected = mapOf(
-            SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD to SettingsDestination.Apps,
+            SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD to SettingsDestination.KeyboardsLayouts,
             SettingLinkIds.TEXT_INPUT_CLEAR_ALT_ON_SPACE to SettingsDestination.Modifiers,
             SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT to SettingsDestination.Modifiers,
             SettingLinkIds.TEXT_INPUT_SHIFT_BACKSPACE_DELETE to SettingsDestination.EditingKeys,
@@ -37,7 +37,7 @@ class SettingsLayoutTest {
             SettingLinkIds.TEXT_INPUT_TEXT_EXPANSION to SettingsDestination.TextExpansion,
             SettingLinkIds.TEXT_INPUT_AUTO_CAPITALIZE to SettingsDestination.TextInput,
             SettingLinkIds.ADVANCED_TRACKPAD_GESTURES to SettingsDestination.TrackpadGestures,
-            SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD to SettingsDestination.LookSound,
+            SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD to SettingsDestination.TrackpadGestures,
             SettingLinkIds.ADVANCED_BACKUP to SettingsDestination.Advanced,
             "trackpad.swipe_to_delete" to SettingsDestination.TrackpadGestures,
             "sym.auto_close" to SettingsDestination.FluxEmojiGifs,
@@ -45,6 +45,37 @@ class SettingsLayoutTest {
             SettingLinkIds.MAIN_APP_SHORTCUTS to SettingsDestination.AppShortcuts
         )
         expected.forEach { (id, destination) -> assertEquals(id, destination, route(id).destination) }
+    }
+
+    /** A moved row is drawn on the screen its search link opens, and nowhere it used to be. */
+    @Test
+    fun movedRowsAreDrawnWhereTheirLinksLand() {
+        val source = java.io.File("src/main/java/it/palsoftware/pastiera")
+        fun body(file: String, function: String): String {
+            val text = java.io.File(source, file).readText()
+            val start = text.indexOf("fun $function(")
+            assertTrue("$function in $file", start >= 0)
+            val next = text.indexOf("\n@Composable", start).let { if (it < 0) text.length else it }
+            return text.substring(start, next)
+        }
+        val keyboards = body("SettingsHubScreens.kt", "KeyboardsLayoutsHubScreen")
+        val typing = body("SettingsHubScreens.kt", "TypingHubScreen")
+        val look = body("SettingsHubScreens.kt", "LookSoundHubScreen")
+        val apps = body("SettingsHubScreens.kt", "AppsHubScreen")
+        val privacy = java.io.File(source, "AdvancedSettingsScreen.kt").readText()
+        val trackpad = java.io.File(source, "TrackpadGestureSettingsScreen.kt").readText()
+
+        assertTrue(keyboards.contains("SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD"))
+        assertFalse(apps.contains("TEXT_INPUT_AUTO_SHOW_KEYBOARD"))
+        assertTrue(typing.contains("\"customization.variations\""))
+        assertTrue(typing.contains("SettingLinkIds.MAIN_NAV_MODE"))
+        assertFalse(look.contains("customization.variations"))
+        assertTrue(privacy.contains("SettingLinkIds.MAIN_APP_LANGUAGE"))
+        assertFalse(look.contains("MAIN_APP_LANGUAGE"))
+        assertTrue(trackpad.contains("SwipePadThresholdRow()"))
+        assertFalse(look.contains("SwipePadThresholdRow()"))
+        assertEquals(SettingsDestination.NavMode, route(SettingLinkIds.MAIN_NAV_MODE).destination)
+        assertEquals(SettingsDestination.AppLanguage, route(SettingLinkIds.MAIN_APP_LANGUAGE).destination)
     }
 
     @Test

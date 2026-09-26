@@ -288,7 +288,7 @@ fun CustomizationSettingsScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp)
+                                .heightIn(min = 64.dp)
                                 .settingRow("customization.variations") { navigateTo(CustomizationDestination.Variations) }
                         ) {
                             Row(
@@ -308,8 +308,7 @@ fun CustomizationSettingsScreen(
                                     Text(
                                         text = stringResource(R.string.variation_customize_title),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        fontWeight = FontWeight.Medium
                                     )
                                 }
                                 Icon(
@@ -324,7 +323,7 @@ fun CustomizationSettingsScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp)
+                                .heightIn(min = 64.dp)
                                 .settingRow("customization.sounds") { navigateTo(CustomizationDestination.Sounds) }
                         ) {
                             Row(
@@ -344,14 +343,12 @@ fun CustomizationSettingsScreen(
                                     Text(
                                         text = stringResource(R.string.settings_category_sounds),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = stringResource(R.string.settings_sounds_description),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Icon(
@@ -1948,8 +1945,7 @@ private fun LauncherShortcutTriggerRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = description,
@@ -1993,14 +1989,12 @@ private fun StarterLauncherNavigationRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Icon(

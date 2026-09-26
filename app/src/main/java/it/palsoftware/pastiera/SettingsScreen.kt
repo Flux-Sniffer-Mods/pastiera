@@ -220,7 +220,8 @@ fun SettingsScreen(
                 TypingHubScreen(
                     modifier = modifier,
                     onBack = { navigateBack() },
-                    onNavigate = { destination -> navigateTo(destination) }
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onOpenCustomization = { destination -> openCustomization(destination) }
                 )
             }
             SettingsDestination.EditingKeys -> {
@@ -479,18 +480,18 @@ private fun SettingsMainScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     SettingsCategoryRow(
-                        icon = Icons.Filled.Keyboard,
-                        title = stringResource(R.string.settings_keyboards_layouts_title),
-                        description = stringResource(R.string.settings_keyboards_layouts_description),
-                        linkId = SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS,
-                        onClick = { onNavigate(SettingsDestination.KeyboardsLayouts) }
-                    )
-                    SettingsCategoryRow(
                         icon = Icons.Filled.TextFields,
                         title = stringResource(R.string.settings_typing_title),
                         description = stringResource(R.string.settings_typing_description),
                         linkId = SettingLinkIds.MAIN_TYPING,
                         onClick = { onNavigate(SettingsDestination.Typing) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Keyboard,
+                        title = stringResource(R.string.settings_keyboards_layouts_title),
+                        description = stringResource(R.string.settings_keyboards_layouts_description),
+                        linkId = SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS,
+                        onClick = { onNavigate(SettingsDestination.KeyboardsLayouts) }
                     )
                     SettingsCategoryRow(
                         iconRes = R.drawable.modifier_keys_24,
@@ -507,6 +508,13 @@ private fun SettingsMainScreen(
                         onClick = { onNavigate(SettingsDestination.FluxEmojiGifs) }
                     )
                     SettingsCategoryRow(
+                        icon = Icons.Filled.Apps,
+                        title = stringResource(R.string.settings_apps_title),
+                        description = stringResource(R.string.settings_apps_description),
+                        linkId = SettingLinkIds.MAIN_APPS,
+                        onClick = { onNavigate(SettingsDestination.Apps) }
+                    )
+                    SettingsCategoryRow(
                         icon = Icons.Filled.Palette,
                         title = stringResource(R.string.settings_look_sound_title),
                         description = stringResource(R.string.settings_look_sound_description),
@@ -519,13 +527,6 @@ private fun SettingsMainScreen(
                         description = stringResource(R.string.settings_trackpad_gestures_description),
                         linkId = SettingLinkIds.ADVANCED_TRACKPAD_GESTURES,
                         onClick = { onNavigate(SettingsDestination.TrackpadGestures) }
-                    )
-                    SettingsCategoryRow(
-                        icon = Icons.Filled.Apps,
-                        title = stringResource(R.string.settings_apps_title),
-                        description = stringResource(R.string.settings_apps_description),
-                        linkId = SettingLinkIds.MAIN_APPS,
-                        onClick = { onNavigate(SettingsDestination.Apps) }
                     )
                     SettingsCategoryRow(
                         icon = Icons.Filled.Shield,
@@ -594,15 +595,13 @@ internal fun SettingsCategoryRow(
                         MaterialTheme.colorScheme.onSurface
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    maxLines = 1
+                    }
                 )
                 if (description != null) {
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

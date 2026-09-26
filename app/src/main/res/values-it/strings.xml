@@ -592,7 +592,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <!-- Settings Categories -->
     <string name="settings_category_text_input">Smart Features</string>
     <string name="settings_category_accessibility">Accessibilità</string>
-    <string name="settings_category_auto_correction">Auto-correzione</string>
+    <string name="settings_category_auto_correction">Suggerimenti e correzione</string>
     <string name="settings_category_customization">Personalizzazione</string>
     <string name="settings_category_sounds">Suoni e feedback aptico</string>
     <string name="settings_sounds_description">Suoni di digitazione, vibrazione e importazione pacchetti audio</string>

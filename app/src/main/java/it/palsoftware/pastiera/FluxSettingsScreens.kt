@@ -283,7 +283,7 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         Surface(
             modifier = Modifier.settingRow("flux_emoji.picker_key")
                 .fillMaxWidth()
-                .height(64.dp)
+                .heightIn(min = 64.dp)
                 .clickable { showEmojiPickerKeyDialog = true }
         ) {
             Row(
@@ -303,14 +303,12 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
                     Text(
                         text = stringResource(R.string.emoji_picker_key_title),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1
+                        fontWeight = FontWeight.Medium
                     )
                     Text(
                         text = emojiPickerKeyLabel(context, emojiPickerKey),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

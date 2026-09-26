@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -64,6 +65,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -291,16 +294,6 @@ fun AdvancedSettingsScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         SettingsSectionDivider(stringResource(R.string.settings_section_privacy))
-                        SettingsCategoryRow(
-                            icon = Icons.Filled.CloudOff,
-                            title = stringResource(R.string.flux_offline_title),
-                            description = stringResource(
-                                if (SettingsManager.isOfflineMode(context)) R.string.flux_offline_on else R.string.flux_offline_description
-                            ),
-                            linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
-                            onClick = { onNavigate(SettingsDestination.FluxOffline) }
-                        )
-
                         FluxSwitchRow(
                             linkId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS,
                             title = stringResource(R.string.incognito_always_title),
@@ -324,94 +317,27 @@ fun AdvancedSettingsScreen(
                             )
                         }
 
-                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
-                        // Backup
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_BACKUP) {
-                                    backupLauncher.launch(defaultBackupName())
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Backup,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.backup_now),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.backup_now_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.CloudOff,
+                            title = stringResource(R.string.flux_offline_title),
+                            description = stringResource(
+                                if (SettingsManager.isOfflineMode(context)) R.string.flux_offline_on else R.string.flux_offline_description
+                            ),
+                            linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
+                            onClick = { onNavigate(SettingsDestination.FluxOffline) }
+                        )
 
-                        // Restore
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_RESTORE) {
-                                    restoreLauncher.launch(arrayOf("application/zip"))
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.restore_from_file),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.restore_from_file_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                        SettingsSectionDivider(stringResource(R.string.settings_section_clipboard))
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
+                            title = stringResource(R.string.paste_suggestion_title),
+                            description = stringResource(R.string.paste_suggestion_description),
+                            checked = pasteSuggestion,
+                            onCheckedChange = {
+                                pasteSuggestion = it
+                                SettingsManager.setPasteSuggestionEnabled(context, it)
                             }
-                        }
+                        )
 
                         // Clipboard Retention Time
                         Surface(
@@ -440,14 +366,12 @@ fun AdvancedSettingsScreen(
                                     Text(
                                         text = stringResource(R.string.clipboard_retention_time_title),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = stringResource(R.string.clipboard_retention_time_description),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 OutlinedTextField(
@@ -479,17 +403,6 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
-                        FluxSwitchRow(
-                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
-                            title = stringResource(R.string.paste_suggestion_title),
-                            description = stringResource(R.string.paste_suggestion_description),
-                            checked = pasteSuggestion,
-                            onCheckedChange = {
-                                pasteSuggestion = it
-                                SettingsManager.setPasteSuggestionEnabled(context, it)
-                            }
-                        )
-
                         SettingsSectionDivider(stringResource(R.string.settings_category_accessibility))
                         SettingsCategoryRow(
                             icon = Icons.Filled.TouchApp,
@@ -497,6 +410,157 @@ fun AdvancedSettingsScreen(
                             description = stringResource(R.string.settings_accessibility_row_description),
                             linkId = SettingLinkIds.MAIN_ACCESSIBILITY,
                             onClick = { onNavigate(SettingsDestination.Accessibility) }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_language))
+                        SettingsCategoryRow(
+                            icon = ImageVector.vectorResource(R.drawable.translate_24),
+                            title = stringResource(R.string.app_language_title),
+                            description = currentAppLanguageLabel(context),
+                            linkId = SettingLinkIds.MAIN_APP_LANGUAGE,
+                            onClick = { onNavigate(SettingsDestination.AppLanguage) }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
+                        // Backup
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_BACKUP) {
+                                    backupLauncher.launch(defaultBackupName())
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Backup,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.backup_now),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.backup_now_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Restore
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_RESTORE) {
+                                    restoreLauncher.launch(arrayOf("application/zip"))
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.History,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.restore_from_file),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.restore_from_file_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
+                        // Show Tutorial
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_SHOW_TUTORIAL) {
+                                    SettingsManager.resetTutorialCompleted(context)
+                                    val intent = Intent(context, TutorialActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.tutorial_show),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.tutorial_review_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        SettingsUpdateRows(context)
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.Info,
+                            title = stringResource(R.string.about_title),
+                            description = stringResource(
+                                R.string.settings_about_version_summary,
+                                BuildConfig.VERSION_NAME
+                            ),
+                            linkId = SettingLinkIds.MAIN_ABOUT,
+                            onClick = { onNavigate(SettingsDestination.About) }
                         )
 
                         SettingsSectionDivider(stringResource(R.string.settings_section_experimental))
@@ -559,64 +623,6 @@ fun AdvancedSettingsScreen(
                             )
                         }
 
-                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
-                        // Show Tutorial
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SHOW_TUTORIAL) {
-                                    SettingsManager.resetTutorialCompleted(context)
-                                    val intent = Intent(context, TutorialActivity::class.java)
-                                    context.startActivity(intent)
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Info,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.tutorial_review_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        SettingsUpdateRows(context)
-                        SettingsCategoryRow(
-                            icon = Icons.Filled.Info,
-                            title = stringResource(R.string.about_title),
-                            description = stringResource(
-                                R.string.settings_about_version_summary,
-                                BuildConfig.VERSION_NAME
-                            ),
-                            linkId = SettingLinkIds.MAIN_ABOUT,
-                            onClick = { onNavigate(SettingsDestination.About) }
-                        )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }

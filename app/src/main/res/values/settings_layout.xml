@@ -2,21 +2,21 @@
 <!-- Settings organised by what you are trying to do -->
 <resources>
     <string name="settings_keyboards_layouts_title">Keyboards &amp; layouts</string>
-    <string name="settings_keyboards_layouts_description">Devices, input languages, layout switching</string>
+    <string name="settings_keyboards_layouts_description">Input languages, keyboards and devices, showing the keyboard</string>
     <string name="settings_typing_title">Typing</string>
-    <string name="settings_typing_description">Capitals and punctuation, editing keys, auto-correction, text expansion</string>
+    <string name="settings_typing_description">Suggestions and auto-correction, capitals and punctuation, text expansion, variations, editing keys, Nav Mode</string>
     <string name="settings_modifiers_sym_title">Modifiers &amp; SYM</string>
     <string name="settings_modifiers_sym_description">Tap, lock and long press, SYM pages, key shortcuts, Nav Mode</string>
     <string name="settings_emoji_symbols_gifs_title">Emoji, symbols &amp; GIFs</string>
     <string name="settings_emoji_symbols_gifs_description">Emoji key and layer, the picker, symbol and GIF search</string>
     <string name="settings_look_sound_title">Look &amp; sound</string>
-    <string name="settings_look_sound_description">Theme and LED colours, status bar, sound and haptics, language</string>
+    <string name="settings_look_sound_description">Theme and LED colours, status bar, sound and haptics</string>
     <string name="settings_trackpad_gestures_title">Trackpad &amp; gestures</string>
-    <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words</string>
+    <string name="settings_trackpad_gestures_description">Swipe on the keys to pick suggestions, delete and add words; the status bar swipe pad</string>
     <string name="settings_apps_title">Apps</string>
-    <string name="settings_apps_description">App shortcuts, Enter per app, Quick Launcher, hidden keyboard apps, Linux desktop</string>
+    <string name="settings_apps_description">App shortcuts, Enter per app, Quick Launcher, terminals and Linux desktop</string>
     <string name="settings_privacy_system_title">Privacy &amp; system</string>
-    <string name="settings_privacy_system_description">Offline mode, backup, clipboard, accessibility, updates, about</string>
+    <string name="settings_privacy_system_description">Incognito, offline mode, clipboard, accessibility, app language, backup, updates</string>
 
     <string name="settings_keyboards_devices_description">Built-in, on-screen and accessory keyboards, and switching between them</string>
     <string name="settings_input_languages_description">Languages, their layouts and the keys that switch them</string>
@@ -24,8 +24,8 @@
     <string name="settings_capitalisation_punctuation_title">Capitals &amp; punctuation</string>
     <string name="settings_capitalisation_punctuation_description">Capital letters, spacing, dashes and quotes</string>
     <string name="settings_editing_keys_title">Editing keys</string>
-    <string name="settings_editing_keys_description">Backspace combinations and navigation</string>
-    <string name="settings_auto_correction_description">Replacements, suggestions and dictionaries</string>
+    <string name="settings_editing_keys_description">Backspace and Delete combinations</string>
+    <string name="settings_auto_correction_description">Suggestions, automatic correction, emoji suggestions, spell checker, dictionaries and replacements</string>
     <string name="settings_text_expansion_hub_description">Snippets, and emoji and symbol shortcodes</string>
     <string name="settings_section_enter">Enter</string>
 
@@ -117,4 +117,13 @@
     </plurals>
     <string name="clicks_all_key_mappings_ready_description">Your own Alt and SYM characters for every key, in a custom Device SYM profile. Ctrl shortcuts are under Key shortcuts.</string>
     <string name="alt_key_editor_no_profiles">No profiles yet. Start one above.</string>
+    <string name="settings_section_clipboard">Clipboard</string>
+    <string name="settings_section_editing">Editing and moving around</string>
+    <string name="settings_nav_mode_hub_description">Arrow keys, selection and more from the letter keys, with Ctrl</string>
+    <string name="settings_section_terminals">Terminals and desktops</string>
+    <string name="settings_section_swipe_pad">Status bar swipe pad</string>
+    <string name="autocorrect_section_suggestions">Suggestions and correction</string>
+    <string name="autocorrect_section_dictionary">Dictionary and spelling</string>
+    <string name="autocorrect_section_replacements">Text replacements</string>
+    <string name="autocorrect_section_tuning">Fine-tuning</string>
 </resources>

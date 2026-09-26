@@ -448,7 +448,7 @@ object SettingLinkRegistry {
             SettingLinkIds.TEXT_INPUT_AUTO_SHOW_KEYBOARD,
             R.string.auto_show_keyboard_title,
             R.string.auto_show_keyboard_description,
-            destination = SettingsDestination.Apps
+            destination = SettingsDestination.KeyboardsLayouts
         ),
         entry(
             SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT,
@@ -656,7 +656,7 @@ object SettingLinkRegistry {
         entry(
             SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD,
             R.string.swipe_incremental_threshold_title,
-            destination = SettingsDestination.LookSound
+            destination = SettingsDestination.TrackpadGestures
         ),
         entry(
             SettingLinkIds.ADVANCED_CLIPBOARD_RETENTION_TIME,

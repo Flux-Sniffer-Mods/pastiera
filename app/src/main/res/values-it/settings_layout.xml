@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_keyboards_layouts_title">Tastiere e layout</string>
-    <string name="settings_keyboards_layouts_description">Dispositivi, lingue di input, cambio layout</string>
+    <string name="settings_keyboards_layouts_description">Lingue di input, tastiere e dispositivi, mostrare la tastiera</string>
     <string name="settings_typing_title">Digitazione</string>
-    <string name="settings_typing_description">Maiuscole e punteggiatura, tasti di modifica, correzione automatica, espansione testo</string>
+    <string name="settings_typing_description">Suggerimenti e correzione automatica, maiuscole e punteggiatura, espansione testo, varianti, tasti di modifica, Nav Mode</string>
     <string name="settings_modifiers_sym_title">Modificatori e SYM</string>
     <string name="settings_modifiers_sym_description">Tocco, blocco e pressione lunga, pagine SYM, scorciatoie, Nav Mode</string>
     <string name="settings_emoji_symbols_gifs_title">Emoji, simboli e GIF</string>
     <string name="settings_emoji_symbols_gifs_description">Tasto e livello emoji, selettore, ricerca simboli e GIF</string>
     <string name="settings_look_sound_title">Aspetto e suono</string>
-    <string name="settings_look_sound_description">Tema e colori dei LED, barra di stato, suono e vibrazione, lingua</string>
+    <string name="settings_look_sound_description">Tema e colori dei LED, barra di stato, suono e vibrazione</string>
     <string name="settings_trackpad_gestures_title">Trackpad e gesti</string>
-    <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole</string>
+    <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole; lo swipe pad della barra di stato</string>
     <string name="settings_apps_title">App</string>
-    <string name="settings_apps_description">Scorciatoie delle app, Invio per app, QuickLauncher, app con tastiera nascosta, desktop Linux</string>
+    <string name="settings_apps_description">Scorciatoie delle app, Invio per app, QuickLauncher, terminali e desktop Linux</string>
     <string name="settings_privacy_system_title">Privacy e sistema</string>
-    <string name="settings_privacy_system_description">Modalità offline, backup, appunti, accessibilità, aggiornamenti, informazioni</string>
+    <string name="settings_privacy_system_description">Incognito, modalità offline, appunti, accessibilità, lingua dell\'app, backup, aggiornamenti</string>
 
     <string name="settings_keyboards_devices_description">Tastiere integrate, a schermo e accessori, e il passaggio tra di esse</string>
     <string name="settings_input_languages_description">Lingue, i loro layout e i tasti per cambiarli</string>
@@ -23,8 +23,8 @@
     <string name="settings_capitalisation_punctuation_title">Maiuscole e punteggiatura</string>
     <string name="settings_capitalisation_punctuation_description">Lettere maiuscole, spazi, trattini e virgolette</string>
     <string name="settings_editing_keys_title">Tasti di modifica</string>
-    <string name="settings_editing_keys_description">Combinazioni di Backspace e navigazione</string>
-    <string name="settings_auto_correction_description">Sostituzioni, suggerimenti e dizionari</string>
+    <string name="settings_editing_keys_description">Combinazioni di Backspace e Canc</string>
+    <string name="settings_auto_correction_description">Suggerimenti, correzione automatica, emoji suggerite, controllo ortografico, dizionari e sostituzioni</string>
     <string name="settings_text_expansion_hub_description">Snippet e codici brevi per emoji e simboli</string>
     <string name="settings_section_enter">Invio</string>
 
@@ -115,4 +115,13 @@
     </plurals>
     <string name="clicks_all_key_mappings_ready_description">I tuoi caratteri Alt e SYM per ogni tasto, in un profilo SYM del dispositivo personalizzato. Le scorciatoie Ctrl sono in Scorciatoie da tastiera.</string>
     <string name="alt_key_editor_no_profiles">Ancora nessun profilo. Creane uno qui sopra.</string>
+    <string name="settings_section_clipboard">Appunti</string>
+    <string name="settings_section_editing">Modifica e spostamenti</string>
+    <string name="settings_nav_mode_hub_description">Frecce, selezione e altro dai tasti lettera, con Ctrl</string>
+    <string name="settings_section_terminals">Terminali e desktop</string>
+    <string name="settings_section_swipe_pad">Swipe pad della barra di stato</string>
+    <string name="autocorrect_section_suggestions">Suggerimenti e correzione</string>
+    <string name="autocorrect_section_dictionary">Dizionario e ortografia</string>
+    <string name="autocorrect_section_replacements">Sostituzioni del testo</string>
+    <string name="autocorrect_section_tuning">Regolazioni</string>
 </resources>
