@@ -190,4 +190,12 @@
     <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (sospendi)</string>
     <string name="terminal_emoji_key_ctrl_l">Ctrl+L (pulisci lo schermo)</string>
     <string name="terminal_emoji_key_ctrl_r">Ctrl+R (cerca nella cronologia)</string>
+    <string name="alt_key_editor_in_use_title">Livello SYM del dispositivo in uso</string>
+    <string name="alt_key_editor_in_use_auto">Automatico: %1$s (dalla tua tastiera)</string>
+    <string name="alt_key_editor_curated_section">Profili curati</string>
+    <string name="alt_key_editor_in_use_badge">in uso</string>
+    <string name="alt_key_editor_use">Usa come livello SYM del dispositivo</string>
+    <string name="alt_key_editor_copy_to_edit">Copia per modificare</string>
+    <string name="alt_key_editor_use_description">Usa questo profilo per il livello SYM del dispositivo su ogni tastiera.</string>
+    <string name="alt_key_editor_in_use_now">Questo è ora il tuo livello SYM del dispositivo.</string>
 </resources>

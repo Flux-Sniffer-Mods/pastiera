@@ -71,6 +71,9 @@ fun DeviceSymLayerEditorScreen(
 
     val profiles = remember(revision) { CustomDeviceSymProfiles.all(context) }
     var cloning by remember { mutableStateOf(false) }
+    var choosingLayer by remember { mutableStateOf(false) }
+    var curated by remember { mutableStateOf<String?>(null) }
+    val choice = remember(revision) { CustomDeviceSymProfiles.choice(context) }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val imported = runCatching {
@@ -88,6 +91,24 @@ fun DeviceSymLayerEditorScreen(
 
     FluxScreenScaffold(stringResource(R.string.alt_key_editor_title), onBack, modifier) {
         FluxNote(stringResource(R.string.alt_key_editor_intro))
+        FluxActionRow(
+            linkId = "hardware.alt_editor.in_use",
+            title = stringResource(R.string.alt_key_editor_in_use_title),
+            description = choiceLabel(choice, profiles),
+            onClick = { choosingLayer = true }
+        )
+
+        SettingsSectionDivider(stringResource(R.string.alt_key_editor_curated_section))
+        CustomDeviceSymProfiles.BUNDLED.forEach { id ->
+            FluxActionRow(
+                linkId = null,
+                title = bundledProfileLabel(id) +
+                    if (choice == id) " · " + stringResource(R.string.alt_key_editor_in_use_badge) else "",
+                description = remember(id) { curatedPreview(context, id) },
+                onClick = { curated = id }
+            )
+        }
+
         SettingsSectionDivider(stringResource(R.string.alt_key_editor_create_section))
         FluxActionRow(
             linkId = "hardware.alt_editor.blank",
@@ -127,6 +148,59 @@ fun DeviceSymLayerEditorScreen(
         Spacer(Modifier.height(16.dp))
     }
 
+    if (choosingLayer) {
+        AlertDialog(
+            onDismissRequest = { choosingLayer = false },
+            title = { Text(stringResource(R.string.alt_key_editor_in_use_title)) },
+            text = {
+                Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
+                    val options = listOf(CustomDeviceSymProfiles.AUTO) + CustomDeviceSymProfiles.BUNDLED + profiles.map { it.profileRef }
+                    options.forEach { option ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                CustomDeviceSymProfiles.setChoice(context, option)
+                                choosingLayer = false
+                                revision++
+                            }
+                        ) {
+                            androidx.compose.material3.RadioButton(selected = option == choice, onClick = null)
+                            Text(choiceLabel(option, profiles), modifier = Modifier.padding(start = 8.dp, top = 10.dp, bottom = 10.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { choosingLayer = false }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+    curated?.let { id ->
+        val label = bundledProfileLabel(id)
+        AlertDialog(
+            onDismissRequest = { curated = null },
+            title = { Text(label) },
+            text = { Text(curatedPreview(context, id)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    CustomDeviceSymProfiles.setChoice(context, id)
+                    curated = null
+                    revision++
+                }) { Text(stringResource(R.string.alt_key_editor_use)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val copy = CustomDeviceSymProfiles.create(
+                        context,
+                        context.getString(R.string.alt_key_editor_copy_name, label),
+                        CustomDeviceSymProfiles.bundledMappings(context.assets, id)
+                    )
+                    curated = null
+                    revision++
+                    openProfileId = copy.id
+                }) { Text(stringResource(R.string.alt_key_editor_copy_to_edit)) }
+            }
+        )
+    }
     if (cloning) {
         AlertDialog(
             onDismissRequest = { cloning = false },
@@ -198,6 +272,19 @@ private fun DeviceSymProfileScreen(
             title = stringResource(R.string.alt_key_editor_details_title),
             description = profileSummary(profile),
             onClick = { editingDetails = true }
+        )
+
+        FluxActionRow(
+            linkId = null,
+            title = stringResource(R.string.alt_key_editor_use),
+            description = stringResource(
+                if (CustomDeviceSymProfiles.choice(context) == profile.profileRef) R.string.alt_key_editor_in_use_now
+                else R.string.alt_key_editor_use_description
+            ),
+            onClick = {
+                CustomDeviceSymProfiles.setChoice(context, profile.profileRef)
+                onChanged()
+            }
         )
 
         SettingsSectionDivider(stringResource(R.string.alt_key_editor_mappings_title))
@@ -395,4 +482,22 @@ private fun shareProfile(context: Context, profile: CustomDeviceSymProfile) {
         putExtra(Intent.EXTRA_TEXT, CustomDeviceSymProfiles.toJson(profile).toString(2))
     }
     context.startActivity(Intent.createChooser(send, profile.name).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
+/** What the Device SYM layer in use is called: automatic (with the keyboard's profile), curated, or yours. */
+@Composable
+private fun choiceLabel(choice: String, profiles: List<CustomDeviceSymProfile>): String = when {
+    choice == CustomDeviceSymProfiles.AUTO -> stringResource(
+        R.string.alt_key_editor_in_use_auto,
+        bundledProfileLabel(it.palsoftware.pastiera.data.mappings.DeviceSymProfileResolver.resolve(LocalContext.current))
+    )
+    choice.startsWith(CustomDeviceSymProfiles.REF_PREFIX) ->
+        profiles.firstOrNull { it.profileRef == choice }?.name ?: stringResource(R.string.alt_key_editor_in_use_auto, "")
+    else -> bundledProfileLabel(choice)
+}
+
+/** The top letter row of a curated profile, as it sits on the keys. */
+private fun curatedPreview(context: Context, id: String): String {
+    val mappings = CustomDeviceSymProfiles.bundledMappings(context.assets, id)
+    return CustomDeviceSymProfiles.EDITABLE_KEYS.take(19).mapNotNull { mappings[it] }.joinToString(" ")
 }

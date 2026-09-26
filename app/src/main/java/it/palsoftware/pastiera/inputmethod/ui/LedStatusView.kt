@@ -122,11 +122,12 @@ class LedStatusView(
     /** The gradient a locked LED sweeps: its colour, a more intense version, and back. */
     private fun lockShader(color: Int, width: Float): android.graphics.Shader {
         val intense = LedColors.intensify(color)
+        val deep = LedColors.deepen(color)
         val span = width.coerceAtLeast(1f)
         val offset = lockPhase * span * 2f
         return android.graphics.LinearGradient(
             offset - span, 0f, offset + span, 0f,
-            intArrayOf(color, intense, color), floatArrayOf(0f, 0.5f, 1f),
+            intArrayOf(deep, intense, deep), floatArrayOf(0f, 0.5f, 1f),
             android.graphics.Shader.TileMode.MIRROR
         )
     }

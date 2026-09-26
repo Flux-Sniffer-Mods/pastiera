@@ -344,6 +344,7 @@ internal object BackupPreferenceContract {
             "led_color_alt" to PreferenceValueType.INT,
             "led_color_sym" to PreferenceValueType.INT,
             "custom_device_sym_profiles" to PreferenceValueType.STRING,
+            "device_sym_profile_choice" to PreferenceValueType.STRING,
             "terminal_mode_enabled" to PreferenceValueType.BOOLEAN,
             "terminal_mode_apps" to PreferenceValueType.STRING,
             "app_shortcuts_enabled" to PreferenceValueType.BOOLEAN,

@@ -30,6 +30,14 @@ object DeviceSymMappingRepository {
         context: Context,
         profileOverride: String? = null
     ): Map<Int, String> {
+        // The layer chosen in the Device SYM layer editor, unless a caller asks for a specific one
+        val chosen = profileOverride ?: CustomDeviceSymProfiles.choice(context).takeUnless { it == CustomDeviceSymProfiles.AUTO }
+        if (chosen != null && profileOverride == null) {
+            CustomDeviceSymProfiles.forRef(context, chosen)?.let { return it.mappings }
+            if (chosen in CustomDeviceSymProfiles.BUNDLED) {
+                runCatching { loadProfile(assets, chosen, context) }.getOrNull()?.let { return it }
+            }
+        }
         // A custom profile chosen by name, or one set to replace the keyboard in use
         CustomDeviceSymProfiles.forRef(context, profileOverride)?.let { return it.mappings }
         val requestedProfile = profileOverride?.takeUnless { it.startsWith(CustomDeviceSymProfiles.REF_PREFIX) }

@@ -36,6 +36,9 @@ class LedColorsTest {
         assertTrue(hsv(intense)[2] > hsv(base)[2])
         assertEquals(hsv(base)[0], hsv(intense)[0], 1f)
         assertEquals(Color.alpha(base), Color.alpha(intense))
+        // A strong sweep: the peak is at full brightness, the low point clearly darker than the colour
+        assertEquals(1f, hsv(intense)[2], 0.01f)
+        assertTrue(hsv(LedColors.deepen(base))[2] < hsv(base)[2] * 0.6f)
     }
 
     @Test

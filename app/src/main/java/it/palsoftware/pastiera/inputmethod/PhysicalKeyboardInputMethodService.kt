@@ -2285,7 +2285,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                     invalidateRenderedStatusSnapshot()
                     updateStatusBarText()
                 }
-            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
+            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY ||
+                key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_CHOICE
+            ) {
                 alternateCharacterManager.reloadModifierAndDeviceSymMappings()
                 Handler(Looper.getMainLooper()).post { updateStatusBarText() }
             } else if (key == "sym_mappings_custom") {

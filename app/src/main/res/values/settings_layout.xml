@@ -195,4 +195,12 @@
     <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (suspend)</string>
     <string name="terminal_emoji_key_ctrl_l">Ctrl+L (clear the screen)</string>
     <string name="terminal_emoji_key_ctrl_r">Ctrl+R (search history)</string>
+    <string name="alt_key_editor_in_use_title">Device SYM layer in use</string>
+    <string name="alt_key_editor_in_use_auto">Automatic: %1$s (from your keyboard)</string>
+    <string name="alt_key_editor_curated_section">Curated profiles</string>
+    <string name="alt_key_editor_in_use_badge">in use</string>
+    <string name="alt_key_editor_use">Use as Device SYM layer</string>
+    <string name="alt_key_editor_copy_to_edit">Copy to edit</string>
+    <string name="alt_key_editor_use_description">Use this profile for the Device SYM layer on every keyboard.</string>
+    <string name="alt_key_editor_in_use_now">This is your Device SYM layer now.</string>
 </resources>

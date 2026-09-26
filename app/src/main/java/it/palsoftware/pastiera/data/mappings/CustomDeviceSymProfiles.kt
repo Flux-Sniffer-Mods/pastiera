@@ -26,6 +26,15 @@ data class CustomDeviceSymProfile(
 
 object CustomDeviceSymProfiles {
     const val PREF_KEY = "custom_device_sym_profiles"
+    /** The Device SYM layer in use: "auto" (from the keyboard), a curated profile id, or "custom:<id>". */
+    const val PREF_CHOICE = "device_sym_profile_choice"
+    const val AUTO = "auto"
+
+    fun choice(context: Context): String = prefs(context).getString(PREF_CHOICE, AUTO) ?: AUTO
+
+    fun setChoice(context: Context, choice: String) {
+        prefs(context).edit().putString(PREF_CHOICE, choice).apply()
+    }
     const val REF_PREFIX = "custom:"
 
     /** Bundled profiles, in the order the pickers show them. */
@@ -58,6 +67,7 @@ object CustomDeviceSymProfiles {
     }
 
     fun delete(context: Context, id: String) {
+        if (choice(context) == REF_PREFIX + id) setChoice(context, AUTO)
         prefs(context).edit().putString(PREF_KEY, toJson(all(context).filterNot { it.id == id }).toString()).apply()
     }
 

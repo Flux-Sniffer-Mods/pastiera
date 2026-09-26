@@ -29,8 +29,15 @@ object LedColors {
         Color.colorToHSV(color, hsv)
         return Color.HSVToColor(
             Color.alpha(color),
-            floatArrayOf(hsv[0], (hsv[1] * 1.3f + 0.15f).coerceAtMost(1f), (hsv[2] * 1.35f + 0.2f).coerceAtMost(1f))
+            floatArrayOf(hsv[0], (hsv[1] * 1.6f + 0.3f).coerceAtMost(1f), 1f)
         )
+    }
+
+    /** The low point of the locked sweep: the same colour, clearly darker. */
+    fun deepen(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        return Color.HSVToColor(Color.alpha(color), floatArrayOf(hsv[0], hsv[1], hsv[2] * 0.45f))
     }
 
     fun baseColor(context: Context, led: Led): Int = SettingsManager.getLedColor(context, led.key, led.defaultColor)
@@ -42,8 +49,9 @@ object LedColors {
         return when (level) {
             Level.OFF -> Color.HSVToColor(110, floatArrayOf(hsv[0], hsv[1] * 0.45f, hsv[2] * 0.35f))
             Level.ACTIVE -> Color.HSVToColor(floatArrayOf(hsv[0], hsv[1], hsv[2]))
+            // Locked stands well apart from active: fully bright and much more saturated
             Level.LOCKED -> Color.HSVToColor(
-                floatArrayOf(hsv[0], (hsv[1] * 1.25f + 0.1f).coerceAtMost(1f), (hsv[2] * 1.2f + 0.1f).coerceAtMost(1f))
+                floatArrayOf(hsv[0], (hsv[1] * 1.5f + 0.25f).coerceAtMost(1f), (hsv[2] * 1.4f + 0.35f).coerceAtMost(1f))
             )
         }
     }

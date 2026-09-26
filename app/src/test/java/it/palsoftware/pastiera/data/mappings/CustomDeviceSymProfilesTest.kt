@@ -20,7 +20,8 @@ class CustomDeviceSymProfilesTest {
 
     @After
     fun clear() {
-        SettingsManager.getPreferences(context).edit().remove(CustomDeviceSymProfiles.PREF_KEY).commit()
+        SettingsManager.getPreferences(context).edit()
+            .remove(CustomDeviceSymProfiles.PREF_KEY).remove(CustomDeviceSymProfiles.PREF_CHOICE).commit()
     }
 
     @Test
@@ -64,5 +65,21 @@ class CustomDeviceSymProfilesTest {
         // A curated profile asked for by name stays curated
         assertNotEquals("Ω", DeviceSymMappingRepository.load(context.assets, context, "titan2")[KeyEvent.KEYCODE_Q])
         assertNull(CustomDeviceSymProfiles.forRef(context, "titan2"))
+    }
+
+    @Test
+    fun theLayerInUseCanBeAnyCuratedOrOwnProfile() {
+        val q25 = CustomDeviceSymProfiles.bundledMappings(context.assets, "Q25")
+        CustomDeviceSymProfiles.setChoice(context, "Q25")
+        assertEquals(q25[KeyEvent.KEYCODE_Q], DeviceSymMappingRepository.load(context.assets, context)[KeyEvent.KEYCODE_Q])
+
+        val mine = CustomDeviceSymProfiles.create(context, "Mine", mapOf(KeyEvent.KEYCODE_Q to "Ω"))
+        CustomDeviceSymProfiles.setChoice(context, mine.profileRef)
+        assertEquals("Ω", DeviceSymMappingRepository.load(context.assets, context)[KeyEvent.KEYCODE_Q])
+
+        // Deleting it goes back to the keyboard's own layer
+        CustomDeviceSymProfiles.delete(context, mine.id)
+        assertEquals(CustomDeviceSymProfiles.AUTO, CustomDeviceSymProfiles.choice(context))
+        assertNotEquals("Ω", DeviceSymMappingRepository.load(context.assets, context)[KeyEvent.KEYCODE_Q])
     }
 }
