@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_keyboards_layouts_title">Tastiere e layout</string>
-    <string name="settings_keyboards_layouts_description">Dispositivi, lingue di input, cambio layout</string>
+    <string name="settings_keyboards_layouts_description">Lingue di input, tastiere e dispositivi, mostrare la tastiera</string>
     <string name="settings_typing_title">Digitazione</string>
-    <string name="settings_typing_description">Maiuscole e punteggiatura, tasti di modifica, correzione automatica, espansione testo</string>
+    <string name="settings_typing_description">Suggerimenti e correzione automatica, maiuscole e punteggiatura, espansione testo, varianti, tasti di modifica, Nav Mode</string>
     <string name="settings_modifiers_sym_title">Modificatori e SYM</string>
     <string name="settings_modifiers_sym_description">Tocco, blocco e pressione lunga, pagine SYM, scorciatoie, Nav Mode</string>
     <string name="settings_emoji_symbols_gifs_title">Emoji, simboli e GIF</string>
     <string name="settings_emoji_symbols_gifs_description">Tasto e livello emoji, selettore, ricerca simboli e GIF</string>
     <string name="settings_look_sound_title">Aspetto e suono</string>
-    <string name="settings_look_sound_description">Tema e colori dei LED, barra di stato, suono e vibrazione, lingua</string>
+    <string name="settings_look_sound_description">Tema, LED di stato, barra di stato, suono e vibrazione</string>
     <string name="settings_trackpad_gestures_title">Trackpad e gesti</string>
-    <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole</string>
+    <string name="settings_trackpad_gestures_description">Scorri sui tasti per scegliere suggerimenti, cancellare e aggiungere parole; lo swipe pad della barra di stato</string>
     <string name="settings_apps_title">App</string>
-    <string name="settings_apps_description">Scorciatoie delle app, Invio per app, QuickLauncher, app con tastiera nascosta, desktop Linux</string>
+    <string name="settings_apps_description">Scorciatoie delle app, Invio per app, QuickLauncher, terminali e desktop Linux</string>
     <string name="settings_privacy_system_title">Privacy e sistema</string>
-    <string name="settings_privacy_system_description">Modalità offline, backup, appunti, accessibilità, aggiornamenti, informazioni</string>
+    <string name="settings_privacy_system_description">Incognito, modalità offline, appunti, accessibilità, lingua dell\'app, backup, aggiornamenti</string>
 
     <string name="settings_keyboards_devices_description">Tastiere integrate, a schermo e accessori, e il passaggio tra di esse</string>
     <string name="settings_input_languages_description">Lingue, i loro layout e i tasti per cambiarli</string>
@@ -23,13 +23,13 @@
     <string name="settings_capitalisation_punctuation_title">Maiuscole e punteggiatura</string>
     <string name="settings_capitalisation_punctuation_description">Lettere maiuscole, spazi, trattini e virgolette</string>
     <string name="settings_editing_keys_title">Tasti di modifica</string>
-    <string name="settings_editing_keys_description">Combinazioni di Backspace e navigazione</string>
-    <string name="settings_auto_correction_description">Sostituzioni, suggerimenti e dizionari</string>
+    <string name="settings_editing_keys_description">Combinazioni di Backspace e Canc</string>
+    <string name="settings_auto_correction_description">Suggerimenti, correzione automatica, emoji suggerite, controllo ortografico, dizionari e sostituzioni</string>
     <string name="settings_text_expansion_hub_description">Snippet e codici brevi per emoji e simboli</string>
     <string name="settings_section_enter">Invio</string>
 
-    <string name="settings_theme_led_colours_title">Tema e colori dei LED</string>
-    <string name="settings_theme_led_colours_description">Colori della tastiera, forma dei tasti e LED dei modificatori</string>
+    <string name="settings_theme_led_colours_title">Tema</string>
+    <string name="settings_theme_led_colours_description">Colori della tastiera e forma dei tasti</string>
     <string name="settings_section_status_bar">Barra di stato</string>
     <string name="settings_section_sound_popups">Suono e popup</string>
     <string name="settings_variations_popup_description">I caratteri proposti tenendo premuto un tasto</string>
@@ -166,12 +166,6 @@
     <string name="emoji_profile_food">Cibo e bevande</string>
     <string name="emoji_profile_travel">Viaggi e aria aperta</string>
     <string name="emoji_profile_gaming">Giochi</string>
-    <string name="recommended_settings_title">Impostazioni consigliate</string>
-    <string name="recommended_settings_description">Attiva le impostazioni più utili con una tastiera fisica, adattate al tuo telefono. Mostra prima ogni modifica.</string>
-    <string name="recommended_settings_will_turn_on">Verranno attivate:</string>
-    <string name="recommended_settings_nothing">Tutto quello che è consigliato è già attivo.</string>
-    <string name="recommended_settings_apply">Attiva</string>
-    <string name="recommended_settings_applied">Impostazioni consigliate attivate</string>
     <string name="terminal_mode_hide_keyboard_title">Nascondi la tastiera</string>
     <string name="terminal_mode_hide_keyboard_description">Come per il desktop Linux: Pastiera resta nascosta nei terminali. Alt scrive comunque il tuo livello Alt e SYM i suoi simboli, senza mostrarli; Ctrl resta Ctrl. Appunti e selettore emoji si mostrano mentre sono aperti.</string>
     <string name="led_locked_animation_title">Anima i LED bloccati</string>

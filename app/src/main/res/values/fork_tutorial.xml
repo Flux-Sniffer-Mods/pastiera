@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flux Keyboard's own tutorial pages -->
+<resources>
+    <string name="flux_tutorial_welcome_description">A keyboard app for phones with a real keyboard, tuned for the Unihertz Titan 2 Elite and built on Pastiera by PalSoftware. The next pages cover what\'s worth knowing.</string>
+
+    <string name="flux_tutorial_setup_title">Set it up in one step</string>
+    <string name="flux_tutorial_setup_description">Recommended settings apply a configuration made on a Titan 2 Elite: suggestions, the emoji key, the status bar, the menu bar and more.</string>
+    <string name="flux_tutorial_setup_bullet_change">Change anything afterwards in Settings.</string>
+    <string name="flux_tutorial_setup_bullet_again">Recommended settings are in Settings too, if you want them back later.</string>
+    <string name="flux_tutorial_setup_bullet_other_phone">On other phones, settings that depend on the phone stay as they are.</string>
+    <string name="flux_tutorial_setup_button">Apply recommended settings (%1$d changes)</string>
+    <string name="flux_tutorial_setup_applied">Recommended settings are on</string>
+    <string name="flux_tutorial_setup_failed">Couldn\'t apply the recommended settings.</string>
+
+    <string name="flux_tutorial_emoji_title">Emoji, GIFs and symbols</string>
+    <string name="flux_tutorial_emoji_description">One key opens a picker with everything in it.</string>
+    <string name="flux_tutorial_emoji_bullet_key">Tap the emoji key (Right Shift by default) to open the picker. Held with Ctrl, it still works as Shift.</string>
+    <string name="flux_tutorial_emoji_bullet_gif">Search GIFs, and keep favourites and recents.</string>
+    <string name="flux_tutorial_emoji_bullet_symbols">Search every Unicode symbol by name.</string>
+    <string name="flux_tutorial_emoji_bullet_profiles">Emoji layer profiles (chatting, work, social…) can follow the app you\'re in.</string>
+    <string name="flux_tutorial_emoji_button">Choose the emoji key</string>
+
+    <string name="flux_tutorial_typing_title">Type faster</string>
+    <string name="flux_tutorial_typing_description">Small things that save keystrokes.</string>
+    <string name="flux_tutorial_typing_bullet_pick">Ctrl+Shift+Q, W or E picks the left, middle or right suggestion.</string>
+    <string name="flux_tutorial_typing_bullet_undo">Backspace right after an auto-correction undoes it.</string>
+    <string name="flux_tutorial_typing_bullet_paste">Just copied something? It\'s offered as a chip in the next text field, with tracking stripped from links.</string>
+    <string name="flux_tutorial_typing_bullet_spell">The spell checker underlines typos in every app, and password managers show their autofill chips in the suggestion bar.</string>
+    <string name="flux_tutorial_typing_button">Spell checker settings</string>
+
+    <string name="flux_tutorial_apps_title">Works with your apps</string>
+    <string name="flux_tutorial_apps_description">The same keys do the same things everywhere.</string>
+    <string name="flux_tutorial_apps_bullet_shortcuts">App shortcuts: Ctrl+F, Ctrl+N and friends work the same in every app.</string>
+    <string name="flux_tutorial_apps_bullet_enter">Enter per app: choose whether Enter sends or adds a new line in each chat app.</string>
+    <string name="flux_tutorial_apps_bullet_exact">Exact typing: nothing rewrites what you type in terminals, code editors or AI chats.</string>
+    <string name="flux_tutorial_apps_bullet_terminal">Terminal mode gives Termux a real Ctrl and keeps the keyboard out of the way.</string>
+    <string name="flux_tutorial_apps_button">Open App shortcuts</string>
+    <string name="whats_new_done">Done</string>
+    <string name="whats_new_close">Close</string>
+    <string name="flux_tutorial_extras_title">Extras to set up</string>
+    <string name="flux_tutorial_extras_description">These need a permission or another app, so they start off. Set them up now, or later in Settings.</string>
+    <string name="flux_tutorial_extras_on">On</string>
+    <string name="flux_tutorial_extras_codes_title">One-time codes</string>
+    <string name="flux_tutorial_extras_codes_text">Codes from your notifications, offered as a chip to fill in. Needs notification access.</string>
+    <string name="flux_tutorial_extras_codes_restricted">Codes from your notifications, offered as a chip to fill in. Android blocks notification access for apps installed from a file: the button opens App info, where ⋮ › Allow restricted settings lifts it.</string>
+    <string name="flux_tutorial_extras_codes_button">Turn on</string>
+    <string name="flux_tutorial_extras_niagara_title">Niagara search as the quick launcher</string>
+    <string name="flux_tutorial_extras_niagara_text">The quick launcher opens Niagara\'s search instead of the built-in one, and Back takes you back to your app.</string>
+    <string name="flux_tutorial_extras_niagara_button">Use Niagara</string>
+    <string name="flux_tutorial_extras_hidden_apps_title">Apps that handle the keyboard themselves</string>
+    <string name="flux_tutorial_extras_hidden_apps_text">In apps like Termux:X11, the keyboard can stay out of sight and leave every key to the app. Its status LEDs there need the accessibility service.</string>
+    <string name="flux_tutorial_extras_hidden_apps_button">Choose these apps</string>
+    <string name="flux_tutorial_emoji_bullet_sticky">Tap SYM or the emoji key once and the next key types its symbol or emoji, without opening a screen (turn it on in Emoji, symbols &amp; GIFs).</string>
+    <string name="flux_tutorial_typing_bullet_swipes">On the trackpad, swipe left, up or right to pick a suggestion, and down to delete a word (Trackpad gestures).</string>
+    <string name="flux_tutorial_typing_bullet_shift">Choose which kinds of text field start with a capital: messages, names and addresses by default.</string>
+    <string name="flux_tutorial_typing_bullet_language">Each app can keep the language you last typed in there.</string>
+    <string name="flux_tutorial_apps_bullet_launcher">The quick launcher opens apps and their own shortcuts (\"New message\"), from any app with SYM + Space.</string>
+    <string name="flux_tutorial_apps_bullet_search">Apps that open with their search bar focused can keep the keyboard bar hidden until you type.</string>
+    <string name="flux_tutorial_personalise_title">Make it yours</string>
+    <string name="flux_tutorial_personalise_description">Change what keys type, and how the keyboard looks.</string>
+    <string name="flux_tutorial_personalise_bullet_layouts">Edit any layout in the app: tap a key to change what it types, then save, copy or export it.</string>
+    <string name="flux_tutorial_personalise_bullet_leds">Each status LED can have its own colour, and a fifth LED shows the emoji key.</string>
+    <string name="flux_tutorial_personalise_bullet_colours">The keyboard can take its colours from your wallpaper, or a theme of your own.</string>
+    <string name="flux_tutorial_personalise_bullet_menu">Choose the menu bar\'s buttons and their order.</string>
+    <string name="flux_tutorial_personalise_button">Status LED colours</string>
+</resources>

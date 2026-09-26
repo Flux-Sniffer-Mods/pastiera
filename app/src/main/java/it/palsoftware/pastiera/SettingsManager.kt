@@ -73,6 +73,9 @@ object SettingsManager {
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
     private const val KEY_LANGUAGE_PER_APP = "language_per_app_enabled"
     private const val KEY_KEYBOARD_WALLPAPER_COLOURS = "keyboard_theme_wallpaper_colours"
+    private const val KEY_ONE_TIME_CODES = "one_time_codes_enabled"
+    private const val KEY_AUTO_SHIFT_FIELD_TYPES = "auto_shift_field_types"
+    private const val KEY_SEARCH_BAR_WAITS_FOR_TYPING = "search_bar_waits_for_typing"
     // Each app's last language, kept apart from settings (not in backups)
     private const val APP_LANGUAGES_PREFS = "app_languages"
     private const val KEY_CLEAN_PASTED_LINKS = "clean_pasted_links" // Strip tracking from pasted links
@@ -80,8 +83,10 @@ object SettingsManager {
     private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
     private const val KEY_SUGGESTION_KEYS = "suggestion_keys" // Keys that pick a suggestion
     private const val KEY_SPEECH_KEEP_LISTENING = "speech_keep_listening" // Voice input carries on through pauses
+    private const val KEY_CLICKS_KEYBOARD_SEEN = "clicks_keyboard_seen" // A Clicks Power Keyboard has been connected here
     private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_LED_INDIVIDUAL_COLORS = "led_individual_colors"
+    private const val KEY_LED_LOCKED_ANIMATION = "led_locked_animation"
     private const val LED_COLOR_KEY_PREFIX = "led_color_"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
@@ -163,18 +168,35 @@ object SettingsManager {
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
     private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
     private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
+    private const val KEY_EXACT_TYPING_APPS = "exact_typing_apps" // Apps where every character stays as typed
+    private const val KEY_EXACT_TYPING_NO_SUGGESTIONS = "exact_typing_no_suggestions" // Honour the app's no-suggestions flag
     private const val KEY_TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode_hide_keyboard"
     private const val KEY_TERMINAL_MODE_EMOJI_KEY = "terminal_mode_emoji_key"
     const val TERMUX_PACKAGE = "com.termux"
     // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
     private const val KEY_HIDDEN_APPS_ALLOW_PANELS = "hidden_keyboard_apps_allow_panels"
+    // Per hidden app (package names, one per line)
+    private const val KEY_HIDDEN_APPS_LEDS = "hidden_keyboard_apps_leds"
+    private const val KEY_HIDDEN_APPS_PANELS = "hidden_keyboard_apps_panels"
     private const val KEY_EMOJI_PICKER_KEY = "emoji_picker_key" // Physical key that toggles the emoji picker (KEYCODE_UNKNOWN = off)
     private const val KEY_EMOJI_KEY_OPENS_LAYER = "emoji_key_opens_layer" // Emoji key opens the emoji layer instead of the picker
     private const val KEY_EMOJI_KEY_AUTO_CLOSE = "emoji_key_auto_close" // Emoji key screens close after an emoji
     private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
     private const val KEY_EMOJI_LAYER_GIF_KEY = "emoji_layer_gif_key" // Emoji layer key that opens GIF search
     private const val KEY_HIDDEN_APP_STANDARD_MODIFIERS = "hidden_app_standard_modifiers" // Titan Ctrl/Sym as standard keys
+    private const val KEY_EMOJI_SEARCH_ENTER_PICKS = "emoji_search_enter_picks" // Enter: first emoji, close
+    private const val KEY_SYMBOL_SEARCH_ENTER_PICKS = "symbol_search_enter_picks" // Enter: first symbol, close
+    private const val KEY_GIF_SEARCH_ENTER_PICKS = "gif_search_enter_picks" // Enter: first GIF (closes)
+    private const val KEY_RECENTS_FIRST_IN_SEARCH = "recents_first_in_search" // recently used first in searches
+    private const val KEY_OFFLINE_MODE = "offline_mode" // nothing goes online (see OfflineMode)
+    private const val KEY_SEARCH_KEY = "search_key" // opens search on the emoji layer, symbols pages, picker
+    private const val KEY_GIF_SHOW_FAVOURITES = "gif_show_favourites" // Favourites section in GIF search
+    private const val KEY_GIF_SHOW_RECENTS = "gif_show_recents" // Recent section in GIF search
+    private const val KEY_EMOJI_PICKER_FOCUS_SEARCH = "emoji_picker_focus_search" // typing searches on open
+    private const val KEY_GIF_FOCUS_SEARCH = "gif_focus_search" // typing searches GIFs on open
+    private const val KEY_EMOJI_LAYER_TYPE_TO_SEARCH = "emoji_layer_type_to_search" // a letter starts emoji search
+    private const val KEY_SYMBOLS_TYPE_TO_SEARCH = "symbols_type_to_search" // a letter starts symbol search
     private const val KEY_GIFS_ENABLED = "gifs_enabled" // GIF key on the emoji layer, GIF tab in the picker
     private const val KEY_KLIPY_API_KEY = "klipy_api_key" // User's own KLIPY key (not backed up)
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
@@ -2729,6 +2751,8 @@ object SettingsManager {
     fun getStaticVariationBarPreset(context: Context): String {
         val prefs = getPreferences(context)
         val stored = prefs.getString(KEY_STATIC_VARIATION_BAR_PRESET, null)
+        // Nothing chosen yet (not even the older on/off switch): Dev's choice
+        if (stored == null && !prefs.contains(KEY_STATIC_VARIATION_BAR_MODE)) return STATIC_VARIATION_PRESET_DEV_CHOICE
         val fallback = if (prefs.getBoolean(KEY_STATIC_VARIATION_BAR_MODE, DEFAULT_STATIC_VARIATION_BAR_MODE)) {
             if (prefs.getBoolean(
                     KEY_STATIC_VARIATION_BAR_BASE_LAYER_ENABLED,
@@ -2878,6 +2902,14 @@ object SettingsManager {
         getPreferences(context).edit().putBoolean(KEY_LED_INDIVIDUAL_COLORS, enabled).apply()
     }
 
+    /** Locked LEDs sweep a gradient of their colour (off: a steady colour). */
+    fun getLedLockedAnimationEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_LED_LOCKED_ANIMATION, false)
+
+    fun setLedLockedAnimationEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_LED_LOCKED_ANIMATION, enabled).apply()
+    }
+
     /** One LED's colour ([led]: shift, ctrl, alt or sym). */
     fun getLedColor(context: Context, led: String, default: Int): Int =
         getPreferences(context).getInt(LED_COLOR_KEY_PREFIX + led, default)
@@ -2920,6 +2952,32 @@ object SettingsManager {
     fun setSpeechKeepListening(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_SPEECH_KEEP_LISTENING, enabled).apply()
     }
+
+    /**
+     * The Clicks Power Keyboard's settings apply here: one is connected now or has been before.
+     * Phones that never had one don't see its settings.
+     */
+    fun hasClicksKeyboard(context: Context): Boolean {
+        if (getPreferences(context).getBoolean(KEY_CLICKS_KEYBOARD_SEEN, false)) return true
+        val connected = runCatching {
+            android.view.InputDevice.getDeviceIds().asSequence()
+                .mapNotNull(android.view.InputDevice::getDevice)
+                .any(it.palsoftware.pastiera.inputmethod.DeviceSpecific::isClicksPowerKeyboard)
+        }.getOrDefault(false)
+        if (connected) markClicksKeyboardSeen(context)
+        return connected
+    }
+
+    fun markClicksKeyboardSeen(context: Context) {
+        val prefs = getPreferences(context)
+        if (!prefs.getBoolean(KEY_CLICKS_KEYBOARD_SEEN, false)) {
+            prefs.edit().putBoolean(KEY_CLICKS_KEYBOARD_SEEN, true).apply()
+        }
+    }
+
+    /** The Titan 2 layout option applies here: a Titan 2, or it's already on elsewhere (so it can be turned off). */
+    fun titan2LayoutApplies(context: Context): Boolean =
+        it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2Device() || isTitan2LayoutEnabled(context)
 
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_EMOJI_SUGGESTIONS, true)
@@ -5507,8 +5565,11 @@ object SettingsManager {
      * Apps where Pastiera shows nothing and leaves every key to the app, e.g. an X11 desktop
      * such as Termux:X11 that handles the keyboard itself.
      */
+    /** Niagara Launcher by default: its own search reads keys directly, so Pastiera stays out of sight. */
     fun getHiddenKeyboardApps(context: Context): List<String> =
-        parsePackageList(getPreferences(context).getString(KEY_HIDDEN_KEYBOARD_APPS, "") ?: "")
+        parsePackageList(getPreferences(context).getString(KEY_HIDDEN_KEYBOARD_APPS, DEFAULT_HIDDEN_KEYBOARD_APPS) ?: "")
+
+    const val DEFAULT_HIDDEN_KEYBOARD_APPS = "bitpit.launcher"
 
     fun setHiddenKeyboardApps(context: Context, packages: Collection<String>) {
         val clean = packages.joinToString("\n").let(::parsePackageList)
@@ -5558,6 +5619,29 @@ object SettingsManager {
         getPreferences(context).edit().putString(KEY_TERMINAL_MODE_APPS, clean.joinToString("\n")).apply()
     }
 
+    /** Apps where Pastiera types exactly what you key: no auto-correct, replacements or auto-capitals. */
+    fun getExactTypingApps(context: Context): List<String> =
+        parsePackageList(getPreferences(context).getString(KEY_EXACT_TYPING_APPS, "") ?: "")
+
+    fun setExactTypingApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit().putString(KEY_EXACT_TYPING_APPS, clean.joinToString("\n")).apply()
+    }
+
+    /** Fields that ask for no suggestions (TYPE_TEXT_FLAG_NO_SUGGESTIONS) also get exact typing. Off by default. */
+    fun getExactTypingForNoSuggestionFields(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, false)
+
+    fun setExactTypingForNoSuggestionFields(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, enabled).apply()
+    }
+
+    /** Exact typing applies to this field: its app is on the list, or it asks for no suggestions and that's honoured. */
+    fun isExactTypingField(context: Context, packageName: String?, inputType: Int): Boolean =
+        (!packageName.isNullOrBlank() && packageName in getExactTypingApps(context)) ||
+            (getExactTypingForNoSuggestionFields(context) &&
+                (inputType and android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0)
+
     /** Terminal mode applies to [packageName] (never while Pastiera is hidden for it). */
     fun isTerminalModeApp(context: Context, packageName: String?): Boolean =
         !packageName.isNullOrBlank() &&
@@ -5568,21 +5652,42 @@ object SettingsManager {
     fun isKeyboardHiddenForApp(context: Context, packageName: String?): Boolean =
         !packageName.isNullOrBlank() && packageName in getHiddenKeyboardApps(context)
 
-    /** In hidden apps, keep the modifier LEDs visible instead of hiding everything. */
-    fun getHiddenAppsShowLeds(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, false)
-
-    fun setHiddenAppsShowLeds(context: Context, enabled: Boolean) {
-        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, enabled).apply()
+    /**
+     * Hidden apps with a per-app option on. Until the first per-app change, the earlier global
+     * switch ([legacyKey]) still applies to every app that was hidden.
+     */
+    private fun hiddenAppsWithOption(context: Context, key: String, legacyKey: String): Set<String> {
+        val prefs = getPreferences(context)
+        if (!prefs.contains(key)) {
+            return if (prefs.getBoolean(legacyKey, false)) getHiddenKeyboardApps(context).toSet() else emptySet()
+        }
+        return parsePackageList(prefs.getString(key, "").orEmpty()).toSet()
     }
 
-    /** In hidden apps, the emoji picker key and Sym still open Pastiera's emoji and symbols. */
-    fun getHiddenAppsAllowPanels(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, false)
-
-    fun setHiddenAppsAllowPanels(context: Context, enabled: Boolean) {
-        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, enabled).apply()
+    private fun setHiddenAppOption(context: Context, key: String, legacyKey: String, packageName: String, enabled: Boolean) {
+        val apps = hiddenAppsWithOption(context, key, legacyKey).toMutableSet()
+        if (enabled) apps += packageName else apps -= packageName
+        getPreferences(context).edit()
+            .putString(key, apps.sorted().joinToString("\n"))
+            .remove(legacyKey)
+            .apply()
     }
+
+    /** This hidden app keeps the modifier LEDs visible, drawn over it. */
+    fun hiddenAppShowsLeds(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            packageName in hiddenAppsWithOption(context, KEY_HIDDEN_APPS_LEDS, KEY_HIDDEN_APPS_SHOW_LEDS)
+
+    fun setHiddenAppShowsLeds(context: Context, packageName: String, enabled: Boolean) =
+        setHiddenAppOption(context, KEY_HIDDEN_APPS_LEDS, KEY_HIDDEN_APPS_SHOW_LEDS, packageName, enabled)
+
+    /** In this hidden app, the emoji picker key and Sym still open Pastiera's emoji and symbols. */
+    fun hiddenAppAllowsPanels(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            packageName in hiddenAppsWithOption(context, KEY_HIDDEN_APPS_PANELS, KEY_HIDDEN_APPS_ALLOW_PANELS)
+
+    fun setHiddenAppAllowsPanels(context: Context, packageName: String, enabled: Boolean) =
+        setHiddenAppOption(context, KEY_HIDDEN_APPS_PANELS, KEY_HIDDEN_APPS_ALLOW_PANELS, packageName, enabled)
 
     /** Stores [keyCode] (KEYCODE_UNKNOWN turns the feature off). Returns false if not allowed. */
     fun setEmojiPickerKey(context: Context, keyCode: Int): Boolean {
@@ -5611,7 +5716,7 @@ object SettingsManager {
     }
 
     /** A fifth status LED for the emoji key; the other four shrink to make room. */
-    fun getEmojiKeyLedEnabled(context: Context): Boolean = getPreferences(context).getBoolean(KEY_EMOJI_KEY_LED, false)
+    fun getEmojiKeyLedEnabled(context: Context): Boolean = getPreferences(context).getBoolean(KEY_EMOJI_KEY_LED, true)
     fun setEmojiKeyLedEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_EMOJI_KEY_LED, enabled).apply()
     }
@@ -5671,6 +5776,120 @@ object SettingsManager {
         getPreferences(context).edit().putBoolean(KEY_HIDDEN_APP_STANDARD_MODIFIERS, enabled).apply()
     }
 
+    /** The emoji picker opens with its search taking typing. On by default. */
+    fun getEmojiPickerFocusSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_PICKER_FOCUS_SEARCH, true)
+
+    fun setEmojiPickerFocusSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_PICKER_FOCUS_SEARCH, enabled).apply()
+    }
+
+    /** GIF search opens with its search taking typing. On by default. */
+    fun getGifFocusSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_FOCUS_SEARCH, true)
+
+    fun setGifFocusSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_FOCUS_SEARCH, enabled).apply()
+    }
+
+    /** On the emoji layer, a letter key starts emoji search with that letter (off: it types its emoji). */
+    fun getEmojiLayerTypeToSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_LAYER_TYPE_TO_SEARCH, false)
+
+    fun setEmojiLayerTypeToSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_LAYER_TYPE_TO_SEARCH, enabled).apply()
+    }
+
+    /** On the symbols pages, a letter key starts symbol search with that letter (off: it types its symbol). */
+    fun getSymbolsTypeToSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, false)
+
+    fun setSymbolsTypeToSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SYMBOLS_TYPE_TO_SEARCH, enabled).apply()
+    }
+
+    /**
+     * The key that opens search on the emoji layer and the symbols pages, and puts typing into
+     * the emoji and GIF picker's search: A unless changed (KEYCODE_UNKNOWN = off).
+     */
+    fun getSearchKey(context: Context): Int {
+        val keyCode = getPreferences(context).getInt(KEY_SEARCH_KEY, KeyEvent.KEYCODE_A)
+        return if (keyCode in EMOJI_LAYER_KEYS) keyCode else KeyEvent.KEYCODE_UNKNOWN
+    }
+
+    fun setSearchKey(context: Context, keyCode: Int): Boolean {
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN) {
+            if (keyCode !in EMOJI_LAYER_KEYS) return false
+            // One key, one job: not the Recents or GIF key
+            if (keyCode == getEmojiLayerRecentsKey(context) || keyCode == getEmojiLayerGifKey(context)) return false
+        }
+        getPreferences(context).edit().putInt(KEY_SEARCH_KEY, keyCode).apply()
+        return true
+    }
+
+    /** Offline mode (see [OfflineMode]): nothing in Pastiera goes online. Off by default. */
+    fun isOfflineMode(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_OFFLINE_MODE, false)
+
+    fun setOfflineMode(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_OFFLINE_MODE, enabled).apply()
+        OfflineMode.update(enabled)
+    }
+
+    /** GIF search is switched on and allowed online (not in offline mode). */
+    fun gifsAvailable(context: Context): Boolean = getGifsEnabled(context) && !isOfflineMode(context)
+
+    /**
+     * Emoji, symbols and GIFs used recently (and favourite GIFs) come first in their searches.
+     * On by default.
+     */
+    fun getRecentsFirstInSearch(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_RECENTS_FIRST_IN_SEARCH, true)
+
+    fun setRecentsFirstInSearch(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_RECENTS_FIRST_IN_SEARCH, enabled).apply()
+    }
+
+    /** GIF search shows the favourite GIFs at its top (with an empty search). On by default. */
+    fun getGifShowFavourites(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SHOW_FAVOURITES, true)
+
+    fun setGifShowFavourites(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SHOW_FAVOURITES, enabled).apply()
+    }
+
+    /** GIF search shows the recently sent GIFs (with an empty search). On by default. */
+    fun getGifShowRecents(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SHOW_RECENTS, true)
+
+    fun setGifShowRecents(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SHOW_RECENTS, enabled).apply()
+    }
+
+    /** Enter in emoji search picks the first emoji and closes (after a pick, only closes). On by default. */
+    fun getEmojiSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_SEARCH_ENTER_PICKS, true)
+
+    fun setEmojiSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_SEARCH_ENTER_PICKS, enabled).apply()
+    }
+
+    /** Enter in symbol search picks the first symbol and closes (after a pick, only closes). On by default. */
+    fun getSymbolSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SYMBOL_SEARCH_ENTER_PICKS, true)
+
+    fun setSymbolSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SYMBOL_SEARCH_ENTER_PICKS, enabled).apply()
+    }
+
+    /** Enter in GIF search sends the first GIF (which closes the picker). On by default. */
+    fun getGifSearchEnterPicks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_GIF_SEARCH_ENTER_PICKS, true)
+
+    fun setGifSearchEnterPicks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_GIF_SEARCH_ENTER_PICKS, enabled).apply()
+    }
+
     /** The emoji layer key that opens GIF search (while it's on): P unless changed (KEYCODE_UNKNOWN = off). */
     fun getEmojiLayerGifKey(context: Context): Int {
         val keyCode = getPreferences(context).getInt(KEY_EMOJI_LAYER_GIF_KEY, KeyEvent.KEYCODE_P)
@@ -5688,7 +5907,7 @@ object SettingsManager {
 
     /** The emoji layer's GIF key while GIF search is on and it isn't also the Recents key, else KEYCODE_UNKNOWN. */
     fun activeEmojiLayerGifKey(context: Context): Int {
-        if (!getGifsEnabled(context)) return KeyEvent.KEYCODE_UNKNOWN
+        if (!gifsAvailable(context)) return KeyEvent.KEYCODE_UNKNOWN
         val keyCode = getEmojiLayerGifKey(context)
         return if (keyCode == getEmojiLayerRecentsKey(context)) KeyEvent.KEYCODE_UNKNOWN else keyCode
     }

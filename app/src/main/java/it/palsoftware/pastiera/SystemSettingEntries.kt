@@ -2,8 +2,6 @@ package it.palsoftware.pastiera
 
 /** Entries for system controls whose screens also expose the same stable IDs. */
 internal fun systemSettingEntries(): List<SettingEntry> = listOf(
-    SettingEntry("advanced.hidden_keyboard_apps", R.string.hidden_keyboard_apps_title,
-        summaryRes = R.string.hidden_keyboard_apps_description, route = SettingRoute(SettingsDestination.Advanced)),
     SettingEntry("advanced.corner_calibration", R.string.corner_calibration_title,
         summaryRes = R.string.corner_calibration_description, route = SettingRoute(SettingsDestination.FluxTitanScreen),
         availabilityCheck = { context ->

@@ -591,7 +591,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="clicks_button_binding_failure">Die Tastenbelegung konnte nicht angewendet werden.</string>
     <string name="clicks_button_binding_pending">Wird angewendet, sobald eine unterstützte Keyboard-Verbindung bereit ist.</string>
     <string name="clicks_launcher_interception_service_label">Pastiera-Tastenabfang</string>
-    <string name="clicks_launcher_interception_service_description">Verarbeitet die konfigurierten Tasten eines Clicks Power Keyboards. In Apps, in denen Pastiera ausgeblendet ist, verfolgt er außerdem Ihre Tasten für die Status-LEDs und gibt Emoji-Taste und Sym an Pastiera weiter, sofern diese Optionen aktiviert sind.</string>
+    <string name="clicks_launcher_interception_service_description">Lässt Pastiera die Tasten verarbeiten, die sonst zuerst eine App liest: Tasten, denen Sie Pastiera-Aktionen zugewiesen haben, und in Apps, in denen Pastiera ausgeblendet ist, die Tasten für die Status-LEDs, die Emoji-Taste und Sym, sofern diese Optionen aktiviert sind.</string>
     <string name="clicks_launcher_interception_title">Android-Abfang für Clicks-Tasten</string>
     <string name="clicks_launcher_interception_enabled">Aktiv · Ausschließlich ausdrücklich konfigurierte Tasten eines unterstützten Clicks Power Keyboards werden gefiltert.</string>
     <string name="clicks_launcher_interception_disabled">Für softwareseitig belegte Clicks-Tasten erforderlich. Antippen, um den Dienst in Androids Bedienungshilfen zu aktivieren.</string>
@@ -1371,7 +1371,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="kw_main_custom_input_styles">Tastaturlayout, Layouts, Eingabestile, Sprachen, pro Sprache</string>
     <string name="kw_main_text_input">Tippen, Text, Zeichensetzung, Anführungszeichen, Abstände, Großschreibung</string>
     <string name="kw_main_auto_correction">Korrektur, Autokorrektur, Rechtschreibung, Vorschläge, Ersetzungen, Wörterbücher</string>
-    <string name="kw_main_keyboard_theme">Theme, Themen, Farben, dunkel, hell, Presets, Hardwaretastatur, Bildschirmtastatur, Pastiera Dark, Pastiera Light, Cloud Tap, Moon Tap, Classic Cloud, Classic Midnight</string>
+    <string name="kw_main_keyboard_theme">Theme, Themen, Farben, dunkel, hell, Presets, Hardwaretastatur, Bildschirmtastatur, Flux Dark, Flux Light, Cloud Tap, Moon Tap, Classic Cloud, Classic Midnight</string>
     <string name="kw_main_app_language">Sprache, App-Sprache, Locale, Übersetzung</string>
     <string name="kw_main_customization">Anpassen, Anpassung, Erscheinungsbild</string>
     <string name="kw_main_advanced">Erweitert, Backup, Wiederherstellung, Debug, Experte</string>

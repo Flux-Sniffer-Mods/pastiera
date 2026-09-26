@@ -1,0 +1,293 @@
+{
+  "name": "pastiera_prefs",
+  "entries": {
+    "keyboard_theme_hardware": {
+      "type": "string",
+      "value": "{\"background\":-14935010,\"divider\":-11908531,\"normal_key\":-12961220,\"special_key\":-13882322,\"text_and_icons\":-1,\"led_inactive\":-12566460,\"led_active\":-16087809,\"led_locked\":-24822,\"accent\":-16087809,\"cursor_swipe\":-16087809,\"key_popup\":-12961220,\"key_popup_selected\":-16087809,\"suggestion\":-14671580,\"status_bar_button\":-13882322,\"key_corner_radius_ratio\":0.11800000071525574,\"chrome_corner_radius_ratio\":0.09000000357627869,\"key_height_scale\":1.2588016986846924,\"number_row_height_scale\":0.9711260199546814,\"key_width_scale\":0.9414876699447632,\"row_gap_scale\":1.0499999523162842,\"distribute_horizontal_spacing\":true,\"ortholinear\":false,\"show_leds\":false,\"suggestions_height_scale\":0.8999999761581421,\"variations_height_scale\":0.8799999952316284,\"key_popup_style\":\"classic\",\"key_popup_attached\":true,\"key_popup_tail_enabled\":true,\"key_preview_after_long_press\":false,\"key_alternates_popup_enabled\":true}"
+    },
+    "sym_mappings_page2_custom": {
+      "type": "string",
+      "value": "{\"mappings\":{\"KEYCODE_Q\":\"~\",\"KEYCODE_W\":\"`\",\"KEYCODE_E\":\"{\",\"KEYCODE_R\":\"}\",\"KEYCODE_T\":\"[\",\"KEYCODE_Y\":\"]\",\"KEYCODE_U\":\"<\",\"KEYCODE_I\":\">\",\"KEYCODE_O\":\"°\",\"KEYCODE_P\":\"%\",\"KEYCODE_S\":\"=\",\"KEYCODE_D\":\";\",\"KEYCODE_F\":\"±\",\"KEYCODE_G\":\"–\",\"KEYCODE_H\":\"\\\\\",\"KEYCODE_J\":\"|\",\"KEYCODE_K\":\"„\",\"KEYCODE_L\":\"“\",\"KEYCODE_Z\":\"”\",\"KEYCODE_X\":\"»\",\"KEYCODE_C\":\"«\",\"KEYCODE_V\":\"&\",\"KEYCODE_B\":\"^\",\"KEYCODE_N\":\"£\",\"KEYCODE_M\":\"$\"}}"
+    },
+    "pastierina_status_bar_slots_left": {
+      "type": "string",
+      "value": "[\"microphone\"]"
+    },
+    "symbols_type_to_search": {
+      "type": "boolean",
+      "value": false
+    },
+    "max_auto_replace_distance": {
+      "type": "int",
+      "value": 1
+    },
+    "layout_aware_ctrl_shortcuts": {
+      "type": "boolean",
+      "value": false
+    },
+    "pastierina_mode_override": {
+      "type": "string",
+      "value": "pastierina"
+    },
+    "auto_correct_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "pastierina_status_bar_slots_right": {
+      "type": "string",
+      "value": "[\"settings\"]"
+    },
+    "sym_mappings_custom": {
+      "type": "string",
+      "value": "{\"mappings\":{\"KEYCODE_W\":\"😂\",\"KEYCODE_E\":\"❤️\",\"KEYCODE_R\":\"👍\",\"KEYCODE_T\":\"🙏\",\"KEYCODE_Y\":\"😭\",\"KEYCODE_U\":\"🥺\",\"KEYCODE_I\":\"🔥\",\"KEYCODE_O\":\"✨\",\"KEYCODE_S\":\"😅\",\"KEYCODE_D\":\"🙌\",\"KEYCODE_F\":\"😊\",\"KEYCODE_G\":\"😍\",\"KEYCODE_H\":\"🤣\",\"KEYCODE_J\":\"😘\",\"KEYCODE_K\":\"🤔\",\"KEYCODE_L\":\"👀\",\"KEYCODE_Z\":\"💀\",\"KEYCODE_X\":\"😎\",\"KEYCODE_C\":\"🥰\",\"KEYCODE_V\":\"👏\",\"KEYCODE_B\":\"💯\",\"KEYCODE_N\":\"🎉\",\"KEYCODE_M\":\"😢\"}}"
+    },
+    "emoji_symbols_accept_prefix_with_space": {
+      "type": "boolean",
+      "value": false
+    },
+    "sym_pages_config": {
+      "type": "string",
+      "value": "{\"schemaVersion\":2,\"deviceEnabled\":false,\"emojiEnabled\":false,\"symbolsEnabled\":true,\"clipboardEnabled\":false,\"emojiPickerEnabled\":false,\"emojiFirst\":false,\"symPageOrder\":[\"symbols\",\"emoji\",\"device\",\"clipboard\",\"emoji_picker\"]}"
+    },
+    "keyboard_theme_assignment_mode_hardware": {
+      "type": "string",
+      "value": "follow_system"
+    },
+    "emoji_symbols_exact_on_close": {
+      "type": "boolean",
+      "value": false
+    },
+    "auto_correct_enabled_languages": {
+      "type": "string",
+      "value": "en"
+    },
+    "launcher_shortcuts": {
+      "type": "string",
+      "value": "{\"62\":{\"type\":\"command\",\"appName\":\"Pastiera QuickLauncher\",\"commandId\":\"pastiera.quick_launcher\",\"source\":\"pastiera\",\"kind\":\"PastieraAction\",\"title\":\"Pastiera QuickLauncher\",\"subtitle\":\"Open Pastiera search\",\"launch\":{\"type\":\"internal_action\",\"actionId\":\"open_quick_launcher\"}}}"
+    },
+    "custom_device_sym_profiles": {
+      "type": "string",
+      "value": "[]"
+    },
+    "terminal_mode_emoji_key": {
+      "type": "string",
+      "value": "up"
+    },
+    "command_surface_sources": {
+      "type": "string",
+      "value": "{\"apps\":{\"quick_launcher\":true},\"pastiera\":{\"quick_launcher\":true},\"app_actions\":{\"quick_launcher\":true},\"device_control\":{\"quick_launcher\":true},\"nav_actions\":{\"quick_launcher\":true}}"
+    },
+    "smart_ctrl_off_after_shortcut": {
+      "type": "boolean",
+      "value": true
+    },
+    "exact_typing_apps": {
+      "type": "string",
+      "value": ""
+    },
+    "emoji_layer_type_to_search": {
+      "type": "boolean",
+      "value": false
+    },
+    "trackpad_gesture_add_word_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "static_variation_bar_base_layer_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "emoji_key_opens_layer": {
+      "type": "boolean",
+      "value": true
+    },
+    "exact_typing_no_suggestions": {
+      "type": "boolean",
+      "value": true
+    },
+    "swipe_to_delete": {
+      "type": "boolean",
+      "value": false
+    },
+    "emoji_layer_active_profile": {
+      "type": "string",
+      "value": "chatting"
+    },
+    "static_variation_bar_mode": {
+      "type": "boolean",
+      "value": true
+    },
+    "keyboard_theme_light_hardware": {
+      "type": "string",
+      "value": "{\"background\":-3353892,\"divider\":-6380113,\"normal_key\":-1,\"special_key\":-5261630,\"text_and_icons\":-16777216,\"led_inactive\":-5327424,\"led_active\":-16745729,\"led_locked\":-27392,\"accent\":-16745729,\"cursor_swipe\":-16745729,\"key_popup\":-1,\"key_popup_selected\":-16745729,\"suggestion\":-3353892,\"status_bar_button\":-5261630,\"key_corner_radius_ratio\":0.11800000071525574,\"chrome_corner_radius_ratio\":0.09000000357627869,\"key_height_scale\":1.2588016986846924,\"number_row_height_scale\":0.9711260199546814,\"key_width_scale\":0.9414876699447632,\"row_gap_scale\":1.0499999523162842,\"distribute_horizontal_spacing\":true,\"ortholinear\":false,\"show_leds\":false,\"suggestions_height_scale\":0.8999999761581421,\"variations_height_scale\":0.8799999952316284,\"key_popup_style\":\"classic\",\"key_popup_attached\":true,\"key_popup_tail_enabled\":true,\"key_preview_after_long_press\":false,\"key_alternates_popup_enabled\":true}"
+    },
+    "emoji_symbols_accept_with_tab": {
+      "type": "boolean",
+      "value": false
+    },
+    "keyboard_theme_wallpaper_colours": {
+      "type": "boolean",
+      "value": true
+    },
+    "double_space_to_period": {
+      "type": "boolean",
+      "value": false
+    },
+    "auto_capitalize_respect_manual_shift_off": {
+      "type": "boolean",
+      "value": true
+    },
+    "titan2_elite_straight_outer_buttons": {
+      "type": "boolean",
+      "value": true
+    },
+    "trackpad_gestures_enabled": {
+      "type": "boolean",
+      "value": true
+    },
+    "emoji_symbols_exact_on_space": {
+      "type": "boolean",
+      "value": true
+    },
+    "emoji_key_auto_close": {
+      "type": "boolean",
+      "value": false
+    },
+    "led_locked_animation": {
+      "type": "boolean",
+      "value": true
+    },
+    "swipe_to_delete_provider": {
+      "type": "string",
+      "value": "native_ime"
+    },
+    "gifs_enabled": {
+      "type": "boolean",
+      "value": true
+    },
+    "titan2_elite_fill_corners": {
+      "type": "boolean",
+      "value": true
+    },
+    "app_enter_behavior_enabled": {
+      "type": "boolean",
+      "value": true
+    },
+    "trackpad_provider": {
+      "type": "string",
+      "value": "native_ime"
+    },
+    "gif_search_enter_picks": {
+      "type": "boolean",
+      "value": false
+    },
+    "emoji_suggestions_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "app_enter_behavior_overrides": {
+      "type": "string",
+      "value": "[{\"packageName\":\"com.whatsapp\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"auto\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.discord\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"auto\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.google.android.apps.messaging\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"auto\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.instagram.android\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"auto\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.facebook.katana\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.google.android.gm\",\"behavior\":\"enter_newline_ctrl_send\",\"sendStrategy\":\"ctrl_enter\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.linkedin.android\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.google.android.apps.tachyon\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.reddit.frontpage\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.microsoft.teams\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"},{\"packageName\":\"com.google.android.youtube\",\"behavior\":\"enter_send_shift_newline\",\"sendStrategy\":\"editor_action\",\"additionalSendShortcut\":\"none\"}]"
+    },
+    "auto_capitalize_restricted_fields": {
+      "type": "boolean",
+      "value": true
+    },
+    "suggestion_keys": {
+      "type": "string",
+      "value": "ctrl_shift_qwe"
+    },
+    "emoji_layer_switch_by_app": {
+      "type": "boolean",
+      "value": false
+    },
+    "menu_bar_buttons": {
+      "type": "string",
+      "value": "microphone,clipboard,settings,undo,redo,language,software_keyboard_mode"
+    },
+    "auto_capitalize_first_letter": {
+      "type": "boolean",
+      "value": true
+    },
+    "nav_mode_ctrl_hold_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "led_color_shift": {
+      "type": "int",
+      "value": -10184961
+    },
+    "alt_backspace_delete": {
+      "type": "boolean",
+      "value": false
+    },
+    "power_shortcuts_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "static_variation_bar_preset": {
+      "type": "string",
+      "value": "dev_choice"
+    },
+    "alt_shift_layout_switch": {
+      "type": "boolean",
+      "value": false
+    },
+    "emoji_symbols_accept_with_enter": {
+      "type": "boolean",
+      "value": true
+    },
+    "quick_launcher_pill_mode": {
+      "type": "boolean",
+      "value": true
+    },
+    "titan2_elite_rounded_corner_insets": {
+      "type": "boolean",
+      "value": true
+    },
+    "auto_replace_on_space_enter": {
+      "type": "boolean",
+      "value": false
+    },
+    "use_keyboard_proximity": {
+      "type": "boolean",
+      "value": true
+    },
+    "keyboard_theme_dark_hardware": {
+      "type": "string",
+      "value": "{\"background\":-14935010,\"divider\":-11908531,\"normal_key\":-12961220,\"special_key\":-13882322,\"text_and_icons\":-1,\"led_inactive\":-12566460,\"led_active\":-16087809,\"led_locked\":-24822,\"accent\":-16087809,\"cursor_swipe\":-16087809,\"key_popup\":-12961220,\"key_popup_selected\":-16087809,\"suggestion\":-14671580,\"status_bar_button\":-13882322,\"key_corner_radius_ratio\":0.11800000071525574,\"chrome_corner_radius_ratio\":0.09000000357627869,\"key_height_scale\":1.2588016986846924,\"number_row_height_scale\":0.9711260199546814,\"key_width_scale\":0.9414876699447632,\"row_gap_scale\":1.0499999523162842,\"distribute_horizontal_spacing\":true,\"ortholinear\":false,\"show_leds\":false,\"suggestions_height_scale\":0.8999999761581421,\"variations_height_scale\":0.8799999952316284,\"key_popup_style\":\"classic\",\"key_popup_attached\":true,\"key_popup_tail_enabled\":true,\"key_preview_after_long_press\":false,\"key_alternates_popup_enabled\":true}"
+    },
+    "shift_backspace_delete": {
+      "type": "boolean",
+      "value": true
+    },
+    "launcher_shortcuts_enabled": {
+      "type": "boolean",
+      "value": false
+    },
+    "titan2_elite_status_bar_lift_dp": {
+      "type": "int",
+      "value": 5
+    },
+    "smart_alt_off_after_opening": {
+      "type": "boolean",
+      "value": true
+    },
+    "led_individual_colors": {
+      "type": "boolean",
+      "value": true
+    },
+    "quick_launcher_behavior": {
+      "type": "string",
+      "value": "pastiera"
+    },
+    "auto_shift_field_types": {
+      "type": "string",
+      "value": "addresses,names,text"
+    },
+    "emoji_key_led": {
+      "type": "boolean",
+      "value": true
+    }
+  }
+}

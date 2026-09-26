@@ -528,7 +528,7 @@
     <string name="clicks_button_binding_failure">Δεν ήταν δυνατή η εφαρμογή της αντιστοίχισης κουμπιού.</string>
     <string name="clicks_button_binding_pending">Θα εφαρμοστεί όταν είναι έτοιμη μια υποστηριζόμενη σύνδεση πληκτρολογίου.</string>
     <string name="clicks_launcher_interception_service_label">Παρεμπόδιση πλήκτρων από Pastiera</string>
-    <string name="clicks_launcher_interception_service_description">Χειρίζεται τα ρυθμισμένα κουμπιά ενός Clicks Power Keyboard. Σε εφαρμογές όπου το Pastiera είναι κρυμμένο, παρακολουθεί επίσης τα πλήκτρα για τις λυχνίες κατάστασης και περνά το πλήκτρο emoji και το Sym στο Pastiera, εφόσον έχετε ενεργοποιήσει αυτές τις επιλογές.</string>
+    <string name="clicks_launcher_interception_service_description">Επιτρέπει στο Pastiera να χειρίζεται τα πλήκτρα που αλλιώς θα διάβαζε πρώτα μια εφαρμογή: κουμπιά στα οποία έχετε αναθέσει ενέργειες του Pastiera και, σε εφαρμογές όπου το Pastiera είναι κρυμμένο, τα πλήκτρα για τις λυχνίες κατάστασης, το πλήκτρο emoji και το Sym, εφόσον έχετε ενεργοποιήσει αυτές τις επιλογές.</string>
     <string name="clicks_launcher_interception_title">Παρεμπόδιση κουμπιών Clicks Android</string>
     <string name="clicks_launcher_interception_enabled">Ενεργό · Φιλτράρονται μόνο ρητά ρυθμισμένα κουμπιά ενός υποστηριζόμενου Clicks Power Keyboard.</string>
     <string name="clicks_launcher_interception_disabled">Απαιτείται για κουμπιά Clicks που αντιστοιχίζονται από το λογισμικό. Πατήστε για ενεργοποίηση στις ρυθμίσεις Προσβασιμότητας Android.</string>
@@ -1673,7 +1673,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="kw_main_custom_input_styles">διάταξη πληκτρολογίου, διατάξεις, στυλ εισαγωγής, γλώσσες, ανά γλώσσα, keyboard layout, layouts, input styles, languages</string>
     <string name="kw_main_text_input">πληκτρολόγηση, κείμενο, στίξη, εισαγωγικά, διαστήματα, κεφαλαία, typing, text, punctuation, quotes, spacing, capitalization</string>
     <string name="kw_main_auto_correction">διόρθωση, αυτόματη διόρθωση, ορθογραφία, προτάσεις, αντικαταστάσεις, λεξικά, correction, autocorrect, spelling, suggestions, replacements, dictionaries</string>
-    <string name="kw_main_keyboard_theme">θέμα, θέματα, χρώματα, σκοτεινό, φωτεινό, προρυθμίσεις, hardware πληκτρολόγιο, πληκτρολόγιο οθόνης, theme, colors, dark, light, presets, Pastiera Dark, Pastiera Light, Cloud Tap, Moon Tap, Classic Cloud, Classic Midnight</string>
+    <string name="kw_main_keyboard_theme">θέμα, θέματα, χρώματα, σκοτεινό, φωτεινό, προρυθμίσεις, hardware πληκτρολόγιο, πληκτρολόγιο οθόνης, theme, colors, dark, light, presets, Flux Dark, Flux Light, Cloud Tap, Moon Tap, Classic Cloud, Classic Midnight</string>
     <string name="kw_main_app_language">γλώσσα, γλώσσα εφαρμογής, locale, μετάφραση, language, app language, translation</string>
     <string name="kw_main_customization">προσαρμογή, εμφάνιση, customize, customization, appearance</string>
     <string name="kw_main_advanced">για προχωρημένους, αντίγραφο ασφαλείας, επαναφορά, debug, ειδικός, advanced, backup, restore, expert</string>

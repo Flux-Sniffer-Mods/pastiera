@@ -193,8 +193,7 @@ class SettingLinkRegistryTest {
             SettingLinkIds.TRACKPAD_SHIZUKU_DEVICE,
             SettingLinkIds.TRACKPAD_SENSITIVITY,
             SettingLinkIds.TRACKPAD_SUGGESTION_SWIPE_THRESHOLD,
-            SettingLinkIds.TRACKPAD_DELETE_SWIPE_THRESHOLD,
-            SettingLinkIds.TRACKPAD_DEBUG
+            SettingLinkIds.TRACKPAD_DELETE_SWIPE_THRESHOLD
         )
 
         trackpadIds.forEach { id ->

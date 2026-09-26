@@ -1,6 +1,7 @@
 package it.palsoftware.pastiera
 
 import it.palsoftware.pastiera.update.bundledReleaseNotes
+import it.palsoftware.pastiera.update.parseBundledReleaseNotes
 import it.palsoftware.pastiera.update.friendlyVersion
 import it.palsoftware.pastiera.update.shortVersion
 import org.junit.Assert.assertEquals
@@ -39,6 +40,20 @@ class BundledReleaseNotesTest {
         assertEquals("0.86", shortVersion("0.86-flux.202609260416"))
         assertEquals("0.85", friendlyVersion("0.85", java.util.Locale.UK))
         assertEquals("Flux Keyboard 0.86", bundledReleaseNotes(RuntimeEnvironment.getApplication(), "0.86-flux.202609260416")?.title)
+    }
+
+    @Test
+    fun afterAnUpdateOnlyNewerEntriesAreListed() {
+        val body = """{"title":"Flux Keyboard","intro":"All","introSince":"Since","highlights":["old",{"text":"new","after":"202609261444"}],"upstream":["team"]}"""
+        val since = assertNotNullAndGet(parseBundledReleaseNotes(body, "0.90-flux.1", 202609261444L))
+        assertEquals(listOf("new"), since.highlights)
+        assertEquals(emptyList<String>(), since.upstreamChanges)
+        assertEquals("Since", since.intro)
+        val all = assertNotNullAndGet(parseBundledReleaseNotes(body, "0.90-flux.1", null))
+        assertEquals(listOf("old", "new"), all.highlights)
+        assertEquals("All", all.intro)
+        // Nothing newer than a later build: no notes, so the full list is shown instead
+        assertEquals(null, parseBundledReleaseNotes(body, "0.90-flux.1", 202609271200L))
     }
 
     private fun <T> assertNotNullAndGet(value: T?): T { assertNotNull(value); return value!! }

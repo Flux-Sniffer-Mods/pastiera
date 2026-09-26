@@ -252,7 +252,8 @@ private fun HardwareKeyboardListScreen(
 
             HardwareKeyboardSectionDivider(stringResource(R.string.hardware_keyboard_behavior_title))
 
-            HardwareKeyboardSwitchRow(
+            // Only on a Titan 2 (or while it's on, so it can be turned off)
+            if (SettingsManager.titan2LayoutApplies(context)) HardwareKeyboardSwitchRow(
                 title = stringResource(R.string.titan2_layout_title),
                 linkId = "hardware.titan2_layout",
                 description = stringResource(R.string.titan2_layout_description),

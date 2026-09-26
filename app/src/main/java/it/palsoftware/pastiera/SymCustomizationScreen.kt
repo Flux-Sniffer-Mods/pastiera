@@ -337,14 +337,12 @@ fun SymCustomizationScreen(
                         Text(
                             text = stringResource(R.string.sym_swap_pages_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1
+                            fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = stringResource(R.string.sym_swap_pages_description),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -692,96 +690,4 @@ fun SymCustomizationScreen(
         }
         }
     }
-}
-
-internal fun emojiPickerKeyLabel(context: Context, keyCode: Int): String = when (keyCode) {
-    KeyEvent.KEYCODE_UNKNOWN -> context.getString(R.string.emoji_picker_key_off)
-    KeyEvent.KEYCODE_SHIFT_RIGHT -> context.getString(R.string.emoji_picker_key_right_shift)
-    KeyEvent.KEYCODE_SHIFT_LEFT -> context.getString(R.string.emoji_picker_key_left_shift)
-    KeyEvent.KEYCODE_ALT_RIGHT -> context.getString(R.string.emoji_picker_key_right_alt)
-    KeyEvent.KEYCODE_ALT_LEFT -> context.getString(R.string.emoji_picker_key_left_alt)
-    KeyEvent.KEYCODE_CTRL_RIGHT -> context.getString(R.string.emoji_picker_key_right_ctrl)
-    KeyEvent.KEYCODE_CTRL_LEFT -> context.getString(R.string.emoji_picker_key_left_ctrl)
-    KeyEvent.KEYCODE_FUNCTION -> "Fn"
-    else -> KeyEvent.keyCodeToString(keyCode)
-        .removePrefix("KEYCODE_")
-        .replace('_', ' ')
-        .lowercase()
-        .replaceFirstChar { it.uppercase() }
-}
-
-/**
- * Press-to-assign dialog for an emoji layer key (Recents, GIF): waits for a letter key press.
- * [onKeyPressed] stores it and returns false when it isn't allowed (not a layer key, or the
- * other special key).
- */
-@Composable
-private fun EmojiLayerKeyDialog(
-    title: String,
-    description: String,
-    currentKey: Int,
-    letterFor: (Int) -> String,
-    onKeyPressed: (Int) -> Boolean,
-    onTurnOff: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val keyFocus = remember { FocusRequester() }
-    var rejected by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(keyFocus)
-                    .focusable()
-                    .onPreviewKeyEvent { event ->
-                        val native = event.nativeKeyEvent
-                        // Let Back close the dialog as usual
-                        if (native.keyCode == KeyEvent.KEYCODE_BACK) return@onPreviewKeyEvent false
-                        if (native.action == KeyEvent.ACTION_DOWN && native.repeatCount == 0) {
-                            if (onKeyPressed(native.keyCode)) onDismiss() else rejected = true
-                        }
-                        true
-                    },
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(text = description, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = if (currentKey == KeyEvent.KEYCODE_UNKNOWN) {
-                        stringResource(R.string.emoji_layer_recents_key_off)
-                    } else {
-                        stringResource(R.string.emoji_layer_recents_key_current, letterFor(currentKey))
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = stringResource(
-                        if (rejected) R.string.emoji_layer_key_rejected
-                        else R.string.emoji_layer_recents_key_press_prompt
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (rejected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                )
-            }
-            LaunchedEffect(Unit) {
-                runCatching { keyFocus.requestFocus() }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onTurnOff()
-                onDismiss()
-            }) {
-                Text(stringResource(R.string.emoji_layer_recents_key_turn_off))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
-    )
 }

@@ -304,7 +304,7 @@ fun KeyboardLayoutSettingsScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
+                        .heightIn(min = 72.dp)
                         .clickable {
                             selectedLayout = "qwerty"
                         }
@@ -326,14 +326,12 @@ fun KeyboardLayoutSettingsScreen(
                             Text(
                                 text = stringResource(R.string.keyboard_layout_no_conversion),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1
+                                fontWeight = FontWeight.Medium
                             )
                             Text(
                                 text = stringResource(R.string.keyboard_layout_no_conversion_description),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Row(
@@ -401,8 +399,7 @@ fun KeyboardLayoutSettingsScreen(
                                         Text(
                                             text = metadata?.name ?: layout.replaceFirstChar { it.uppercase() },
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1
+                                            fontWeight = FontWeight.Medium
                                         )
                                         if (hasMultiTap) {
                                             Surface(
@@ -422,8 +419,7 @@ fun KeyboardLayoutSettingsScreen(
                                     Text(
                                         text = metadata?.description ?: getLayoutDescription(context, layout),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 if (canDelete) {

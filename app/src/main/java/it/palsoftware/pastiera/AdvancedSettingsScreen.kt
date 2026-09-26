@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
@@ -63,6 +65,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -104,6 +108,24 @@ fun AdvancedSettingsScreen(
     var clipboardRetentionTime by remember {
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
+    var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
+    var pasteSuggestion by remember { mutableStateOf(SettingsManager.getPasteSuggestionEnabled(context)) }
+    var oneTimeCodes by remember { mutableStateOf(SettingsManager.getOneTimeCodesEnabled(context)) }
+    // Notification access, re-read when coming back from Android's settings
+    var notificationAccess by remember { mutableStateOf(SettingsManager.hasNotificationAccess(context)) }
+    val accessLifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(accessLifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                notificationAccess = SettingsManager.hasNotificationAccess(context)
+            }
+        }
+        accessLifecycle.lifecycle.addObserver(observer)
+        onDispose { accessLifecycle.lifecycle.removeObserver(observer) }
+    }
+    var cleanLinks by remember { mutableStateOf(SettingsManager.getCleanPastedLinks(context)) }
+    var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
+    var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -286,6 +308,29 @@ fun AdvancedSettingsScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         SettingsSectionDivider(stringResource(R.string.settings_section_privacy))
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS,
+                            title = stringResource(R.string.incognito_always_title),
+                            description = stringResource(R.string.incognito_always_description),
+                            checked = incognitoAlways,
+                            onCheckedChange = {
+                                incognitoAlways = it
+                                SettingsManager.setIncognitoAlways(context, it)
+                            }
+                        )
+                        if (!incognitoAlways) {
+                            FluxSwitchRow(
+                                linkId = SettingLinkIds.PRIVACY_INCOGNITO_FOLLOW_APPS,
+                                title = stringResource(R.string.incognito_follow_apps_title),
+                                description = stringResource(R.string.incognito_follow_apps_description),
+                                checked = incognitoFollowApps,
+                                onCheckedChange = {
+                                    incognitoFollowApps = it
+                                    SettingsManager.setIncognitoFollowApps(context, it)
+                                }
+                            )
+                        }
+
                         SettingsCategoryRow(
                             icon = Icons.Filled.CloudOff,
                             title = stringResource(R.string.flux_offline_title),
@@ -296,48 +341,15 @@ fun AdvancedSettingsScreen(
                             onClick = { onNavigate(SettingsDestination.FluxOffline) }
                         )
 
-                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
-                        // Backup
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_BACKUP) {
-                                    backupLauncher.launch(defaultBackupName())
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Backup,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.backup_now),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.backup_now_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                        SettingsSectionDivider(stringResource(R.string.settings_section_clipboard))
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
+                            title = stringResource(R.string.paste_suggestion_title),
+                            description = stringResource(R.string.paste_suggestion_description),
+                            checked = pasteSuggestion,
+                            onCheckedChange = {
+                                pasteSuggestion = it
+                                SettingsManager.setPasteSuggestionEnabled(context, it)
                             }
                         )
                         FluxSwitchRow(
@@ -350,12 +362,31 @@ fun AdvancedSettingsScreen(
                                 SettingsManager.setOneTimeCodesEnabled(context, it)
                                 // Android's own switch lets the app read notifications
                                 if (it && !SettingsManager.hasNotificationAccess(context)) {
-                                    runCatching {
-                                        context.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                                    }
+                                    RestrictedSettings.openNotificationAccess(context)
                                 }
                             }
+                        )
+                        if (oneTimeCodes && !notificationAccess) {
+                            FluxActionRow(
+                                linkId = null,
+                                title = stringResource(R.string.notification_access_title),
+                                description = stringResource(
+                                    if (RestrictedSettings.blocked(context)) R.string.restricted_settings_notifications
+                                    else R.string.notification_access_off
+                                ),
+                                onClick = { RestrictedSettings.openNotificationAccess(context) }
+                            )
                         }
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_CLEAN_LINKS,
+                            title = stringResource(R.string.clean_links_title),
+                            description = stringResource(R.string.clean_links_description),
+                            checked = cleanLinks,
+                            onCheckedChange = {
+                                cleanLinks = it
+                                SettingsManager.setCleanPastedLinks(context, it)
+                            }
+                        )
 
                         // Clipboard Retention Time
                         Surface(
@@ -384,14 +415,12 @@ fun AdvancedSettingsScreen(
                                     Text(
                                         text = stringResource(R.string.clipboard_retention_time_title),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
+                                        fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = stringResource(R.string.clipboard_retention_time_description),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 OutlinedTextField(
@@ -432,6 +461,158 @@ fun AdvancedSettingsScreen(
                             onClick = { onNavigate(SettingsDestination.Accessibility) }
                         )
 
+                        SettingsSectionDivider(stringResource(R.string.settings_section_language))
+                        SettingsCategoryRow(
+                            icon = ImageVector.vectorResource(R.drawable.translate_24),
+                            title = stringResource(R.string.app_language_title),
+                            description = currentAppLanguageLabel(context),
+                            linkId = SettingLinkIds.MAIN_APP_LANGUAGE,
+                            onClick = { onNavigate(SettingsDestination.AppLanguage) }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
+                        RecommendedSettingsRow()
+                        // Backup
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_BACKUP) {
+                                    backupLauncher.launch(defaultBackupName())
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Backup,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.backup_now),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.backup_now_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Restore
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_RESTORE) {
+                                    restoreLauncher.launch(arrayOf("application/zip"))
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.History,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.restore_from_file),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.restore_from_file_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
+                        // Show Tutorial
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 64.dp)
+                                .settingRow(SettingLinkIds.ADVANCED_SHOW_TUTORIAL) {
+                                    SettingsManager.resetTutorialCompleted(context)
+                                    val intent = Intent(context, TutorialActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.tutorial_show),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.tutorial_review_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        SettingsUpdateRows(context)
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.Info,
+                            title = stringResource(R.string.about_title),
+                            description = stringResource(
+                                R.string.settings_about_version_summary,
+                                BuildConfig.VERSION_NAME
+                            ),
+                            linkId = SettingLinkIds.MAIN_ABOUT,
+                            onClick = { onNavigate(SettingsDestination.About) }
+                        )
+
                         SettingsSectionDivider(stringResource(R.string.settings_section_experimental))
                         Surface(
                             modifier = Modifier
@@ -470,307 +651,28 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
-                        var hiddenKeyboardApps by remember {
-                            mutableStateOf(SettingsManager.getHiddenKeyboardApps(context))
-                        }
-                        var showHiddenAppsDialog by remember { mutableStateOf(false) }
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .settingRow("advanced.hidden_keyboard_apps") { showHiddenAppsDialog = true }
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(stringResource(R.string.hidden_keyboard_apps_title),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium)
-                                val hiddenAppNames = remember(hiddenKeyboardApps) {
-                                    val installed = AppListHelper.getCachedInstalledApps()
-                                        ?.associateBy { app -> app.packageName }
-                                    hiddenKeyboardApps.map { pkg -> installed?.get(pkg)?.appName ?: pkg }
-                                }
-                                Text(
-                                    text = if (hiddenKeyboardApps.isEmpty()) {
-                                        stringResource(R.string.hidden_keyboard_apps_description)
-                                    } else {
-                                        hiddenAppNames.joinToString(", ")
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        if (showHiddenAppsDialog) {
-                            HiddenKeyboardAppsDialog(onDismiss = {
-                                showHiddenAppsDialog = false
-                                hiddenKeyboardApps = SettingsManager.getHiddenKeyboardApps(context)
-                            })
-                        }
 
-                        if (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() ||
-                            SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(context)) {
-                            Surface(modifier = Modifier.fillMaxWidth()
-                                .settingRow("advanced.corner_calibration") {
-                                    context.startActivity(Intent(context, CornerCalibrationActivity::class.java))
-                                }) {
-                                Column(Modifier.padding(16.dp)) {
-                                    Text(stringResource(R.string.corner_calibration_title),
-                                        style = MaterialTheme.typography.titleMedium)
-                                    Text(stringResource(R.string.corner_calibration_description),
-                                        style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
 
-                            var fillCorners by remember {
-                                mutableStateOf(SettingsManager.getTitan2EliteFillCorners(context))
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.DEVELOPER_OPTIONS_ENABLED,
+                            title = stringResource(R.string.developer_options_title),
+                            description = stringResource(R.string.developer_options_description),
+                            checked = developerOptions,
+                            onCheckedChange = { enabled ->
+                                developerOptions = enabled
+                                SettingsManager.setDeveloperOptionsEnabled(context, enabled)
                             }
-                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.corner_fill")) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(stringResource(R.string.titan2_elite_fill_corners_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium)
-                                        Text(stringResource(R.string.titan2_elite_fill_corners_description),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(
-                                        checked = fillCorners,
-                                        onCheckedChange = { enabled ->
-                                            fillCorners = enabled
-                                            SettingsManager.setTitan2EliteFillCorners(context, enabled)
-                                        }
-                                    )
-                                }
-                            }
-
-                            var straightOuterButtons by remember {
-                                mutableStateOf(SettingsManager.getTitan2EliteStraightOuterButtons(context))
-                            }
-                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.straight_outer_buttons")) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(stringResource(R.string.titan2_elite_straight_outer_buttons_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium)
-                                        Text(stringResource(R.string.titan2_elite_straight_outer_buttons_description),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Switch(
-                                        checked = straightOuterButtons,
-                                        onCheckedChange = { enabled ->
-                                            straightOuterButtons = enabled
-                                            SettingsManager.setTitan2EliteStraightOuterButtons(context, enabled)
-                                        }
-                                    )
-                                }
-                            }
-
-                            var statusBarLiftDp by remember {
-                                mutableStateOf(SettingsManager.getTitan2EliteStatusBarLiftDp(context).toFloat())
-                            }
-                            Surface(modifier = Modifier.fillMaxWidth().settingRow("advanced.status_bar_lift")) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(stringResource(R.string.titan2_elite_status_bar_lift_title),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium)
-                                    Text(stringResource(R.string.titan2_elite_status_bar_lift_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        Slider(
-                                            value = statusBarLiftDp,
-                                            onValueChange = { statusBarLiftDp = kotlin.math.round(it) },
-                                            onValueChangeFinished = {
-                                                SettingsManager.setTitan2EliteStatusBarLiftDp(
-                                                    context, statusBarLiftDp.toInt()
-                                                )
-                                            },
-                                            valueRange = 0f..SettingsManager.TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP.toFloat(),
-                                            steps = SettingsManager.TITAN2_ELITE_STATUS_BAR_LIFT_MAX_DP - 1,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(stringResource(
-                                            R.string.titan2_elite_status_bar_lift_value,
-                                            statusBarLiftDp.toInt()
-                                        ))
-                                    }
-                                }
-                            }
-                        }
-
-                        // IME Test Screen (only in debug builds)
-                        if (BuildConfig.DEBUG) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(64.dp)
-                                    .clickable { navigateTo(AdvancedDestination.ImeTest) }
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.TextFields,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "IME Test Screen",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1
-                                        )
-                                        Text(
-                                            text = "Test all input field types and IME actions",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1
-                                        )
-                                    }
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-
-                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
-                        // Show Tutorial
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SHOW_TUTORIAL) {
-                                    SettingsManager.resetTutorialCompleted(context)
-                                    val intent = Intent(context, TutorialActivity::class.java)
-                                    context.startActivity(intent)
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Info,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.tutorial_review_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SHOW_RELEASE_NOTES_TUTORIAL) {
-                                    val intent = Intent(context, TutorialActivity::class.java).apply {
-                                        putExtra(TutorialActivity.EXTRA_UPDATE_TUTORIAL, true)
-                                        putExtra(TutorialActivity.EXTRA_PREVIEW_UPDATE_TUTORIAL, true)
-                                        putExtra(TutorialActivity.EXTRA_PREVIOUS_VERSION, "0.84beta")
-                                    }
-                                    context.startActivity(intent)
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show_release_notes),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.tutorial_show_release_notes_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        SettingsUpdateRows(context)
-                        SettingsCategoryRow(
-                            icon = Icons.Filled.Info,
-                            title = stringResource(R.string.about_title),
-                            description = stringResource(
-                                R.string.settings_about_version_summary,
-                                BuildConfig.VERSION_NAME
-                            ),
-                            linkId = SettingLinkIds.MAIN_ABOUT,
-                            onClick = { onNavigate(SettingsDestination.About) }
                         )
+                        if (developerOptions) {
+                            SettingsCategoryRow(
+                                icon = Icons.Filled.Code,
+                                title = stringResource(R.string.developer_options_title),
+                                description = stringResource(R.string.developer_options_row_description),
+                                linkId = SettingLinkIds.MAIN_DEVELOPER,
+                                onClick = { onNavigate(SettingsDestination.Developer) }
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }

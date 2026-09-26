@@ -29,6 +29,8 @@ object EmojiCompatSupport {
 
     /** Starts loading the downloadable emoji font. Safe to call repeatedly. */
     fun ensureLoaded(context: Context) {
+        // Offline mode: no downloadable font (the system font's emoji only)
+        if (it.palsoftware.pastiera.OfflineMode.enabled) return
         runCatching {
             val compat = EmojiCompat.init(context.applicationContext) ?: return
             if (!initCallbackRegistered) {

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -64,7 +65,10 @@ fun ModifierSettingsScreen(
     var ctrlLatchStaysOnSpace by remember { mutableStateOf(SettingsManager.getCtrlLatchStaysOnSpace(context)) }
     var modifierIndicators by remember { mutableStateOf(SettingsManager.getModifierIndicators(context)) }
     var clearAltOnSpace by remember { mutableStateOf(SettingsManager.getClearAltOnSpace(context)) }
+    var smartAltOff by remember { mutableStateOf(SettingsManager.getSmartAltOffAfterOpening(context)) }
+    var smartCtrlOff by remember { mutableStateOf(SettingsManager.getSmartCtrlOffAfterShortcut(context)) }
     var altCtrlSpeechShortcut by remember { mutableStateOf(SettingsManager.getAltCtrlSpeechShortcutEnabled(context)) }
+    var speechKeepListening by remember { mutableStateOf(SettingsManager.getSpeechKeepListening(context)) }
     var showSymShortcutCompatibilityInfo by remember { mutableStateOf(false) }
     var longPressExpanded by remember { mutableStateOf(false) }
     var altBindingExpanded by remember { mutableStateOf(false) }
@@ -121,6 +125,31 @@ fun ModifierSettingsScreen(
         Column(
             modifier = modifier.fillMaxWidth().padding(paddingValues).verticalScroll(rememberScrollState())
         ) {
+            SettingsSectionDivider(stringResource(R.string.modifiers_section_sym_pages_layers))
+            ModifierNavigationRow(
+                iconRes = R.drawable.ic_emoji_symbols_24,
+                title = stringResource(R.string.sym_customization_title),
+                description = stringResource(R.string.sym_customization_description),
+                linkId = SettingLinkIds.MODIFIERS_SYM_LAYERS,
+                onClick = onOpenSymLayers
+            )
+            ModifierDropdownRow(
+                title = stringResource(R.string.alt_binding_title),
+                description = stringResource(R.string.alt_binding_description),
+                value = altBindingOptions.firstOrNull { it.first == altBinding }?.second
+                    ?: altBindingOptions.first().second,
+                linkId = SettingLinkIds.MODIFIERS_ALT_BINDING,
+                expanded = altBindingExpanded,
+                onExpand = { altBindingExpanded = true },
+                onDismiss = { altBindingExpanded = false },
+                options = altBindingOptions,
+                onSelected = { value ->
+                    altBinding = value
+                    SettingsManager.setAltModifierBinding(context, value)
+                    altBindingExpanded = false
+                }
+            )
+
             SettingsSectionDivider(stringResource(R.string.modifiers_section_tap_lock_long_press))
             ModifierSwitchRow(
                 title = stringResource(R.string.shift_tap_latches_title),
@@ -179,6 +208,24 @@ fun ModifierSettingsScreen(
                     ctrlLatchStaysOnSpace = it
                     SettingsManager.setCtrlLatchStaysOnSpace(context, it)
                 }
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.smart_alt_off_title),
+                description = stringResource(R.string.smart_alt_off_description),
+                checked = smartAltOff,
+                linkId = SettingLinkIds.MODIFIERS_SMART_ALT_OFF
+            ) {
+                smartAltOff = it
+                SettingsManager.setSmartAltOffAfterOpening(context, it)
+            }
+            ModifierSwitchRow(
+                title = stringResource(R.string.smart_ctrl_off_title),
+                description = stringResource(R.string.smart_ctrl_off_description),
+                checked = smartCtrlOff,
+                linkId = SettingLinkIds.MODIFIERS_SMART_CTRL_OFF
+            ) {
+                smartCtrlOff = it
+                SettingsManager.setSmartCtrlOffAfterShortcut(context, it)
             }
             ModifierDropdownRow(
                 title = stringResource(R.string.long_press_modifier_title),
@@ -266,60 +313,6 @@ fun ModifierSettingsScreen(
                     )
                 }
             }
-
-            SettingsSectionDivider(stringResource(R.string.modifiers_section_sym_pages_layers))
-            ModifierNavigationRow(
-                iconRes = R.drawable.ic_emoji_symbols_24,
-                title = stringResource(R.string.sym_customization_title),
-                description = stringResource(R.string.sym_customization_description),
-                linkId = SettingLinkIds.MODIFIERS_SYM_LAYERS,
-                onClick = onOpenSymLayers
-            )
-            ModifierDropdownRow(
-                title = stringResource(R.string.alt_binding_title),
-                description = stringResource(R.string.alt_binding_description),
-                value = altBindingOptions.firstOrNull { it.first == altBinding }?.second
-                    ?: altBindingOptions.first().second,
-                linkId = SettingLinkIds.MODIFIERS_ALT_BINDING,
-                expanded = altBindingExpanded,
-                onExpand = { altBindingExpanded = true },
-                onDismiss = { altBindingExpanded = false },
-                options = altBindingOptions,
-                onSelected = { value ->
-                    altBinding = value
-                    SettingsManager.setAltModifierBinding(context, value)
-                    altBindingExpanded = false
-                }
-            )
-
-            SettingsSectionDivider(stringResource(R.string.key_shortcuts_title))
-            ModifierNavigationRow(
-                iconRes = R.drawable.keyboard_option_key_24,
-                title = stringResource(R.string.key_shortcuts_title),
-                description = stringResource(R.string.key_shortcuts_description),
-                linkId = SettingLinkIds.MODIFIERS_SYM_SHORTCUTS,
-                onClick = onOpenKeyShortcuts,
-                onInfoClick = { showSymShortcutCompatibilityInfo = true }
-            )
-            ModifierSwitchRow(
-                title = stringResource(R.string.alt_ctrl_speech_shortcut_title),
-                description = stringResource(R.string.alt_ctrl_speech_shortcut_description),
-                checked = altCtrlSpeechShortcut,
-                linkId = SettingLinkIds.TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT
-            ) {
-                altCtrlSpeechShortcut = it
-                SettingsManager.setAltCtrlSpeechShortcutEnabled(context, it)
-            }
-
-            SettingsSectionDivider(stringResource(R.string.nav_mode_title))
-            ModifierNavigationRow(
-                iconRes = R.drawable.navigation_24,
-                title = stringResource(R.string.modifier_control_nav_mode_title),
-                description = stringResource(R.string.modifier_control_nav_mode_description),
-                linkId = SettingLinkIds.MODIFIERS_CONTROL_NAV_MODE,
-                onClick = onOpenNavMode
-            )
-
         }
     }
 
@@ -479,7 +472,7 @@ private fun ModifierSwitchRow(
     linkId: String? = null,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Surface(modifier = Modifier.fillMaxWidth().height(64.dp).settingRow(linkId)) {
+    Surface(modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).settingRow(linkId)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = if (indent) 52.dp else 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,

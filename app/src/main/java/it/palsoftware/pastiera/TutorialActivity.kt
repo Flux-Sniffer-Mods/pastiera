@@ -113,8 +113,18 @@ sealed class TutorialPageType {
     data class Welcome(
         val title: String,
         val description: String,
-        @DrawableRes val imageRes: Int
+        @DrawableRes val imageRes: Int? = null,
+        // Flux Keyboard: a plain icon instead of Pastiera's mascot
+        val icon: ImageVector? = null
     ) : TutorialPageType()
+
+    // Flux Keyboard's own pages (FluxTutorialPages.kt)
+    object FluxSetup : TutorialPageType()
+    object FluxEmoji : TutorialPageType()
+    object FluxTyping : TutorialPageType()
+    object FluxApps : TutorialPageType()
+    object FluxExtras : TutorialPageType()
+    object FluxPersonalise : TutorialPageType()
     
     data class Standard(
         val title: String,
@@ -186,7 +196,13 @@ fun TutorialScreen(
         SettingsManager.getLastSeenWhatsNewVersion(context)
     }
     // Notes bundled with the build (a fork's own changes) win over the online ones
-    val bundledNotes = remember { it.palsoftware.pastiera.update.bundledReleaseNotes(context, BuildConfig.VERSION_NAME) }
+    // After an update, only what's new since the version the notes were last seen on
+    val bundledNotes = remember {
+        it.palsoftware.pastiera.update.bundledReleaseNotes(
+            context, BuildConfig.VERSION_NAME,
+            sinceVersion = if (updateTutorial && previousVersionOverride == null) lastSeenWhatsNewVersion else null
+        )
+    }
     var releaseNotes by remember {
         mutableStateOf(bundledNotes ?: ReleaseNotesSummary.fallback(BuildConfig.VERSION_NAME, releaseNotesLanguageTag))
     }
@@ -234,12 +250,14 @@ fun TutorialScreen(
                     currentVersion = BuildConfig.VERSION_NAME
                 )
             )
+            // Flux Keyboard: after an update, What's new alone (the tutorial is in Settings)
+            return@buildList
         }
         add(
             TutorialPageType.Welcome(
                 title = stringResource(R.string.tutorial_page_welcome_title),
-                description = stringResource(R.string.tutorial_page_welcome_description),
-                imageRes = R.drawable.tutorial_welcome
+                description = stringResource(R.string.flux_tutorial_welcome_description),
+                icon = Icons.Filled.Keyboard
             )
         )
         if (!isPastieraEnabled) {
@@ -258,30 +276,33 @@ fun TutorialScreen(
                 )
             )
         }
-        add(
-            TutorialPageType.Customization(
-                title = stringResource(R.string.tutorial_page_customization_title),
-                description = stringResource(R.string.tutorial_page_customization_description),
-                icon = Icons.Filled.Settings,
-                iconTint = MaterialTheme.colorScheme.primary
+        // Flux Keyboard: set up in one step, then what's different, then Pastiera's essentials
+        add(TutorialPageType.FluxSetup)
+        if (DeviceSpecific.isTitan2Device()) {
+            add(
+                TutorialPageType.ImeCaptionBar(
+                    title = stringResource(R.string.tutorial_android16_ime_caption_title),
+                    description = stringResource(R.string.tutorial_android16_ime_caption_description)
+                )
             )
-        )
+        }
+        add(TutorialPageType.FluxEmoji)
+        add(TutorialPageType.FluxTyping)
+        add(TutorialPageType.FluxApps)
+        add(TutorialPageType.FluxPersonalise)
+        add(TutorialPageType.FluxExtras)
         add(TutorialPageType.QuickLauncher)
-        add(TutorialPageType.MessengerPresets)
-        add(
-            TutorialPageType.ImeCaptionBar(
-                title = stringResource(R.string.tutorial_android16_ime_caption_title),
-                description = stringResource(R.string.tutorial_android16_ime_caption_description)
+        // The on-screen keyboard mode matters only on phones without a keyboard
+        if (!DeviceSpecific.isPhysicalKeyboardDevice()) {
+            add(
+                TutorialPageType.SoftwareKeyboard(
+                    title = stringResource(R.string.tutorial_page_software_keyboard_title),
+                    description = stringResource(R.string.tutorial_page_software_keyboard_description),
+                    icon = Icons.Filled.Keyboard,
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
             )
-        )
-        add(
-            TutorialPageType.SoftwareKeyboard(
-                title = stringResource(R.string.tutorial_page_software_keyboard_title),
-                description = stringResource(R.string.tutorial_page_software_keyboard_description),
-                icon = Icons.Filled.Keyboard,
-                iconTint = MaterialTheme.colorScheme.primary
-            )
-        )
+        }
         add(
             TutorialPageType.NavMode(
                 title = stringResource(R.string.tutorial_page_nav_mode_title),
@@ -297,7 +318,6 @@ fun TutorialScreen(
                 iconTint = MaterialTheme.colorScheme.secondary
             )
         )
-        add(TutorialPageType.FeatureStatuses)
         add(
             TutorialPageType.Standard(
                 title = stringResource(R.string.tutorial_page_ready_title),
@@ -357,7 +377,8 @@ fun TutorialScreen(
                         is TutorialPageType.WhatsNew -> {
                             TutorialWhatsNewPageContent(
                                 page = pageType,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                onDone = if (pages.size == 1) onComplete else null
                             )
                         }
                         is TutorialPageType.Welcome -> {
@@ -398,6 +419,12 @@ fun TutorialScreen(
                         TutorialPageType.MessengerPresets -> {
                             TutorialMessengerPresetsPageContent(modifier = Modifier.fillMaxSize())
                         }
+                        TutorialPageType.FluxSetup -> FluxTutorialSetupPageContent(modifier = Modifier.fillMaxSize())
+                        TutorialPageType.FluxEmoji -> FluxTutorialEmojiPageContent(modifier = Modifier.fillMaxSize())
+                        TutorialPageType.FluxTyping -> FluxTutorialTypingPageContent(modifier = Modifier.fillMaxSize())
+                        TutorialPageType.FluxApps -> FluxTutorialAppsPageContent(modifier = Modifier.fillMaxSize())
+                        TutorialPageType.FluxExtras -> FluxTutorialExtrasPageContent(modifier = Modifier.fillMaxSize())
+                        TutorialPageType.FluxPersonalise -> FluxTutorialPersonalisePageContent(modifier = Modifier.fillMaxSize())
                         TutorialPageType.FeatureStatuses -> {
                             TutorialFeatureStatusesPageContent(modifier = Modifier.fillMaxSize())
                         }
@@ -1151,7 +1178,9 @@ private fun TutorialIconSurface(
 @Composable
 fun TutorialWhatsNewPageContent(
     page: TutorialPageType.WhatsNew,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // Flux Keyboard: after an update What's new is the only page, and closes with Done
+    onDone: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -1167,6 +1196,14 @@ fun TutorialWhatsNewPageContent(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (onDone != null) {
+            androidx.activity.compose.BackHandler(onBack = onDone)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                IconButton(onClick = onDone) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.whats_new_close))
+                }
+            }
+        }
         TutorialIconSurface(
             icon = Icons.Filled.AutoAwesome,
             tint = MaterialTheme.colorScheme.primary
@@ -1296,13 +1333,19 @@ fun TutorialWhatsNewPageContent(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Text(
-            text = stringResource(R.string.tutorial_whats_new_continue_hint),
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium
-        )
+        if (onDone != null) {
+            Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.whats_new_done))
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.tutorial_whats_new_continue_hint),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -1386,14 +1429,31 @@ fun TutorialWelcomePageContent(
                 .height(260.dp),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = page.imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(TutorialWelcomeImageSize)
-                    .clip(RoundedCornerShape(28.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (page.icon != null) {
+                Surface(
+                    modifier = Modifier.size(168.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = page.icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(96.dp)
+                        )
+                    }
+                }
+            } else if (page.imageRes != null) {
+                Image(
+                    painter = painterResource(id = page.imageRes),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(TutorialWelcomeImageSize)
+                        .clip(RoundedCornerShape(28.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(1.dp))
@@ -1484,7 +1544,7 @@ fun TutorialMessengerPresetsPageContent(
 }
 
 @Composable
-private fun TutorialFeaturePageContent(
+internal fun TutorialFeaturePageContent(
     title: String,
     description: String,
     icon: ImageVector,
@@ -1493,11 +1553,17 @@ private fun TutorialFeaturePageContent(
     buttonText: String,
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
+    buttonEnabled: Boolean = true,
     extraContent: @Composable ColumnScope.() -> Unit = {}
 ) {
+    // Scrolls when there's more than fits; otherwise the button still sits at the bottom
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    val pageHeight = maxHeight
     Column(
-        modifier = modifier
-            .fillMaxSize()
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .heightIn(min = pageHeight)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -1524,8 +1590,10 @@ private fun TutorialFeaturePageContent(
         }
         extraContent()
         Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onButtonClick,
+            enabled = buttonEnabled,
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
@@ -1536,6 +1604,7 @@ private fun TutorialFeaturePageContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text(buttonText)
         }
+    }
     }
 }
 
