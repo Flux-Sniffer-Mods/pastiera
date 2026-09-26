@@ -3,7 +3,34 @@
   "intro": "Everything new since Pastiera 0.85, the last official release: first what Flux Keyboard adds, then what the Pastiera team has built since.",
   "sectionTitle": "Added by Flux Keyboard",
   "highlights": [
-    "Pastiera Flux is now Flux Keyboard, at the Pastiera team's request. It's a separate app: restore a backup from Pastiera Flux, then uninstall it.",
+    {
+      "text": "Edit keyboard layouts in the app: tap a key to change what it types, then save, restore, copy or export the layout.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Tap SYM for one symbol, or the emoji key for one emoji, without opening a screen; SYM's LED shows it held or locked, and a fifth LED does the same for the emoji key.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Trackpad swipes: left, up or right picks that suggestion, and swipe down deletes the previous word (options).",
+      "after": "202609261444"
+    },
+    {
+      "text": "The quick launcher lists apps' own shortcuts, and Back from Niagara's search returns to the app you were in.",
+      "after": "202609261444"
+    },
+    {
+      "text": "One-time codes from your notifications, offered as a chip in the next text field.",
+      "after": "202609261234"
+    },
+    {
+      "text": "The keyboard can take its colours from your wallpaper.",
+      "after": "202609261234"
+    },
+    {
+      "text": "Each app can remember the language you last typed in there.",
+      "after": "202609261222"
+    },
     "GIF search, a dedicated emoji picker key, emoji layer profiles that follow the app, and symbol search.",
     "Spell checking and password-manager autofill in every app.",
     "App shortcuts that work the same in every app.",
@@ -13,6 +40,66 @@
     "Pick suggestions with Ctrl+Shift+Q, W or E (Right Shift too); Backspace undoes an auto-replace."
   ],
   "improvements": [
+    {
+      "text": "The emoji key has its own status LED by default.",
+      "after": "202609262008"
+    },
+    {
+      "text": "The quick launcher is the built-in one by default, in your keyboard theme's colours.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Automatic Shift stays off in the kinds of field you turn off, and search, links and email start off.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Holding SYM or the emoji key without choosing anything just lets go; trackpad swipes count when short or slanted.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Choose which kinds of text field start with a capital: text, names and addresses by default.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Search bars an app focuses on its own can keep the keyboard bar hidden until you type.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Android's restricted settings are detected, with a way to lift them for one-time codes and the accessibility service.",
+      "after": "202609261444"
+    },
+    {
+      "text": "A shortcut to the phone's own trackpad scroll and cursor settings, in Settings and the quick launcher.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Extras that need a permission or another app start off, and the tutorial sets them up.",
+      "after": "202609261444"
+    },
+    {
+      "text": "What's new closes with ✕ and, after an update, lists only what's new since your version.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Settings search keeps your query and your place when you come back from a result.",
+      "after": "202609261444"
+    },
+    {
+      "text": "Status LED colours in one table, and Input Languages laid out like the other pages.",
+      "after": "202609261444"
+    },
+    {
+      "text": "In Termux, the emoji key can work as Alt.",
+      "after": "202609261234"
+    },
+    {
+      "text": "Search, Recents and GIF keys on the layers have their own tint, with nothing hidden under them; the symbols pencil edits the layer again.",
+      "after": "202609261234"
+    },
+    {
+      "text": "After an update, What's new shows alone, and updates download and install from the app.",
+      "after": "202609261234"
+    },
     "Paste what you just copied from a chip, with tracking stripped from links.",
     "Emoji suggestions, Enter standards by app category, and exact typing in the apps you pick.",
     "Offline mode: nothing in the keyboard goes online.",
@@ -21,7 +108,8 @@
     "Voice input keeps listening through pauses.",
     "Smart Alt and Ctrl, and incognito typing.",
     "Ctrl+Shift+Space switches language backwards; bold suggestions option.",
-    "The QuickLauncher opens from other apps and the app icon."
+    "The QuickLauncher opens from other apps and the app icon.",
+    "Pastiera Flux is now Flux Keyboard, at the Pastiera team's request: restore a backup from Pastiera Flux, then uninstall it."
   ],
   "upstreamTitle": "From the Pastiera team since 0.85",
   "upstream": [
@@ -40,10 +128,21 @@
     "Safer backups (themes and typing sounds included) and many fixes, from Telegram suggestions to Firefox accents."
   ],
   "bugFixes": [
+    {
+      "text": "Automatic Shift, auto-correct and replacements work in every text box again with exact typing for no-suggestion fields on.",
+      "after": "202609261943"
+    },
+    {
+      "text": "On the Niagara home screen, SYM + Space opens the quick launcher instead of an empty symbols panel, and Back from Niagara's search returns to your app without pressing Back there too.",
+      "after": "202609261943"
+    },
     "No automatic Shift in scripts without capitals, such as Thai.",
-    "Indicators are text symbols, never emoji.",
     "Letters on the emoji layer and symbols pages type their mappings."
   ],
   "docsUrl": "https://github.com/Flux-Sniffer-Mods/Flux-Keyboard/blob/flux-keyboard/FORK_CHANGES.md",
-  "docsLabel": "Full Flux Keyboard changelog"
+  "docsLabel": "Full Flux Keyboard changelog",
+  "introSince": "What's new in Flux Keyboard since the version you had.",
+  "releases": {
+    "0.91": "202609262020"
+  }
 }

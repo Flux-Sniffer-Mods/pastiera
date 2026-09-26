@@ -94,7 +94,8 @@ val generateForkNames = tasks.register("generateForkNames") {
         resDir.listFiles { f -> f.isDirectory && f.name.startsWith("values") }.orEmpty().forEach { dir ->
             val renamed = dir.listFiles { f -> f.extension == "xml" }.orEmpty().sortedBy { it.name }
                 .flatMap { xml -> element.findAll(xml.readText()).map { it.value }.toList() }
-                .filter { word.containsMatchIn(it) }
+                // Credits to PalSoftware keep Pastiera's name
+                .filter { word.containsMatchIn(it) && !it.contains("PalSoftware") }
                 .map {
                     word.replace(it.replace("Pastiera Flux", appName).replace("Pastierina", compactName), appName)
                 }
@@ -159,6 +160,7 @@ android {
         buildConfigField("String", "APP_NAME", "\"Pastiera\"")
         buildConfigField("String", "COMPACT_MODE_NAME", "\"Pastierina\"")
         buildConfigField("String", "SUCCESSOR_GITHUB_REPOSITORY", "\"$successorGithubRepository\"")
+        buildConfigField("String", "FORK_GITHUB_REPOSITORY", "\"$forkGithubRepository\"")
         buildConfigField("String", "KLIPY_API_KEY", "\"$klipyApiKey\"")
     }
 
@@ -200,10 +202,13 @@ android {
     productFlavors {
         create("stable") {
             dimension = "channel"
-            // Flux-Sniffer-Mods fork: own app ID so it installs next to official Pastiera
-            applicationIdSuffix = ".flux"
-            manifestPlaceholders["appLabel"] = "Pastiera Flux"
-            manifestPlaceholders["imeLabel"] = "Pastiera Flux"
+            // Flux Keyboard (Flux-Sniffer-Mods fork): its own name and app ID, so it installs next
+            // to official Pastiera and never presents itself as Pastiera
+            applicationId = "io.github.fluxsniffermods.fluxkeyboard"
+            manifestPlaceholders["appLabel"] = forkAppName
+            manifestPlaceholders["imeLabel"] = forkAppName
+            buildConfigField("String", "APP_NAME", "\"$forkAppName\"")
+            buildConfigField("String", "COMPACT_MODE_NAME", "\"$forkCompactModeName\"")
             buildConfigField("String", "RELEASE_CHANNEL", "\"stable\"")
             buildConfigField("boolean", "IS_FDROID_BUILD", if (isFdroidBuild) "true" else "false")
             buildConfigField("boolean", "ENABLE_GITHUB_UPDATE_CHECKS", if (isFdroidBuild) "false" else "true")
@@ -323,6 +328,11 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // File names with non-ASCII characters (layout names) need a UTF-8 locale on every host
+        unitTests.all { test ->
+            test.environment("LC_ALL", "C.UTF-8")
+            test.environment("LANG", "C.UTF-8")
+        }
     }
 }
 

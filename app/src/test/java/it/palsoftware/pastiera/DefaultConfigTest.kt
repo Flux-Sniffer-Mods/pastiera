@@ -29,7 +29,13 @@ class DefaultConfigTest {
         assertTrue(SettingsManager.getSmartCtrlOffAfterShortcut(context))
         assertFalse(SettingsManager.getEmojiSuggestionsEnabled(context))
         assertTrue(SettingsManager.getLedIndividualColorsEnabled(context))
-        assertEquals(listOf("com.termux.x11", "bitpit.launcher"), SettingsManager.getHiddenKeyboardApps(context))
+        // Extras that need a permission or another app start off: the tutorial sets them up
+        assertEquals(listOf("bitpit.launcher"), SettingsManager.getHiddenKeyboardApps(context))
+        assertFalse(SettingsManager.getOneTimeCodesEnabled(context))
+        assertEquals(SettingsManager.QUICK_LAUNCHER_BEHAVIOR_PASTIERA, SettingsManager.getQuickLauncherBehavior(context))
+        // Letters on the emoji layer and symbols pages type their mappings, not a search
+        assertFalse(SettingsManager.getEmojiLayerTypeToSearch(context))
+        assertFalse(SettingsManager.getSymbolsTypeToSearch(context))
     }
 
     @Test

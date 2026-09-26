@@ -39,37 +39,25 @@ Input method for physical keyboards android devices (e.g. Unihertz Titan 2), des
 
 ## Flux Keyboard (this fork)
 
-**Flux Keyboard** builds on Pastiera for the Unihertz Titan 2 Elite and works on any phone with a
-hardware keyboard. It installs alongside Pastiera (app ID `io.github.fluxsniffermods.fluxkeyboard`),
-so you can keep both. The biggest differences:
+**Flux Keyboard** builds on Pastiera for the Unihertz Titan 2 Elite and works on any phone with a hardware keyboard. It installs alongside Pastiera (app ID `io.github.fluxsniffermods.fluxkeyboard`), so you can keep both. The biggest differences:
 
-1. **GIFs, emoji and symbols**: GIF search with favourites, a dedicated **emoji picker key**
-   (Right Shift by default), emoji layer **profiles** that follow the app, and search across
-   every Unicode symbol.
-2. **Spell checking and autofill in every app**: Pastiera becomes Android's spell checker, and
-   password managers show their chips in the suggestion bar.
-3. **App shortcuts everywhere**: the same shortcuts in every app, suggested per app category, plus
-   each app's own launcher shortcuts.
-4. **Made for the Titan 2 Elite**: a status bar fitted to its rounded display, **per-LED colours**,
-   a **customisable menu bar**, and **recommended settings** that set it all up in one step.
-5. **Settings rebuilt**: grouped by task, searchable, and hiding what your phone's hardware can't
-   use.
-6. **Terminal mode and hidden-keyboard apps**: Termux gets a real Ctrl and Pastiera's Alt and SYM
-   with the keyboard out of the way; Termux:X11 and launchers get the keys without the keyboard.
-7. **Faster suggestions**: pick one with Ctrl+Shift+Q, W or E, undo an auto-replace with
-   Backspace, and paste what you just copied from a chip, with tracking stripped from links.
-8. **Offline mode**, and **updates** from this fork's own releases.
+1. **GIFs, emoji and symbols**: GIF search with favourites, a dedicated **emoji picker key** (Right Shift by default), emoji layer **profiles** that follow the app, and search across every Unicode symbol. Tap SYM or the emoji key to apply it to the next key without opening a screen.
+2. **Spell checking, autofill and one-time codes in every app**: Flux Keyboard becomes Android's spell checker, password managers show their chips in the suggestion bar, and codes from your notifications are offered as a chip.
+3. **Edit layouts in the app**: change what any key types, save, restore, copy or export a layout, with no web editor.
+4. **App shortcuts everywhere**: the same shortcuts in every app, suggested per app category, and apps' own shortcuts in the quick launcher, which can also hand over to Niagara's search.
+5. **Made for the Titan 2 Elite**: a status bar fitted to its rounded display, **per-LED colours** with a fifth LED for the emoji key, trackpad swipes for suggestions, a **customisable menu bar**, and **recommended settings** that set it all up in one step.
+6. **Settings and tutorial rebuilt**: grouped by task, searchable, hiding what your phone's hardware can't use, and a tutorial that sets up the extras needing a permission, including Android's restricted settings.
+7. **Terminal mode and hidden-keyboard apps**: Termux gets a real Ctrl and the keyboard's Alt and SYM with the keyboard out of the way; Termux:X11 and launchers get the keys without the keyboard.
+8. **Faster suggestions**: pick one with Ctrl+Shift+Q, W or E or a trackpad swipe, undo an auto-replace with Backspace, and paste what you just copied from a chip, with tracking stripped from links.
+9. **Offline mode**, and **updates** from this fork's own releases that download and install from the app.
 
-Everything else, including per-app exact typing, snippets and voice input that keeps listening,
-is in the [changelog](FORK_CHANGES.md). It covers everything since Pastiera 0.85, the last
-official release, including what the Pastiera team has added since, which Flux Keyboard also
-includes.
+Everything else, including per-app exact typing and languages, automatic Shift by field type, snippets and voice input that keeps listening, is in the [changelog](FORK_CHANGES.md). It covers everything since Pastiera 0.85, the last official release, including what the Pastiera team has added since, which Flux Keyboard also includes.
 
 *The rest of this README is Pastiera's own documentation, updated where the fork differs.*
 
 ## Quick overview
 - Compact status bar with LED indicators for Shift/SYM/Ctrl/Alt, variants/suggestions bar, and swipe-pad gestures to move the cursor.
-- Multiple layouts (QWERTY/AZERTY/QWERTZ, Greek, Cyrillic, Arabic, translit, etc.) fully configurable; JSON import/export directly from the app. A web frontend for editing layouts is available at https://pastierakeyedit.vercel.app/
+- Multiple layouts (QWERTY/AZERTY/QWERTZ, Greek, Cyrillic, Arabic, translit, etc.) fully configurable; JSON import/export directly from the app, and an editor in the app for what each key types.
 - SYM pages usable via touch or physical keys (emoji, symbols, clipboard and the full emoji picker), reorderable/disableable, with an integrated layout editor.
 - Clipboard support with multiple entries and pinnable items.
 - Support for dictionary based suggestions/Autocorrections + swipe gestures to accept a suggestion (requires Shizuku)
@@ -94,7 +82,7 @@ includes.
 - Layout switching: select from the enabled layouts list (configurable).
 - Multi-tap support and mapping for complex characters.
 - JSON import/export directly from the app, with visual preview and list management (enable/disable, delete).
-- Layout maps are stored in `files/keyboard_layouts` and can also be edited manually. A web frontend for editing layouts is available at https://pastierakeyedit.vercel.app/
+- Layout maps are stored in `files/keyboard_layouts` and can also be edited manually, or in the app (Keyboard layout > a layout's pencil).
 - Device/firmware behavior snapshots for physical keyboards are archived under [docs/device-archives](docs/device-archives/).
 
 ## Symbols, emoji, and variations
