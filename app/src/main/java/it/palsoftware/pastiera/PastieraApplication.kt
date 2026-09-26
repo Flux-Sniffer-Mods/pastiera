@@ -41,13 +41,27 @@ class PastieraApplication : Application() {
                     .setClass(this, SoftwareKeyboardModeActionActivity::class.java)
             )
             .build()
+        // The QuickLauncher on the app icon's long-press, where key mappers can pick it too
+        val quickLauncher = ShortcutInfo.Builder(this, QUICK_LAUNCHER_SHORTCUT_ID)
+            .setShortLabel(getString(R.string.tutorial_quick_launcher_title))
+            .setLongLabel(getString(R.string.quick_launcher_title))
+            .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher))
+            .setIntent(
+                Intent(ACTION_QUICK_LAUNCHER)
+                    .setClassName(this, "it.palsoftware.pastiera.QuickLauncherEntry")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            )
+            .build()
         runCatching {
-            shortcutManager.removeDynamicShortcuts(listOf(SOFTWARE_KEYBOARD_MODE_SHORTCUT_ID))
-            shortcutManager.addDynamicShortcuts(listOf(shortcut))
+            shortcutManager.removeDynamicShortcuts(listOf(SOFTWARE_KEYBOARD_MODE_SHORTCUT_ID, QUICK_LAUNCHER_SHORTCUT_ID))
+            shortcutManager.addDynamicShortcuts(listOf(quickLauncher, shortcut))
         }
     }
 
     companion object {
         private const val SOFTWARE_KEYBOARD_MODE_SHORTCUT_ID = "software_keyboard_mode_toggle"
+        private const val QUICK_LAUNCHER_SHORTCUT_ID = "quick_launcher"
+        /** Other apps open the QuickLauncher with this action. */
+        const val ACTION_QUICK_LAUNCHER = "it.palsoftware.pastiera.action.QUICK_LAUNCHER"
     }
 }

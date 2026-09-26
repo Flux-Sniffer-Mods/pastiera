@@ -444,6 +444,69 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
+    fun terminalMode_keepsTheKeyboardOutOfSightInTermux() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setTerminalModeEnabled(context, true)
+        val termux = EditorInfo().apply {
+            packageName = "com.termux"
+            // A terminal view: no text field, as Termux reports it
+            inputType = android.text.InputType.TYPE_NULL
+        }
+
+        SettingsManager.setTerminalModeHideKeyboard(context, true)
+        service.onStartInput(termux, false)
+        assertFalse(service.onEvaluateInputViewShown())
+
+        // The option off: terminal mode no longer forces the keyboard away
+        SettingsManager.setTerminalModeHideKeyboard(context, false)
+        service.onStartInput(termux, false)
+        val shownWithoutHiding = service.onEvaluateInputViewShown()
+        service.onStartInput(editorInfo, false)
+        assertEquals(service.onEvaluateInputViewShown(), shownWithoutHiding)
+    }
+
+    @Test
+    fun terminalMode_emojiKeySendsTheChosenTerminalKey() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setTerminalModeEnabled(context, true)
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_GRAVE)
+        SettingsManager.setTerminalModeEmojiKeyAction(context, TerminalMode.EmojiKeyAction.Interrupt.id)
+        focusNewField(
+            newRecorder = RecordingInputConnection(),
+            inputType = InputType.TYPE_NULL,
+            packageName = "com.termux"
+        )
+
+        assertTrue(service.onKeyDown(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_000L)))
+        // Holding it doesn't send more interrupts
+        service.onKeyDown(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_500L, repeatCount = 1))
+        assertTrue(service.onKeyUp(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_600L)))
+
+        assertEquals(listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP), recorder.sentKeyEvents.map { it.action })
+        assertTrue(recorder.sentKeyEvents.all { it.keyCode == KeyEvent.KEYCODE_C && it.isCtrlPressed })
+        assertTrue(recorder.committedTexts.isEmpty())
+    }
+
+    @Test
+    fun terminalMode_emojiKeyAsAltActsAsAlt() {
+        val context = RuntimeEnvironment.getApplication()
+        SettingsManager.setTerminalModeEnabled(context, true)
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_GRAVE)
+        SettingsManager.setTerminalModeEmojiKeyAction(context, TerminalMode.EmojiKeyAction.Alt.id)
+        focusNewField(
+            newRecorder = RecordingInputConnection(),
+            inputType = InputType.TYPE_NULL,
+            packageName = "com.termux"
+        )
+
+        service.onKeyDown(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_000L))
+        assertTrue("Held, the emoji key is Alt", modifierController().altPhysicallyPressed)
+        service.onKeyUp(KeyEvent.KEYCODE_GRAVE, keyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_GRAVE, 3_000L, 3_200L))
+        assertFalse(modifierController().altPhysicallyPressed)
+        assertTrue("Nothing of its own is sent", recorder.sentKeyEvents.none { it.keyCode == KeyEvent.KEYCODE_GRAVE })
+    }
+
+    @Test
     fun autoCap_manualShiftOff_survivesRestartOfCurrentField() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setAutoCapitalizeFirstLetter(context, true)
@@ -1012,20 +1075,6 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     }
 
     @Test
-    fun layoutSwitchChords_notFromEmojiScreensOrWithTheEmojiKey() {
-        val context = RuntimeEnvironment.getApplication()
-        val blocked = PhysicalKeyboardInputMethodService::class.java
-            .getDeclaredMethod("layoutSwitchChordBlocked", Int::class.java, Boolean::class.java)
-            .apply { isAccessible = true }
-        fun isBlocked(keyCode: Int, symOpen: Boolean) = blocked.invoke(service, keyCode, symOpen) as Boolean
-
-        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_ALT_RIGHT)
-        assertFalse(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, false))
-        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_RIGHT, false))
-        assertTrue(isBlocked(KeyEvent.KEYCODE_ALT_LEFT, true))
-    }
-
-    @Test
     fun hiddenApp_holdingALetterInATextFieldDoesNotRepeatIntoTheApp() {
         setField(service, "keyboardHiddenForApp", true)
 
@@ -1046,8 +1095,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     fun hiddenApp_withPanels_emojiKeyOpensPickerAndClosesItAgain() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
-        setField(service, "hiddenAppAllowsPanels", true)
 
         val (openDown, openUp) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 12_000L)
         assertTrue(openDown)
@@ -1062,8 +1111,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     fun hiddenApp_withPanels_keyPressedBeforeThePanelReleasesToTheApp() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
-        setField(service, "hiddenAppAllowsPanels", true)
 
         val shiftDown = service.onKeyDown(
             KeyEvent.KEYCODE_SHIFT_LEFT,

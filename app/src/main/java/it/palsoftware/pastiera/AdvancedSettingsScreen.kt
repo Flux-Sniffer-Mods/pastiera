@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
@@ -89,7 +91,8 @@ import androidx.compose.material.icons.filled.Warning
 @Composable
 fun AdvancedSettingsScreen(
     modifier: Modifier = Modifier,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigate: (SettingsDestination) -> Unit = {}
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -98,19 +101,9 @@ fun AdvancedSettingsScreen(
     val scope = rememberCoroutineScope()
     val prefs = remember { SettingsManager.getPreferences(context) }
 
-    // Store the actual value (3 to 25), but display it inverted in the slider (25 to 3)
-    var swipeIncrementalThreshold by remember {
-        mutableStateOf(SettingsManager.getSwipeIncrementalThreshold(context))
-    }
     var clipboardRetentionTime by remember {
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
-    var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
-    var pasteSuggestion by remember { mutableStateOf(SettingsManager.getPasteSuggestionEnabled(context)) }
-    var oneTimeCodes by remember { mutableStateOf(SettingsManager.getOneTimeCodesEnabled(context)) }
-    var cleanLinks by remember { mutableStateOf(SettingsManager.getCleanPastedLinks(context)) }
-    var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
-    var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -127,14 +120,8 @@ fun AdvancedSettingsScreen(
     DisposableEffect(prefs) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             when (key) {
-                "swipe_incremental_threshold" -> {
-                    swipeIncrementalThreshold = SettingsManager.getSwipeIncrementalThreshold(context)
-                }
                 "clipboard_retention_time" -> {
                     clipboardRetentionTime = SettingsManager.getClipboardRetentionTime(context).toString()
-                }
-                "trackpad_provider" -> {
-                    trackpadProvider = SettingsManager.getTrackpadProvider(context)
                 }
                 "experimental_candidates_view_enabled" -> {
                     experimentalCandidatesViewEnabled = SettingsManager.getExperimentalCandidatesViewEnabled(context)
@@ -147,13 +134,6 @@ fun AdvancedSettingsScreen(
         }
     }
 
-    // Check Shizuku connection and authorization status periodically
-    LaunchedEffect(Unit) {
-        while (true) {
-            shizukuStatus = resolveShizukuStatus()
-            delay(2000) // Check every 2 seconds
-        }
-    }
 
     fun navigateTo(destination: AdvancedDestination) {
         openSettingsChild(context, "advanced", when (destination) { AdvancedDestination.Main -> "Main"; AdvancedDestination.ImeTest -> "ImeTest"; AdvancedDestination.TrackpadGestures -> "TrackpadGestures" })
@@ -198,7 +178,6 @@ fun AdvancedSettingsScreen(
             kotlinx.coroutines.delay(100)
 
             // Explicitly reload values after restore to ensure UI is updated
-            swipeIncrementalThreshold = SettingsManager.getSwipeIncrementalThreshold(context)
             clipboardRetentionTime = SettingsManager.getClipboardRetentionTime(context).toString()
         }
     }
@@ -290,7 +269,7 @@ fun AdvancedSettingsScreen(
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.settings_category_advanced),
+                                    text = stringResource(R.string.settings_privacy_system_title),
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = 8.dp)
@@ -306,117 +285,16 @@ fun AdvancedSettingsScreen(
                             .padding(paddingValues)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // Trackpad Gesture Settings
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .settingRow(SettingLinkIds.ADVANCED_TRACKPAD_GESTURES) {
-                                    navigateTo(AdvancedDestination.TrackpadGestures)
-                                }
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.TouchApp,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.trackpad_gestures_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 1
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.trackpad_gestures_description),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1
-                                        )
-                                    }
-                                    FeatureStatusIcon(FeatureStatus.Experimental)
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                // Trackpad provider status row
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 36.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> Icons.Filled.CheckCircle
-                                            shizukuStatus == ShizukuStatus.Connected -> Icons.Filled.CheckCircle
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> Icons.Filled.Warning
-                                            else -> Icons.Filled.Error
-                                        },
-                                        contentDescription = null,
-                                        tint = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.Connected -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> MaterialTheme.colorScheme.tertiary
-                                            else -> MaterialTheme.colorScheme.error
-                                        },
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> stringResource(R.string.trackpad_provider_native_ime_status)
-                                            shizukuStatus == ShizukuStatus.Connected -> stringResource(R.string.trackpad_gestures_shizuku_connected)
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> stringResource(R.string.trackpad_gestures_shizuku_not_authorized)
-                                            else -> stringResource(R.string.trackpad_gestures_shizuku_not_connected)
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = when {
-                                            trackpadProvider == SettingsManager.TRACKPAD_PROVIDER_NATIVE_IME -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.Connected -> MaterialTheme.colorScheme.primary
-                                            shizukuStatus == ShizukuStatus.NotAuthorized -> MaterialTheme.colorScheme.tertiary
-                                            else -> MaterialTheme.colorScheme.error
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        FluxSwitchRow(
-                            linkId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS,
-                            title = stringResource(R.string.incognito_always_title),
-                            description = stringResource(R.string.incognito_always_description),
-                            checked = incognitoAlways,
-                            onCheckedChange = {
-                                incognitoAlways = it
-                                SettingsManager.setIncognitoAlways(context, it)
-                            }
+                        SettingsSectionDivider(stringResource(R.string.settings_section_privacy))
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.CloudOff,
+                            title = stringResource(R.string.flux_offline_title),
+                            description = stringResource(
+                                if (SettingsManager.isOfflineMode(context)) R.string.flux_offline_on else R.string.flux_offline_description
+                            ),
+                            linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
+                            onClick = { onNavigate(SettingsDestination.FluxOffline) }
                         )
-                        if (!incognitoAlways) {
-                            FluxSwitchRow(
-                                linkId = SettingLinkIds.PRIVACY_INCOGNITO_FOLLOW_APPS,
-                                title = stringResource(R.string.incognito_follow_apps_title),
-                                description = stringResource(R.string.incognito_follow_apps_description),
-                                checked = incognitoFollowApps,
-                                onCheckedChange = {
-                                    incognitoFollowApps = it
-                                    SettingsManager.setIncognitoFollowApps(context, it)
-                                }
-                            )
-                        }
 
                         SettingsSectionDivider(stringResource(R.string.settings_section_backup))
                         // Backup
@@ -477,17 +355,7 @@ fun AdvancedSettingsScreen(
                                     }
                                 }
                             }
-                        )
-                        FluxSwitchRow(
-                            linkId = SettingLinkIds.PRIVACY_CLEAN_LINKS,
-                            title = stringResource(R.string.clean_links_title),
-                            description = stringResource(R.string.clean_links_description),
-                            checked = cleanLinks,
-                            onCheckedChange = {
-                                cleanLinks = it
-                                SettingsManager.setCleanPastedLinks(context, it)
-                            }
-                        )
+                        }
 
                         // Clipboard Retention Time
                         Surface(
@@ -555,17 +423,6 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
-                        FluxSwitchRow(
-                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
-                            title = stringResource(R.string.paste_suggestion_title),
-                            description = stringResource(R.string.paste_suggestion_description),
-                            checked = pasteSuggestion,
-                            onCheckedChange = {
-                                pasteSuggestion = it
-                                SettingsManager.setPasteSuggestionEnabled(context, it)
-                            }
-                        )
-
                         SettingsSectionDivider(stringResource(R.string.settings_category_accessibility))
                         SettingsCategoryRow(
                             icon = Icons.Filled.TouchApp,
@@ -611,6 +468,45 @@ fun AdvancedSettingsScreen(
                                     }
                                 )
                             }
+                        }
+
+                        var hiddenKeyboardApps by remember {
+                            mutableStateOf(SettingsManager.getHiddenKeyboardApps(context))
+                        }
+                        var showHiddenAppsDialog by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .settingRow("advanced.hidden_keyboard_apps") { showHiddenAppsDialog = true }
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(stringResource(R.string.hidden_keyboard_apps_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium)
+                                val hiddenAppNames = remember(hiddenKeyboardApps) {
+                                    val installed = AppListHelper.getCachedInstalledApps()
+                                        ?.associateBy { app -> app.packageName }
+                                    hiddenKeyboardApps.map { pkg -> installed?.get(pkg)?.appName ?: pkg }
+                                }
+                                Text(
+                                    text = if (hiddenKeyboardApps.isEmpty()) {
+                                        stringResource(R.string.hidden_keyboard_apps_description)
+                                    } else {
+                                        hiddenAppNames.joinToString(", ")
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        if (showHiddenAppsDialog) {
+                            HiddenKeyboardAppsDialog(onDismiss = {
+                                showHiddenAppsDialog = false
+                                hiddenKeyboardApps = SettingsManager.getHiddenKeyboardApps(context)
+                            })
                         }
 
                         if (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice() ||
@@ -672,6 +568,7 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        SettingsSectionDivider(stringResource(R.string.settings_section_help_about))
                         // Show Tutorial
                         Surface(
                             modifier = Modifier
@@ -765,6 +662,18 @@ fun AdvancedSettingsScreen(
                                 )
                             }
                         }
+                        SettingsUpdateRows(context)
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.Info,
+                            title = stringResource(R.string.about_title),
+                            description = stringResource(
+                                R.string.settings_about_version_summary,
+                                BuildConfig.VERSION_NAME
+                            ),
+                            linkId = SettingLinkIds.MAIN_ABOUT,
+                            onClick = { onNavigate(SettingsDestination.About) }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
@@ -802,6 +711,7 @@ private val TRACKPAD_SETTING_LINK_IDS = setOf(
     "trackpad.swipe_to_delete_provider",
     "trackpad.suggestion_swipe_directions",
     "trackpad.swipe_down_deletes_word",
+    "trackpad.phone_settings",
     SettingLinkIds.TRACKPAD_GESTURES_ENABLED,
     SettingLinkIds.TRACKPAD_PROVIDER,
     SettingLinkIds.TRACKPAD_SHIZUKU_DEVICE,

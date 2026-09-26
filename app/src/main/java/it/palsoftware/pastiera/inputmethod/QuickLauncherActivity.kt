@@ -161,6 +161,8 @@ class QuickLauncherActivity : LocalizedComponentActivity() {
 
         setContent {
             PastieraTheme {
+              // Flux Keyboard: the keyboard's own theme colours, so the two look like one app
+              MaterialTheme(colorScheme = quickLauncherColors(this), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -192,6 +194,7 @@ class QuickLauncherActivity : LocalizedComponentActivity() {
                         onDismissAnimationFinished = { finish() }
                     )
                 }
+              }
             }
         }
 
@@ -508,6 +511,29 @@ class QuickLauncherActivity : LocalizedComponentActivity() {
             }
         }
     }
+}
+
+/** The quick launcher in the keyboard's theme: its background, keys, text and accent. */
+private fun quickLauncherColors(context: Context): androidx.compose.material3.ColorScheme {
+    val theme = SettingsManager.getEffectiveKeyboardTheme(context, SettingsManager.KeyboardThemeTarget.HARDWARE)
+    val background = Color(theme.background).copy(alpha = 1f)
+    val text = Color(theme.textAndIcons)
+    val accent = Color(theme.accent)
+    val dark = androidx.core.graphics.ColorUtils.calculateLuminance(theme.background) < 0.5
+    val base = if (dark) androidx.compose.material3.darkColorScheme() else androidx.compose.material3.lightColorScheme()
+    return base.copy(
+        primary = accent,
+        onPrimary = background,
+        primaryContainer = accent.copy(alpha = 0.35f),
+        onPrimaryContainer = text,
+        surface = background,
+        onSurface = text,
+        surfaceVariant = Color(theme.normalKey),
+        onSurfaceVariant = text.copy(alpha = 0.78f),
+        background = background,
+        onBackground = text,
+        outline = Color(theme.divider)
+    )
 }
 
 @Composable

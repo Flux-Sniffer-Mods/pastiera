@@ -535,6 +535,35 @@ fun KeyboardSetupScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        // Search every setting straight from the start page
+        var settingsQuery by rememberSaveable { mutableStateOf("") }
+        SettingsSearchField(
+            value = settingsQuery,
+            onValueChange = { settingsQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+        )
+        if (settingsQuery.isNotBlank()) {
+            val results = remember(settingsQuery) { SettingLinkRegistry.search(context, settingsQuery) }
+            if (results.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.settings_search_no_results),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+            results.take(MAX_START_PAGE_SEARCH_RESULTS).forEach { entry ->
+                SettingSearchResultRow(entry = entry) {
+                    settingsQuery = ""
+                    context.startActivity(Intent(context, SettingsActivity::class.java).apply {
+                        data = android.net.Uri.parse("pastiera://setting/${entry.id}")
+                    })
+                }
+            }
+        }
+
         // Enable/select IME actions
         Row(
             modifier = Modifier
@@ -1340,3 +1369,5 @@ private fun checkImeStatus(
         callback(false, false)
     }
 }
+
+private const val MAX_START_PAGE_SEARCH_RESULTS = 20

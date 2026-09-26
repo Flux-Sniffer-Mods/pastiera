@@ -49,7 +49,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.power_shortcuts_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         )
     ),
     SettingEntry(
@@ -58,7 +58,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.alt_key_shortcuts_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         )
     ),
     SettingEntry(
@@ -67,7 +67,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.sym_shortcuts_in_text_fields_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         ),
         availabilityCheck = { SettingsManager.getPowerShortcutsEnabled(it) },
         unavailableFallbackId = "quick_launcher.sym_shortcuts"
@@ -78,7 +78,7 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         summaryRes = R.string.alt_shortcuts_in_text_fields_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
-            customizationDestination = "launcher_shortcuts"
+            customizationDestination = "key_shortcuts"
         ),
         availabilityCheck = { SettingsManager.getQuickLauncherAltShortcutsOutsideTextFields(it) },
         unavailableFallbackId = "quick_launcher.alt_shortcuts"
@@ -135,6 +135,26 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
             destination = SettingsDestination.Customization,
             customizationDestination = "launcher_shortcut_behavior"
         )
+    ),
+    SettingEntry(
+        id = "quick_launcher.app_shortcuts",
+        titleRes = R.string.quick_launcher_app_shortcuts_title,
+        summaryRes = R.string.quick_launcher_app_shortcuts_description,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "launcher_shortcut_behavior"
+        )
+    ),
+    SettingEntry(
+        id = "quick_launcher.niagara_back_returns",
+        titleRes = R.string.quick_launcher_niagara_back_title,
+        summaryRes = R.string.quick_launcher_niagara_back_description,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "launcher_shortcut_behavior"
+        ),
+        availabilityCheck = { context -> SettingsManager.getQuickLauncherBehavior(context) == SettingsManager.QUICK_LAUNCHER_BEHAVIOR_NIAGARA },
+        unavailableFallbackId = "quick_launcher.behavior"
     ),
     SettingEntry(
         id = "quick_launcher.typo_tolerant_ranking",
@@ -296,6 +316,15 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
     SettingEntry(
         id = "app_enter_behavior.overrides",
         titleRes = R.string.app_enter_behaviour_overrides_title,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "app_enter_behavior"
+        )
+    ),
+    SettingEntry(
+        id = "app_enter_behavior.standards",
+        titleRes = R.string.enter_standards_title,
+        summaryRes = R.string.enter_standards_description,
         route = SettingRoute(
             destination = SettingsDestination.Customization,
             customizationDestination = "app_enter_behavior"

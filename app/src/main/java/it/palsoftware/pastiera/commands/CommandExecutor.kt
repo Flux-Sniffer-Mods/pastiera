@@ -52,6 +52,20 @@ class CommandExecutor(
     }
 
     private fun startIntent(spec: CommandLaunchSpec.IntentUri): CommandExecutionResult {
+        spec.intentUri?.let { uri ->
+            // An app's own shortcut: only if the app still lets other apps open it
+            val packageName = spec.packageName ?: return fail("Command not available")
+            val action = it.palsoftware.pastiera.shortcuts.DiscoveredAction("", "", uri)
+            val intent = it.palsoftware.pastiera.shortcuts.AppActionDiscovery.intentFor(context, packageName, action)
+                ?: return fail("Command not available")
+            return try {
+                context.startActivity(intent)
+                CommandExecutionResult.Success
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to start app shortcut", error)
+                fail("Command failed")
+            }
+        }
         return try {
             val intent = Intent(spec.action, spec.data?.let(Uri::parse)).apply {
                 spec.packageName?.let(::setPackage)
@@ -105,6 +119,9 @@ class CommandExecutor(
             }
             PastieraCommandSource.ACTION_TOGGLE_SOFTWARE_KEYBOARD_MODE -> toggleSoftwareKeyboardMode()
             DeviceControlCommandSource.ACTION_HOME_SCREEN -> goHome()
+            DeviceControlCommandSource.ACTION_PHONE_TRACKPAD_SETTINGS ->
+                if (it.palsoftware.pastiera.PhoneTrackpadSettings.open(context)) CommandExecutionResult.Success
+                else fail("Could not open the trackpad settings")
             DeviceControlCommandSource.ACTION_MEDIA_PLAY_PAUSE -> dispatchMediaKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
             DeviceControlCommandSource.ACTION_MEDIA_PREVIOUS -> dispatchMediaKey(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
             DeviceControlCommandSource.ACTION_MEDIA_NEXT -> dispatchMediaKey(KeyEvent.KEYCODE_MEDIA_NEXT)

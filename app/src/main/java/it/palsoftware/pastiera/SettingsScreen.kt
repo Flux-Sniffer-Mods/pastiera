@@ -19,23 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.size
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
-import androidx.compose.material.icons.automirrored.filled.ManageSearch
 import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.SmartButton
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Spellcheck
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Shield
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -51,8 +44,6 @@ import it.palsoftware.pastiera.R
 import android.widget.Toast
 import it.palsoftware.pastiera.BuildConfig
 import it.palsoftware.pastiera.inputmethod.DeviceSpecific
-import it.palsoftware.pastiera.update.checkForUpdate
-import it.palsoftware.pastiera.update.showUpdateDialog
 import it.palsoftware.pastiera.update.shouldUseGithubUpdateChecks
 import kotlinx.coroutines.delay
 
@@ -89,8 +80,7 @@ enum class SettingsDestination {
     Apps,
     AppShortcuts,
     Developer,
-    TerminalMode,
-    ExactTyping
+    TerminalMode
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -125,7 +115,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val activity = context as? ComponentActivity
 
-    var checkingForUpdates by remember { mutableStateOf(false) }
     val currentEntry = remember { context.settingsActivity().intent.settingsPage() }
     val currentDestination = currentEntry.destination
     var highlightSettingId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -213,42 +202,13 @@ fun SettingsScreen(
                 SettingsMainScreen(
                     modifier = modifier,
                     context = context,
-                    checkingForUpdates = checkingForUpdates,
-                    onCheckingForUpdatesChange = { checkingForUpdates = it },
                     onOpenSettingEntry = { target ->
                         context.startActivity(Intent(context, SettingsActivity::class.java).apply {
                             data = android.net.Uri.parse("pastiera://setting/${target.id}")
                         })
                     },
-                    onModifiersClick = { navigateTo(SettingsDestination.Modifiers) },
-                    onKeyboardsDevicesClick = { navigateTo(SettingsDestination.KeyboardsDevices) },
-                    onTextInputClick = { navigateTo(SettingsDestination.TextInput) },
-                    onAccessibilityClick = { navigateTo(SettingsDestination.Accessibility) },
-                    onAutoCorrectionClick = { navigateTo(SettingsDestination.AutoCorrection) },
-                    onCustomizationClick = { openCustomization(null) },
-                    onStatusBarButtonsClick = {
-                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_STATUS_BAR_BUTTONS)
-                    },
-                    onKeyboardThemeClick = {
-                        openCustomization(
-                            SettingsActivity.CUSTOMIZATION_DESTINATION_KEYBOARD_THEME,
-                            initialKeyboardThemeTarget
-                        )
-                    },
-                    onQuickLauncherClick = {
-                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_LAUNCHER_SHORTCUTS)
-                    },
-                    onNavModeClick = {
-                        navigateToNavMode(null)
-                    },
-                    onEnterBehaviorClick = {
-                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_APP_ENTER_BEHAVIOR)
-                    },
-                    onAdvancedClick = { navigateTo(SettingsDestination.Advanced) },
-                    onAboutClick = { navigateTo(SettingsDestination.About) },
-                    onBackClick = { navigateBack() },
-                    onCustomInputStylesClick = { navigateTo(SettingsDestination.CustomInputStyles) },
-                    onAppLanguageClick = { navigateTo(SettingsDestination.AppLanguage) }
+                    onNavigate = { destination -> navigateTo(destination) },
+                    onBackClick = { navigateBack() }
                 )
             }
             SettingsDestination.KeyboardsLayouts -> {
@@ -262,8 +222,7 @@ fun SettingsScreen(
                 TypingHubScreen(
                     modifier = modifier,
                     onBack = { navigateBack() },
-                    onNavigate = { destination -> navigateTo(destination) },
-                    onOpenCustomization = { destination -> openCustomization(destination) }
+                    onNavigate = { destination -> navigateTo(destination) }
                 )
             }
             SettingsDestination.EditingKeys -> {
@@ -299,9 +258,6 @@ fun SettingsScreen(
             SettingsDestination.TerminalMode -> {
                 TerminalModeScreen(modifier = modifier, onBack = { navigateBack() })
             }
-            SettingsDestination.ExactTyping -> {
-                ExactTypingScreen(modifier = modifier, onBack = { navigateBack() })
-            }
             SettingsDestination.Developer -> {
                 DeveloperOptionsScreen(modifier = modifier, onBack = { navigateBack() })
             }
@@ -332,7 +288,7 @@ fun SettingsScreen(
                 TextInputSettingsScreen(
                     modifier = modifier,
                     onBack = { navigateBack() },
-                    onNavModeSettingsClick = { navigateToNavMode(null) }
+                    page = TextInputPage.CapitalisationPunctuation
                 )
             }
             SettingsDestination.Accessibility -> {
@@ -367,7 +323,8 @@ fun SettingsScreen(
             SettingsDestination.Advanced -> {
                 AdvancedSettingsScreen(
                     modifier = modifier,
-                    onBack = { navigateBack() }
+                    onBack = { navigateBack() },
+                    onNavigate = { destination -> navigateTo(destination) }
                 )
             }
             SettingsDestination.About -> {
@@ -403,8 +360,8 @@ fun SettingsScreen(
 Intent(context, SymCustomizationActivity::class.java)
                         )
                     },
-                    onOpenSymShortcuts = {
-                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_LAUNCHER_SHORTCUTS)
+                    onOpenKeyShortcuts = {
+                        openCustomization(SettingsActivity.CUSTOMIZATION_DESTINATION_KEY_SHORTCUTS)
                     },
                     onOpenNavMode = {
                         navigateToNavMode(null)
@@ -426,28 +383,10 @@ Intent(context, SymCustomizationActivity::class.java)
 private fun SettingsMainScreen(
     modifier: Modifier,
     context: Context,
-    checkingForUpdates: Boolean,
-    onCheckingForUpdatesChange: (Boolean) -> Unit,
-    onModifiersClick: () -> Unit,
-    onKeyboardsDevicesClick: () -> Unit,
-    onTextInputClick: () -> Unit,
-    onAccessibilityClick: () -> Unit,
-    onAutoCorrectionClick: () -> Unit,
-    onCustomizationClick: () -> Unit,
-    onStatusBarButtonsClick: () -> Unit,
-    onKeyboardThemeClick: () -> Unit,
-    onQuickLauncherClick: () -> Unit,
-    onNavModeClick: () -> Unit,
-    onEnterBehaviorClick: () -> Unit,
-    onAdvancedClick: () -> Unit,
-    onAboutClick: () -> Unit,
+    onNavigate: (SettingsDestination) -> Unit,
     onBackClick: () -> Unit,
-    onCustomInputStylesClick: () -> Unit,
-    onAppLanguageClick: () -> Unit,
     onOpenSettingEntry: (SettingEntry) -> Unit
 ) {
-    var checkingNightly by remember { mutableStateOf(false) }
-
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchResults = remember(searchQuery, context) {
@@ -532,182 +471,66 @@ private fun SettingsMainScreen(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-            SettingsGroupDivider(stringResource(R.string.settings_group_typing))
-
-            SettingsCategoryRow(
-                icon = Icons.Filled.Keyboard,
-                title = stringResource(R.string.keyboards_devices_title),
-                linkId = SettingLinkIds.MAIN_KEYBOARDS_DEVICES,
-                onClick = onKeyboardsDevicesClick
-            )
-            SettingsCategoryRow(
-                iconRes = R.drawable.modifier_keys_24,
-                title = stringResource(R.string.modifiers_title),
-                description = stringResource(R.string.modifiers_description),
-                linkId = SettingLinkIds.MAIN_MODIFIERS,
-                onClick = onModifiersClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.Filled.Language,
-                title = stringResource(R.string.custom_input_styles_title),
-                linkId = SettingLinkIds.MAIN_CUSTOM_INPUT_STYLES,
-                onClick = onCustomInputStylesClick
-            )
-
-            SettingsGroupDivider(stringResource(R.string.settings_group_smart_features))
-
-            SettingsCategoryRow(
-                icon = Icons.Filled.TextFields,
-                title = stringResource(R.string.settings_category_text_input),
-                linkId = SettingLinkIds.MAIN_TEXT_INPUT,
-                onClick = onTextInputClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.Filled.Spellcheck,
-                title = stringResource(R.string.settings_category_auto_correction),
-                linkId = SettingLinkIds.MAIN_AUTO_CORRECTION,
-                onClick = onAutoCorrectionClick
-            )
-
-            SettingsGroupDivider(stringResource(R.string.settings_group_customization))
-
-            SettingsCategoryRow(
-                icon = Icons.Filled.Palette,
-                title = stringResource(R.string.keyboard_theme_title),
-                linkId = SettingLinkIds.MAIN_KEYBOARD_THEME,
-                onClick = onKeyboardThemeClick
-            )
-            SettingsCategoryRow(
-                icon = ImageVector.vectorResource(R.drawable.translate_24),
-                title = stringResource(R.string.app_language_title),
-                description = currentAppLanguageLabel(context),
-                linkId = SettingLinkIds.MAIN_APP_LANGUAGE,
-                onClick = onAppLanguageClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.Filled.SmartButton,
-                title = stringResource(R.string.status_bar_buttons_title),
-                description = stringResource(R.string.status_bar_buttons_description),
-                linkId = SettingLinkIds.MAIN_STATUS_BAR_BUTTONS,
-                onClick = onStatusBarButtonsClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.Filled.Tune,
-                title = stringResource(R.string.settings_category_customization),
-                linkId = SettingLinkIds.MAIN_CUSTOMIZATION,
-                onClick = onCustomizationClick
-            )
-
-            SettingsGroupDivider(stringResource(R.string.settings_group_utility))
-
-            SettingsCategoryRow(
-                icon = Icons.AutoMirrored.Filled.ManageSearch,
-                title = stringResource(R.string.starter_launcher_shortcuts_title),
-                description = stringResource(R.string.starter_launcher_shortcuts_description),
-                linkId = SettingLinkIds.MAIN_LAUNCHER_SHORTCUTS,
-                onClick = onQuickLauncherClick
-            )
-            SettingsCategoryRow(
-                icon = ImageVector.vectorResource(R.drawable.navigation_24),
-                title = stringResource(R.string.nav_mode_title),
-                description = stringResource(R.string.settings_nav_mode_configure),
-                linkId = SettingLinkIds.MAIN_NAV_MODE,
-                onClick = onNavModeClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.AutoMirrored.Filled.KeyboardReturn,
-                title = stringResource(R.string.app_enter_behaviour_title),
-                description = stringResource(R.string.app_enter_behaviour_description),
-                linkId = SettingLinkIds.MAIN_APP_ENTER_BEHAVIOR,
-                onClick = onEnterBehaviorClick
-            )
-
-            SettingsGroupDivider(stringResource(R.string.settings_group_system))
-
-            SettingsCategoryRow(
-                icon = Icons.Filled.Engineering,
-                title = stringResource(R.string.settings_category_advanced),
-                linkId = SettingLinkIds.MAIN_ADVANCED,
-                onClick = onAdvancedClick
-            )
-            SettingsCategoryRow(
-                icon = Icons.Filled.TouchApp,
-                title = stringResource(R.string.settings_category_accessibility),
-                linkId = SettingLinkIds.MAIN_ACCESSIBILITY,
-                onClick = onAccessibilityClick
-            )
-
-            SettingsGroupDivider(stringResource(R.string.settings_group_pastiera))
-
-            SettingsCategoryRow(
-                icon = Icons.Filled.Info,
-                title = stringResource(R.string.about_title),
-                description = stringResource(
-                    R.string.settings_about_version_summary,
-                    BuildConfig.VERSION_NAME
-                ),
-                linkId = SettingLinkIds.MAIN_ABOUT,
-                onClick = onAboutClick
-            )
-
-            if (BuildConfig.RELEASE_CHANNEL == "nightly" && shouldUseGithubUpdateChecks(context)) {
-                SettingsCategoryRow(
-                    icon = Icons.Filled.Code,
-                    title = stringResource(if (checkingNightly) R.string.nightly_update_checking else R.string.nightly_update_settings_title),
-                    description = stringResource(R.string.nightly_update_settings_description),
-                    enabled = !checkingNightly,
-                    onClick = {
-                        checkingNightly = true
-                        it.palsoftware.pastiera.update.checkForNightlyUpdate(context, ignoreDismissedReleases = false) { result ->
-                            checkingNightly = false
-                            if (result.hasAnnouncement) it.palsoftware.pastiera.update.showReleaseNotice(context, result)
-                            else Toast.makeText(context, if (result.successful) R.string.nightly_update_current else R.string.settings_update_check_failed, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-            }
-
-            if (shouldUseGithubUpdateChecks(context)) {
-                SettingsCategoryRow(
-                    icon = ImageVector.vectorResource(R.drawable.plektra_open_monochrome_24),
-                    title = if (checkingForUpdates) {
-                        stringResource(R.string.settings_update_checking)
-                    } else {
-                        stringResource(R.string.settings_update_section_title)
-                    },
-                    description = stringResource(R.string.settings_update_section_description),
-                    enabled = !checkingForUpdates,
-                    onClick = {
-                        onCheckingForUpdatesChange(true)
-                        checkForUpdate(
-                            context = context,
-                            releaseChannel = BuildConfig.RELEASE_CHANNEL,
-                            ignoreDismissedReleases = false
-                        ) { result ->
-                            onCheckingForUpdatesChange(false)
-                            when {
-                                !result.successful -> Toast.makeText(
-                                    context,
-                                    context.getString(R.string.settings_update_check_failed),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                result.hasAnnouncement && result.releaseTag != null && result.displayName != null -> showUpdateDialog(
-                                    context,
-                                    result.releaseTag,
-                                    result.displayName,
-                                    result.releasePageUrl
-                                )
-                                else -> Toast.makeText(
-                                    context,
-                                    context.getString(R.string.settings_update_up_to_date),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                )
-            }
-
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Keyboard,
+                        title = stringResource(R.string.settings_keyboards_layouts_title),
+                        description = stringResource(R.string.settings_keyboards_layouts_description),
+                        linkId = SettingLinkIds.MAIN_KEYBOARDS_LAYOUTS,
+                        onClick = { onNavigate(SettingsDestination.KeyboardsLayouts) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.TextFields,
+                        title = stringResource(R.string.settings_typing_title),
+                        description = stringResource(R.string.settings_typing_description),
+                        linkId = SettingLinkIds.MAIN_TYPING,
+                        onClick = { onNavigate(SettingsDestination.Typing) }
+                    )
+                    SettingsCategoryRow(
+                        iconRes = R.drawable.modifier_keys_24,
+                        title = stringResource(R.string.settings_modifiers_sym_title),
+                        description = stringResource(R.string.settings_modifiers_sym_description),
+                        linkId = SettingLinkIds.MAIN_MODIFIERS,
+                        onClick = { onNavigate(SettingsDestination.Modifiers) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.EmojiEmotions,
+                        title = stringResource(R.string.settings_emoji_symbols_gifs_title),
+                        description = stringResource(R.string.settings_emoji_symbols_gifs_description),
+                        linkId = SettingLinkIds.MAIN_FLUX_EMOJI_GIFS,
+                        onClick = { onNavigate(SettingsDestination.FluxEmojiGifs) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Palette,
+                        title = stringResource(R.string.settings_look_sound_title),
+                        description = stringResource(R.string.settings_look_sound_description),
+                        linkId = SettingLinkIds.MAIN_LOOK_SOUND,
+                        onClick = { onNavigate(SettingsDestination.LookSound) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.TouchApp,
+                        title = stringResource(R.string.settings_trackpad_gestures_title),
+                        description = stringResource(R.string.settings_trackpad_gestures_description),
+                        linkId = SettingLinkIds.ADVANCED_TRACKPAD_GESTURES,
+                        onClick = { onNavigate(SettingsDestination.TrackpadGestures) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Apps,
+                        title = stringResource(R.string.settings_apps_title),
+                        description = stringResource(R.string.settings_apps_description),
+                        linkId = SettingLinkIds.MAIN_APPS,
+                        onClick = { onNavigate(SettingsDestination.Apps) }
+                    )
+                    SettingsCategoryRow(
+                        icon = Icons.Filled.Shield,
+                        title = stringResource(R.string.settings_privacy_system_title),
+                        description = if (SettingsManager.isOfflineMode(context)) {
+                            stringResource(R.string.flux_offline_on)
+                        } else {
+                            stringResource(R.string.settings_privacy_system_description)
+                        },
+                        linkId = SettingLinkIds.MAIN_ADVANCED,
+                        onClick = { onNavigate(SettingsDestination.Advanced) }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -716,7 +539,7 @@ private fun SettingsMainScreen(
 }
 
 @Composable
-private fun SettingsCategoryRow(
+internal fun SettingsCategoryRow(
     icon: ImageVector? = null,
     iconRes: Int? = null,
     title: String,
@@ -786,7 +609,7 @@ private fun SettingsCategoryRow(
 }
 
 @Composable
-private fun SettingsGroupDivider(label: String) {
+internal fun SettingsGroupDivider(label: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

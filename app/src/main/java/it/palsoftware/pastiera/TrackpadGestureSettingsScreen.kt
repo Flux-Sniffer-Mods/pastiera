@@ -85,6 +85,7 @@ fun TrackpadGestureSettingsScreen(
             "trackpad.swipe_to_delete_provider",
             "trackpad.suggestion_swipe_directions",
             "trackpad.swipe_down_deletes_word",
+            "trackpad.phone_settings",
             SettingLinkIds.TRACKPAD_GESTURES_ENABLED,
             SettingLinkIds.TRACKPAD_PROVIDER,
             SettingLinkIds.TRACKPAD_SHIZUKU_DEVICE,
@@ -578,6 +579,14 @@ fun TrackpadGestureSettingsScreen(
                 }
             }
 
+            if (it.palsoftware.pastiera.inputmethod.DeviceSpecific.isTitan2EliteDevice()) {
+                FluxActionRow(
+                    linkId = "trackpad.phone_settings",
+                    title = stringResource(R.string.phone_trackpad_settings_title),
+                    description = stringResource(R.string.phone_trackpad_settings_description),
+                    onClick = { PhoneTrackpadSettings.open(context) }
+                )
+            }
             FluxSwitchRow(
                 linkId = "trackpad.suggestion_swipe_directions",
                 title = stringResource(R.string.trackpad_swipe_directions_title),

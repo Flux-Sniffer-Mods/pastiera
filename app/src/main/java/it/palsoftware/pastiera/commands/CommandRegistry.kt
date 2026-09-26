@@ -56,6 +56,7 @@ class CommandRegistry(
                 AppCommandSource(),
                 PastieraCommandSource(),
                 AppActionCommandSource(),
+                AppShortcutCommandSource(),
                 DeviceControlCommandSource(),
                 NavCommandSource()
             )

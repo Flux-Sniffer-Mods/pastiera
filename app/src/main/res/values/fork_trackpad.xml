@@ -5,4 +5,8 @@
     <string name="trackpad_swipe_directions_description">Swipe left, up or right anywhere on the trackpad for the left, middle or right suggestion. Swipe left no longer deletes a word.</string>
     <string name="trackpad_swipe_down_delete_title">Swipe down deletes the previous word</string>
     <string name="trackpad_swipe_down_delete_description">A quick swipe down on the trackpad deletes the word before the cursor.</string>
+    <string name="phone_trackpad_settings_title">Phone trackpad settings</string>
+    <string name="phone_trackpad_settings_description">Open the phone\'s Keyboard gestures settings, for scrolling and moving the cursor on the keys. Also in the quick launcher as \"Trackpad scroll &amp; cursor\".</string>
+    <string name="phone_trackpad_settings_query">Keyboard gestures</string>
+    <string name="phone_trackpad_settings_fallback">Search Settings for \"%1$s\": it\'s copied, ready to paste.</string>
 </resources>
