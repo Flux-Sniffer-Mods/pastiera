@@ -25,6 +25,32 @@ object SettingLinkIds {
     const val MAIN_ADVANCED = "main.advanced"
     const val MAIN_ACCESSIBILITY = "main.accessibility"
     const val MAIN_ABOUT = "main.about"
+    const val MAIN_FLUX_EMOJI_GIFS = "main.flux_emoji_gifs"
+    const val MAIN_FLUX_TITAN_SCREEN = "main.flux_titan_screen"
+    const val MAIN_FLUX_HIDDEN_APPS = "main.flux_hidden_apps"
+    const val MAIN_FLUX_LINUX_DESKTOP = "main.flux_linux_desktop"
+    const val MAIN_FLUX_OFFLINE = "main.flux_offline"
+    const val MAIN_KEYBOARDS_LAYOUTS = "main.keyboards_layouts"
+    const val MAIN_TYPING = "main.typing"
+    const val MAIN_EDITING_KEYS = "main.editing_keys"
+    const val MAIN_LOOK_SOUND = "main.look_sound"
+    const val MAIN_APPS = "main.apps"
+    const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
+    const val MAIN_DEVELOPER = "main.developer"
+    const val MAIN_TERMINAL_MODE = "main.terminal_mode"
+    const val MAIN_EXACT_TYPING = "main.exact_typing"
+    const val EXACT_TYPING_NO_SUGGESTION_FIELDS = "exact_typing.no_suggestion_fields"
+    const val PRIVACY_INCOGNITO_ALWAYS = "privacy.incognito_always"
+    const val PRIVACY_PASTE_SUGGESTION = "privacy.paste_suggestion"
+    const val PRIVACY_ONE_TIME_CODES = "privacy.one_time_codes"
+    const val PRIVACY_CLEAN_LINKS = "privacy.clean_links"
+    const val PRIVACY_INCOGNITO_FOLLOW_APPS = "privacy.incognito_follow_apps"
+    const val TERMINAL_MODE_ENABLED = "terminal_mode.enabled"
+    const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"
+
+    // App shortcuts screen
+    const val APP_SHORTCUTS_ENABLED = "app_shortcuts.enabled"
+    const val APP_SHORTCUTS_SUGGESTIONS = "app_shortcuts.suggestions"
 
     // Text input screen
     const val TEXT_INPUT_TEXT_EXPANSION = "text_input.text_expansion"
@@ -45,6 +71,7 @@ object SettingLinkIds {
     const val TEXT_INPUT_CLEAR_ALT_ON_SPACE = "text_input.clear_alt_on_space"
     const val TEXT_INPUT_AUTO_SHOW_KEYBOARD = "text_input.auto_show_keyboard"
     const val TEXT_INPUT_ALT_CTRL_SPEECH_SHORTCUT = "text_input.alt_ctrl_speech_shortcut"
+    const val TEXT_INPUT_SPEECH_KEEP_LISTENING = "text_input.speech_keep_listening"
     const val TEXT_INPUT_SHIFT_BACKSPACE_DELETE = "text_input.shift_backspace_delete"
     const val TEXT_INPUT_ALT_BACKSPACE_DELETE = "text_input.alt_backspace_delete"
     const val TEXT_INPUT_BACKSPACE_AT_START_DELETE = "text_input.backspace_at_start_delete"
@@ -69,13 +96,10 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_SUGGESTIONS = "auto_correction.suggestions"
     const val AUTO_CORRECTION_ACCENT_MATCHING = "auto_correction.accent_matching"
     const val AUTO_CORRECTION_EMOJI_SUGGESTIONS = "auto_correction.emoji_suggestions"
+    const val AUTO_CORRECTION_SUGGESTIONS_BOLD = "auto_correction.suggestions_bold"
+    const val AUTO_CORRECTION_SUGGESTION_KEYS = "auto_correction.suggestion_keys"
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
-    const val MAIN_LED_COLORS = "main.led_colors"
-    const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
-    const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
-    const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
-    const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 
@@ -124,6 +148,8 @@ object SettingLinkIds {
     const val MODIFIERS_ALT_LATCH_STAYS_ON_SPACE = "modifiers.alt_latch_stays_on_space"
     const val MODIFIERS_CTRL_TAP_LATCHES = "modifiers.ctrl_tap_latches"
     const val MODIFIERS_CTRL_LATCH_STAYS_ON_SPACE = "modifiers.ctrl_latch_stays_on_space"
+    const val MODIFIERS_SMART_ALT_OFF = "modifiers.smart_alt_off"
+    const val MODIFIERS_SMART_CTRL_OFF = "modifiers.smart_ctrl_off"
 
     // Custom input styles screen
     const val CUSTOM_INPUT_STYLES_LAYOUT_MODE = "custom_input_styles.layout_mode"
@@ -134,6 +160,7 @@ object SettingLinkIds {
     const val CUSTOM_INPUT_STYLES_CTRL_SPACE_LAYOUT_SWITCH =
         "custom_input_styles.ctrl_space_layout_switch"
     const val CUSTOM_INPUT_STYLES_LAYOUT_SWITCH_TOAST = "custom_input_styles.layout_switch_toast"
+    const val CUSTOM_INPUT_STYLES_LANGUAGE_PER_APP = "custom_input_styles.language_per_app"
 
     // About screen
     const val ABOUT_SUPPORT_KO_FI = "about.support_ko_fi"
@@ -430,6 +457,12 @@ object SettingLinkRegistry {
             R.string.alt_ctrl_speech_shortcut_title,
             R.string.alt_ctrl_speech_shortcut_description,
             destination = SettingsDestination.TextInput
+        ),
+        entry(
+            SettingLinkIds.TEXT_INPUT_SPEECH_KEEP_LISTENING,
+            R.string.speech_keep_listening_title,
+            R.string.speech_keep_listening_description,
+            destination = SettingsDestination.Modifiers
         ),
         entry(
             SettingLinkIds.TEXT_INPUT_SHIFT_BACKSPACE_DELETE,
@@ -809,6 +842,12 @@ object SettingLinkRegistry {
             R.string.toast_on_layout_switch_description,
             destination = SettingsDestination.CustomInputStyles
         ),
+        entry(
+            SettingLinkIds.CUSTOM_INPUT_STYLES_LANGUAGE_PER_APP,
+            R.string.language_per_app_title,
+            R.string.language_per_app_description,
+            destination = SettingsDestination.CustomInputStyles
+        ),
 
         entry(
             SettingLinkIds.ABOUT_SUPPORT_KO_FI,
@@ -1033,7 +1072,8 @@ object SettingLinkRegistry {
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
         SettingsDestination.LedColors to R.string.led_colors_title,
         SettingsDestination.EmojiProfiles to R.string.emoji_profiles_title,
-        SettingsDestination.TerminalMode to R.string.terminal_mode_title
+        SettingsDestination.TerminalMode to R.string.terminal_mode_title,
+        SettingsDestination.ExactTyping to R.string.exact_typing_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

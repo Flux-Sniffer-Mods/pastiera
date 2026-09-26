@@ -56,6 +56,12 @@ fun AutoCorrectionCategoryScreen(
     var suggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getSuggestionsEnabled(context))
     }
+    var inlineAutofillEnabled by remember {
+        mutableStateOf(SettingsManager.getInlineAutofillEnabled(context))
+    }
+    var suggestionsBold by remember { mutableStateOf(SettingsManager.getSuggestionsBold(context)) }
+    var suggestionKeys by remember { mutableStateOf(SettingsManager.getSuggestionKeys(context)) }
+    var choosingSuggestionKeys by remember { mutableStateOf(false) }
     var emojiSuggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getEmojiSuggestionsEnabled(context))
     }
@@ -314,6 +320,78 @@ fun AutoCorrectionCategoryScreen(
                             }
                         }
 
+                        FluxActionRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SUGGESTION_KEYS,
+                            title = stringResource(R.string.suggestion_keys_title),
+                            description = suggestionKeysLabel(suggestionKeys),
+                            onClick = { choosingSuggestionKeys = true }
+                        )
+                        if (choosingSuggestionKeys) {
+                            AlertDialog(
+                                onDismissRequest = { choosingSuggestionKeys = false },
+                                title = { Text(stringResource(R.string.suggestion_keys_title)) },
+                                text = {
+                                    Column {
+                                        it.palsoftware.pastiera.inputmethod.SuggestionKeys.OPTIONS.forEach { option ->
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.fillMaxWidth().clickable {
+                                                    suggestionKeys = option
+                                                    SettingsManager.setSuggestionKeys(context, option)
+                                                    choosingSuggestionKeys = false
+                                                }.padding(vertical = 6.dp)
+                                            ) {
+                                                RadioButton(selected = option == suggestionKeys, onClick = null)
+                                                Text(suggestionKeysLabel(option), modifier = Modifier.padding(start = 12.dp))
+                                            }
+                                        }
+                                    }
+                                },
+                                confirmButton = {},
+                                dismissButton = {
+                                    TextButton(onClick = { choosingSuggestionKeys = false }) {
+                                        Text(stringResource(R.string.cancel))
+                                    }
+                                }
+                            )
+                        }
+
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SUGGESTIONS_BOLD,
+                            title = stringResource(R.string.suggestions_bold_title),
+                            description = stringResource(R.string.suggestions_bold_description),
+                            checked = suggestionsBold,
+                            onCheckedChange = { enabled ->
+                                suggestionsBold = enabled
+                                SettingsManager.setSuggestionsBold(context, enabled)
+                            }
+                        )
+
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS,
+                            title = stringResource(R.string.emoji_suggestions_title),
+                            description = stringResource(R.string.emoji_suggestions_description),
+                            checked = emojiSuggestionsEnabled,
+                            onCheckedChange = { enabled ->
+                                emojiSuggestionsEnabled = enabled
+                                SettingsManager.setEmojiSuggestionsEnabled(context, enabled)
+                            }
+                        )
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                            FluxSwitchRow(
+                                linkId = SettingLinkIds.AUTO_CORRECTION_INLINE_AUTOFILL,
+                                title = stringResource(R.string.inline_autofill_title),
+                                description = stringResource(R.string.inline_autofill_description),
+                                checked = inlineAutofillEnabled,
+                                onCheckedChange = { enabled ->
+                                    inlineAutofillEnabled = enabled
+                                    SettingsManager.setInlineAutofillEnabled(context, enabled)
+                                }
+                            )
+                        }
+
+                        SettingsSectionDivider(stringResource(R.string.autocorrect_section_dictionary))
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -443,6 +521,13 @@ fun AutoCorrectionCategoryScreen(
                                     )
                                 }
                             }
+
+                        FluxActionRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_SPELL_CHECKER,
+                            title = stringResource(R.string.spell_checker_title),
+                            description = stringResource(R.string.spell_checker_description),
+                            onClick = { it.palsoftware.pastiera.spellcheck.SpellCheckRules.openSystemSettings(context) }
+                        )
 
                         FluxSwitchRow(
                             linkId = SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS,
@@ -1009,3 +1094,12 @@ private class DefaultUserDefaultsStore(private val context: Context) {
         }
     }
 }
+
+@Composable
+private fun suggestionKeysLabel(option: String): String = stringResource(
+    when (option) {
+        it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_SHIFT_QWE -> R.string.suggestion_keys_ctrl_shift_qwe
+        it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_DIGITS -> R.string.suggestion_keys_ctrl_digits
+        else -> R.string.suggestion_keys_off
+    }
+)

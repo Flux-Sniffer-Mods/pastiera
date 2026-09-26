@@ -105,8 +105,12 @@ fun AdvancedSettingsScreen(
     var clipboardRetentionTime by remember {
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
-    var shizukuStatus by remember { mutableStateOf(ShizukuStatus.NotConnected) }
-    var trackpadProvider by remember { mutableStateOf(SettingsManager.getTrackpadProvider(context)) }
+    var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
+    var pasteSuggestion by remember { mutableStateOf(SettingsManager.getPasteSuggestionEnabled(context)) }
+    var oneTimeCodes by remember { mutableStateOf(SettingsManager.getOneTimeCodesEnabled(context)) }
+    var cleanLinks by remember { mutableStateOf(SettingsManager.getCleanPastedLinks(context)) }
+    var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
+    var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -391,6 +395,30 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS,
+                            title = stringResource(R.string.incognito_always_title),
+                            description = stringResource(R.string.incognito_always_description),
+                            checked = incognitoAlways,
+                            onCheckedChange = {
+                                incognitoAlways = it
+                                SettingsManager.setIncognitoAlways(context, it)
+                            }
+                        )
+                        if (!incognitoAlways) {
+                            FluxSwitchRow(
+                                linkId = SettingLinkIds.PRIVACY_INCOGNITO_FOLLOW_APPS,
+                                title = stringResource(R.string.incognito_follow_apps_title),
+                                description = stringResource(R.string.incognito_follow_apps_description),
+                                checked = incognitoFollowApps,
+                                onCheckedChange = {
+                                    incognitoFollowApps = it
+                                    SettingsManager.setIncognitoFollowApps(context, it)
+                                }
+                            )
+                        }
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_backup))
                         // Backup
                         Surface(
                             modifier = Modifier
@@ -433,104 +461,33 @@ fun AdvancedSettingsScreen(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
-
-                        // Restore
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_RESTORE) {
-                                    restoreLauncher.launch(arrayOf("application/zip"))
+                        )
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_ONE_TIME_CODES,
+                            title = stringResource(R.string.one_time_codes_title),
+                            description = stringResource(R.string.one_time_codes_description),
+                            checked = oneTimeCodes,
+                            onCheckedChange = {
+                                oneTimeCodes = it
+                                SettingsManager.setOneTimeCodesEnabled(context, it)
+                                // Android's own switch lets the app read notifications
+                                if (it && !SettingsManager.hasNotificationAccess(context)) {
+                                    runCatching {
+                                        context.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                    }
                                 }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.restore_from_file),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.restore_from_file_description),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
-                        }
-
-                        // Swipe Incremental Threshold
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp)
-                                .settingRow(SettingLinkIds.ADVANCED_SWIPE_INCREMENTAL_THRESHOLD)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.TouchApp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.swipe_incremental_threshold_title),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "${String.format("%.1f", swipeIncrementalThreshold)} ${stringResource(R.string.dip_unit)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                                Slider(
-                                    value = SettingsManager.getMaxSwipeIncrementalThreshold() +
-                                        SettingsManager.getMinSwipeIncrementalThreshold() - swipeIncrementalThreshold,
-                                    onValueChange = { newInvertedValue ->
-                                        // Invert the slider value (25 to 3) back to stored value (3 to 25)
-                                        val actualValue = SettingsManager.getMaxSwipeIncrementalThreshold() +
-                                            SettingsManager.getMinSwipeIncrementalThreshold() - newInvertedValue
-                                        swipeIncrementalThreshold = actualValue
-                                        SettingsManager.setSwipeIncrementalThreshold(context, actualValue)
-                                    },
-                                    valueRange = SettingsManager.getMinSwipeIncrementalThreshold()..SettingsManager.getMaxSwipeIncrementalThreshold(),
-                                    steps = 16,
-                                    modifier = Modifier
-                                        .weight(1.0f)
-                                        .height(24.dp)
-                                )
+                        )
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_CLEAN_LINKS,
+                            title = stringResource(R.string.clean_links_title),
+                            description = stringResource(R.string.clean_links_description),
+                            checked = cleanLinks,
+                            onCheckedChange = {
+                                cleanLinks = it
+                                SettingsManager.setCleanPastedLinks(context, it)
                             }
-                        }
+                        )
 
                         // Clipboard Retention Time
                         Surface(
@@ -598,6 +555,27 @@ fun AdvancedSettingsScreen(
                             }
                         }
 
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_PASTE_SUGGESTION,
+                            title = stringResource(R.string.paste_suggestion_title),
+                            description = stringResource(R.string.paste_suggestion_description),
+                            checked = pasteSuggestion,
+                            onCheckedChange = {
+                                pasteSuggestion = it
+                                SettingsManager.setPasteSuggestionEnabled(context, it)
+                            }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_category_accessibility))
+                        SettingsCategoryRow(
+                            icon = Icons.Filled.TouchApp,
+                            title = stringResource(R.string.settings_category_accessibility),
+                            description = stringResource(R.string.settings_accessibility_row_description),
+                            linkId = SettingLinkIds.MAIN_ACCESSIBILITY,
+                            onClick = { onNavigate(SettingsDestination.Accessibility) }
+                        )
+
+                        SettingsSectionDivider(stringResource(R.string.settings_section_experimental))
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -822,6 +800,8 @@ private val TRACKPAD_SETTING_LINK_IDS = setOf(
     "trackpad.add_word_full_width",
     "trackpad.swipe_to_delete",
     "trackpad.swipe_to_delete_provider",
+    "trackpad.suggestion_swipe_directions",
+    "trackpad.swipe_down_deletes_word",
     SettingLinkIds.TRACKPAD_GESTURES_ENABLED,
     SettingLinkIds.TRACKPAD_PROVIDER,
     SettingLinkIds.TRACKPAD_SHIZUKU_DEVICE,

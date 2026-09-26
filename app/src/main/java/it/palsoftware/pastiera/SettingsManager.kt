@@ -71,7 +71,18 @@ object SettingsManager {
     private const val KEY_DEVELOPER_OPTIONS_ENABLED = "developer_options_enabled"
     private const val KEY_INCOGNITO_ALWAYS = "incognito_always"
     private const val KEY_PASTE_SUGGESTION = "paste_suggestion_enabled"
+    private const val KEY_LANGUAGE_PER_APP = "language_per_app_enabled"
+    private const val KEY_KEYBOARD_WALLPAPER_COLOURS = "keyboard_theme_wallpaper_colours"
+    private const val KEY_ONE_TIME_CODES = "one_time_codes_enabled"
+    private const val KEY_AUTO_SHIFT_FIELD_TYPES = "auto_shift_field_types"
+    // Each app's last language, kept apart from settings (not in backups)
+    private const val APP_LANGUAGES_PREFS = "app_languages"
+    private const val KEY_CLEAN_PASTED_LINKS = "clean_pasted_links" // Strip tracking from pasted links
     private const val KEY_EMOJI_SUGGESTIONS = "emoji_suggestions_enabled"
+    private const val KEY_SUGGESTIONS_BOLD = "suggestions_bold" // Suggestion bar words in bold
+    private const val KEY_SUGGESTION_KEYS = "suggestion_keys" // Keys that pick a suggestion
+    private const val KEY_SPEECH_KEEP_LISTENING = "speech_keep_listening" // Voice input carries on through pauses
+    private const val KEY_INLINE_AUTOFILL = "inline_autofill_enabled"
     private const val KEY_INCOGNITO_FOLLOW_APPS = "incognito_follow_apps"
     private const val KEY_SMART_CTRL_OFF_AFTER_SHORTCUT = "smart_ctrl_off_after_shortcut"
     private const val KEY_ALT_CTRL_SPEECH_SHORTCUT = "alt_ctrl_speech_shortcut"
@@ -150,6 +161,13 @@ object SettingsManager {
     private const val KEY_CTRL_LATCH_STAYS_ON_SPACE = "ctrl_latch_stays_on_space"
     private const val KEY_EMOJI_PICKER_EXPANDED_HEIGHT = "emoji_picker_expanded_height"
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
+    private const val KEY_TERMINAL_MODE_ENABLED = "terminal_mode_enabled"
+    private const val KEY_TERMINAL_MODE_APPS = "terminal_mode_apps"
+    private const val KEY_EXACT_TYPING_APPS = "exact_typing_apps" // Apps where every character stays as typed
+    private const val KEY_EXACT_TYPING_NO_SUGGESTIONS = "exact_typing_no_suggestions" // Honour the app's no-suggestions flag
+    private const val KEY_TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode_hide_keyboard"
+    private const val KEY_TERMINAL_MODE_EMOJI_KEY = "terminal_mode_emoji_key"
+    const val TERMUX_PACKAGE = "com.termux"
     // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
     private const val KEY_HIDDEN_APPS_ALLOW_PANELS = "hidden_keyboard_apps_allow_panels"
@@ -2170,6 +2188,26 @@ object SettingsManager {
             .apply()
     }
 
+    // Flux Keyboard: trackpad swipe directions
+    private const val KEY_TRACKPAD_SUGGESTION_SWIPE_DIRECTIONS = "trackpad_suggestion_swipe_directions"
+    private const val KEY_TRACKPAD_SWIPE_DOWN_DELETES_WORD = "trackpad_swipe_down_deletes_word"
+
+    /** Left, up and right swipes pick the left, middle and right suggestion, wherever they start. */
+    fun getTrackpadSuggestionSwipeDirections(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TRACKPAD_SUGGESTION_SWIPE_DIRECTIONS, false)
+
+    fun setTrackpadSuggestionSwipeDirections(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TRACKPAD_SUGGESTION_SWIPE_DIRECTIONS, enabled).apply()
+    }
+
+    /** A swipe down on the trackpad deletes the previous word. */
+    fun getTrackpadSwipeDownDeletesWord(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TRACKPAD_SWIPE_DOWN_DELETES_WORD, false)
+
+    fun setTrackpadSwipeDownDeletesWord(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TRACKPAD_SWIPE_DOWN_DELETES_WORD, enabled).apply()
+    }
+
     fun getSwipeToDeleteProvider(context: Context): String {
         val value = getPreferences(context).getString(
             KEY_SWIPE_TO_DELETE_PROVIDER,
@@ -2794,13 +2832,99 @@ object SettingsManager {
     }
     
     /** Offer what you just copied as a suggestion to paste when you start typing in a field. */
+    /** Password managers' chips (logins, one-time codes) in the suggestion bar, Android 11+. */
+    fun getInlineAutofillEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_INLINE_AUTOFILL, true)
+
+    fun setInlineAutofillEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_INLINE_AUTOFILL, enabled).apply()
+    }
+
     /** An emoji for the word you're typing, in the suggestion bar. */
+    /** Suggestion bar words in bold, easier to spot when typing fast (palsoftware/pastiera#310). */
+    fun getSuggestionsBold(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SUGGESTIONS_BOLD, false)
+
+    fun setSuggestionsBold(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SUGGESTIONS_BOLD, enabled).apply()
+    }
+
+    /** Keys that pick a suggestion (an [it.palsoftware.pastiera.inputmethod.SuggestionKeys] option). */
+    fun getSuggestionKeys(context: Context): String =
+        getPreferences(context).getString(KEY_SUGGESTION_KEYS, null)
+            ?.takeIf { option -> option in it.palsoftware.pastiera.inputmethod.SuggestionKeys.OPTIONS }
+            ?: it.palsoftware.pastiera.inputmethod.SuggestionKeys.CTRL_SHIFT_QWE
+
+    fun setSuggestionKeys(context: Context, option: String) {
+        getPreferences(context).edit().putString(KEY_SUGGESTION_KEYS, option).apply()
+    }
+
+    /** Voice input keeps listening through pauses until you stop it or stay silent. On by default. */
+    fun getSpeechKeepListening(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_SPEECH_KEEP_LISTENING, true)
+
+    fun setSpeechKeepListening(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_SPEECH_KEEP_LISTENING, enabled).apply()
+    }
+
     fun getEmojiSuggestionsEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_EMOJI_SUGGESTIONS, true)
 
     fun setEmojiSuggestionsEnabled(context: Context, enabled: Boolean) {
         getPreferences(context).edit().putBoolean(KEY_EMOJI_SUGGESTIONS, enabled).apply()
     }
+
+    /** Links Pastiera pastes lose their tracking parameters and mobile hosts. On by default. */
+    fun getCleanPastedLinks(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_CLEAN_PASTED_LINKS, true)
+
+    fun setCleanPastedLinks(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_CLEAN_PASTED_LINKS, enabled).apply()
+    }
+
+    /** [text] as Pastiera pastes it: links cleaned when that's on. */
+    fun textToPaste(context: Context, text: String): String =
+        if (getCleanPastedLinks(context)) it.palsoftware.pastiera.clipboard.LinkCleaner.clean(text) else text
+
+    /** Remember the language per app: each app gets back the language last used in it. */
+    fun getLanguagePerAppEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_LANGUAGE_PER_APP, true)
+
+    fun setLanguagePerAppEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_LANGUAGE_PER_APP, enabled).apply()
+        if (!enabled) context.getSharedPreferences(APP_LANGUAGES_PREFS, Context.MODE_PRIVATE).edit().clear().apply()
+    }
+
+    /** The language (a subtype key, see SubtypeCycler.subtypeKey) last used in [packageName]. */
+    fun getAppLanguage(context: Context, packageName: String): String? =
+        context.getSharedPreferences(APP_LANGUAGES_PREFS, Context.MODE_PRIVATE).getString(packageName, null)
+
+    fun setAppLanguage(context: Context, packageName: String, subtypeKey: String) {
+        context.getSharedPreferences(APP_LANGUAGES_PREFS, Context.MODE_PRIVATE).edit()
+            .putString(packageName, subtypeKey).apply()
+    }
+
+    /** The kinds of text field with automatic Shift (ShiftFieldTypes ids); null before it was set. */
+    fun getAutoShiftFieldTypes(context: Context): Set<String>? =
+        getPreferences(context).getString(KEY_AUTO_SHIFT_FIELD_TYPES, null)
+            ?.split(',')?.filter { it.isNotBlank() }?.toSet()
+
+    fun setAutoShiftFieldTypes(context: Context, ids: Set<String>) {
+        getPreferences(context).edit().putString(KEY_AUTO_SHIFT_FIELD_TYPES, ids.sorted().joinToString(",")).apply()
+    }
+
+    /** One-time codes from notifications, offered as a chip (needs notification access). */
+    fun getOneTimeCodesEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_ONE_TIME_CODES, false)
+
+    fun setOneTimeCodesEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_ONE_TIME_CODES, enabled).apply()
+        if (!enabled) it.palsoftware.pastiera.otp.OneTimeCodes.consume()
+    }
+
+    /** Whether Android lets the app read notifications (for one-time codes). */
+    fun hasNotificationAccess(context: Context): Boolean =
+        androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
 
     fun getPasteSuggestionEnabled(context: Context): Boolean =
         getPreferences(context).getBoolean(KEY_PASTE_SUGGESTION, true)
@@ -5312,6 +5436,77 @@ object SettingsManager {
             .putString(KEY_HIDDEN_KEYBOARD_APPS, clean.joinToString("\n"))
             .apply()
     }
+
+    /**
+     * Terminal mode: in these apps (Termux unless changed) the terminal is typed into like a
+     * text field without smart features, so Alt and SYM type Pastiera's symbols, and every Ctrl
+     * (held, tapped or latched) reaches the terminal as a real Ctrl.
+     */
+    fun getTerminalModeEnabled(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TERMINAL_MODE_ENABLED, true)
+
+    /**
+     * Terminal mode keeps Pastiera out of sight, as for the Linux desktop: Alt and SYM still type
+     * Pastiera's characters, only the clipboard and emoji picker show while open.
+     */
+    fun getTerminalModeHideKeyboard(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_TERMINAL_MODE_HIDE_KEYBOARD, true)
+
+    fun setTerminalModeHideKeyboard(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_HIDE_KEYBOARD, enabled).apply()
+    }
+
+    /** What the emoji key does in terminal mode, a TerminalMode.EmojiKeyAction id. */
+    fun getTerminalModeEmojiKeyAction(context: Context): String =
+        getPreferences(context).getString(KEY_TERMINAL_MODE_EMOJI_KEY, "emoji_picker") ?: "emoji_picker"
+
+    fun setTerminalModeEmojiKeyAction(context: Context, id: String) {
+        getPreferences(context).edit().putString(KEY_TERMINAL_MODE_EMOJI_KEY, id).apply()
+    }
+
+    fun setTerminalModeEnabled(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_TERMINAL_MODE_ENABLED, enabled).apply()
+    }
+
+    fun getTerminalModeApps(context: Context): List<String> {
+        val stored = getPreferences(context).getString(KEY_TERMINAL_MODE_APPS, null) ?: return listOf(TERMUX_PACKAGE)
+        return parsePackageList(stored)
+    }
+
+    fun setTerminalModeApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit().putString(KEY_TERMINAL_MODE_APPS, clean.joinToString("\n")).apply()
+    }
+
+    /** Apps where Pastiera types exactly what you key: no auto-correct, replacements or auto-capitals. */
+    fun getExactTypingApps(context: Context): List<String> =
+        parsePackageList(getPreferences(context).getString(KEY_EXACT_TYPING_APPS, "") ?: "")
+
+    fun setExactTypingApps(context: Context, packages: Collection<String>) {
+        val clean = packages.joinToString("\n").let(::parsePackageList)
+        getPreferences(context).edit().putString(KEY_EXACT_TYPING_APPS, clean.joinToString("\n")).apply()
+    }
+
+    /** Fields that ask for no suggestions (TYPE_TEXT_FLAG_NO_SUGGESTIONS) also get exact typing. Off by default. */
+    fun getExactTypingForNoSuggestionFields(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, false)
+
+    fun setExactTypingForNoSuggestionFields(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EXACT_TYPING_NO_SUGGESTIONS, enabled).apply()
+    }
+
+    /** Exact typing applies to this field: its app is on the list, or it asks for no suggestions and that's honoured. */
+    fun isExactTypingField(context: Context, packageName: String?, inputType: Int): Boolean =
+        (!packageName.isNullOrBlank() && packageName in getExactTypingApps(context)) ||
+            (getExactTypingForNoSuggestionFields(context) &&
+                (inputType and android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) != 0)
+
+    /** Terminal mode applies to [packageName] (never while Pastiera is hidden for it). */
+    fun isTerminalModeApp(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            getTerminalModeEnabled(context) &&
+            packageName in getTerminalModeApps(context) &&
+            !isKeyboardHiddenForApp(context, packageName)
 
     fun isKeyboardHiddenForApp(context: Context, packageName: String?): Boolean =
         !packageName.isNullOrBlank() && packageName in getHiddenKeyboardApps(context)

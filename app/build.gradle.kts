@@ -329,6 +329,8 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    // Inline autofill chips (passwords, one-time codes) in the suggestion bar
+    implementation(libs.androidx.autofill)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)

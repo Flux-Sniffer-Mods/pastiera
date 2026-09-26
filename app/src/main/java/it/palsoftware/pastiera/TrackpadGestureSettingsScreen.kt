@@ -60,6 +60,8 @@ fun TrackpadGestureSettingsScreen(
     var shizukuDevices by remember { mutableStateOf<List<TrackpadInputDevice>>(emptyList()) }
     var shizukuDeviceDiscoveryFailed by remember { mutableStateOf(false) }
     var swipeToDelete by remember { mutableStateOf(SettingsManager.getSwipeToDelete(context)) }
+    var swipeDirections by remember { mutableStateOf(SettingsManager.getTrackpadSuggestionSwipeDirections(context)) }
+    var swipeDownDeletes by remember { mutableStateOf(SettingsManager.getTrackpadSwipeDownDeletesWord(context)) }
     var swipeToDeleteProvider by remember { mutableStateOf(SettingsManager.getSwipeToDeleteProvider(context)) }
     var swipeToDeleteProviderMenuExpanded by remember { mutableStateOf(false) }
     val highlightedSettingId = LocalSettingHighlightId.current
@@ -81,6 +83,8 @@ fun TrackpadGestureSettingsScreen(
             "trackpad.add_word_full_width",
             "trackpad.swipe_to_delete",
             "trackpad.swipe_to_delete_provider",
+            "trackpad.suggestion_swipe_directions",
+            "trackpad.swipe_down_deletes_word",
             SettingLinkIds.TRACKPAD_GESTURES_ENABLED,
             SettingLinkIds.TRACKPAD_PROVIDER,
             SettingLinkIds.TRACKPAD_SHIZUKU_DEVICE,
@@ -573,6 +577,27 @@ fun TrackpadGestureSettingsScreen(
                     )
                 }
             }
+
+            FluxSwitchRow(
+                linkId = "trackpad.suggestion_swipe_directions",
+                title = stringResource(R.string.trackpad_swipe_directions_title),
+                description = stringResource(R.string.trackpad_swipe_directions_description),
+                checked = swipeDirections,
+                onCheckedChange = {
+                    swipeDirections = it
+                    SettingsManager.setTrackpadSuggestionSwipeDirections(context, it)
+                }
+            )
+            FluxSwitchRow(
+                linkId = "trackpad.swipe_down_deletes_word",
+                title = stringResource(R.string.trackpad_swipe_down_delete_title),
+                description = stringResource(R.string.trackpad_swipe_down_delete_description),
+                checked = swipeDownDeletes,
+                onCheckedChange = {
+                    swipeDownDeletes = it
+                    SettingsManager.setTrackpadSwipeDownDeletesWord(context, it)
+                }
+            )
 
             Surface(
                 modifier = Modifier
