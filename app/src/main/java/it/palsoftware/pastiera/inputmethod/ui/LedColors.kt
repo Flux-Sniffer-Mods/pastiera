@@ -14,7 +14,8 @@ object LedColors {
         SHIFT("shift", Color.rgb(79, 195, 247)),
         CTRL("ctrl", Color.rgb(255, 183, 77)),
         ALT("alt", Color.rgb(129, 199, 132)),
-        SYM("sym", Color.rgb(186, 104, 200))
+        SYM("sym", Color.rgb(186, 104, 200)),
+        EMOJI("emoji", Color.rgb(255, 213, 79))
     }
 
     enum class Level { OFF, ACTIVE, LOCKED }
@@ -23,6 +24,25 @@ object LedColors {
     private const val ACTIVE_MAX_VALUE = 0.68f
 
     fun enabled(context: Context): Boolean = SettingsManager.getLedIndividualColorsEnabled(context)
+
+    fun lockedAnimationEnabled(context: Context): Boolean = SettingsManager.getLedLockedAnimationEnabled(context)
+
+    /** A more intense version of [color] for the locked sweep: more saturated and brighter. */
+    fun intensify(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        return Color.HSVToColor(
+            Color.alpha(color),
+            floatArrayOf(hsv[0], (hsv[1] * 1.6f + 0.3f).coerceAtMost(1f), 1f)
+        )
+    }
+
+    /** The low point of the locked sweep: the same colour, clearly darker. */
+    fun deepen(color: Int): Int {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        return Color.HSVToColor(Color.alpha(color), floatArrayOf(hsv[0], hsv[1], hsv[2] * 0.45f))
+    }
 
     fun baseColor(context: Context, led: Led): Int = SettingsManager.getLedColor(context, led.key, led.defaultColor)
 
@@ -45,5 +65,6 @@ object LedColors {
         ModifierLedState.CTRL -> Led.CTRL
         ModifierLedState.ALT -> Led.ALT
         ModifierLedState.SYM -> Led.SYM
+        ModifierLedState.EMOJI -> Led.EMOJI
     }
 }

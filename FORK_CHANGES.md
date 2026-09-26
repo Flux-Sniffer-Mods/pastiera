@@ -64,7 +64,7 @@ Flux Keyboard was called **Pastiera Flux** (app ID `it.palsoftware.pastiera.flux
 ## SYM layers and variations
 
 - **Device SYM layer editor** with curated and custom profiles.
-- The pencil on the symbol panels edits the variations mapping.
+- The pencil on the symbol panels edits that layer; holding it edits the variations mapping.
 - Dev's choice static variations by default.
 
 ## From the Pastiera team since 0.85

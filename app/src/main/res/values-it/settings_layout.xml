@@ -198,13 +198,7 @@
     <string name="alt_key_editor_copy_to_edit">Copia per modificare</string>
     <string name="alt_key_editor_use_description">Usa questo profilo per il livello SYM del dispositivo su ogni tastiera.</string>
     <string name="alt_key_editor_in_use_now">Questo è ora il tuo livello SYM del dispositivo.</string>
-    <string name="sym_symbols_pencil_description">Modifica le varianti. Tieni premuto per modificare questo livello di simboli.</string>
-    <string name="default_config_title">Configurazione predefinita</string>
-    <string name="default_config_description">Imposta Pastiera come in una nuova installazione, calibrata su un Titan 2 Elite: tema, LED, modificatori, SYM, varianti, app e altro.</string>
-    <string name="default_config_confirm">Sostituisce le impostazioni attuali con la configurazione predefinita. Fai prima un backup se potresti volerle recuperare.</string>
-    <string name="default_config_apply">Sostituisci le mie impostazioni</string>
-    <string name="default_config_applied">Configurazione predefinita applicata</string>
-    <string name="default_config_failed">Impossibile applicare la configurazione predefinita</string>
+    <string name="sym_symbols_pencil_description">Modifica questo livello di simboli. Tieni premuto per modificare le varianti.</string>
     <string name="exact_typing_title">Digitazione esatta</string>
     <string name="exact_typing_description">App in cui ciò che scrivi resta com\'è: SSH, codice, agenti AI</string>
     <string name="exact_typing_note">In queste app niente modifica ciò che scrivi: niente correzione automatica, sostituzioni, maiuscole automatiche, punto con doppio spazio o spazi automatici. I suggerimenti restano e cambiano una parola solo quando ne scegli uno.</string>
@@ -218,4 +212,24 @@
     <string name="menu_bar_move_up">Sposta su (più a sinistra nella barra)</string>
     <string name="menu_bar_move_down">Sposta giù (più a destra nella barra)</string>
     <string name="menu_bar_reset">Ripristina la barra del menu</string>
+    <string name="suggestions_bold_title">Suggerimenti in grassetto</string>
+    <string name="suggestions_bold_description">Parole della barra dei suggerimenti in grassetto, più facili da vedere</string>
+    <string name="clean_links_title">Pulisci i link incollati</string>
+    <string name="clean_links_description">I link incollati dagli appunti perdono il tracciamento (utm_, fbclid, si…) e aprono il sito completo, non quello mobile</string>
+    <string name="suggestion_keys_title">Scegli i suggerimenti dalla tastiera</string>
+    <string name="suggestion_keys_ctrl_shift_qwe">Ctrl+Maiusc+Q, W o E: il suggerimento a sinistra, al centro o a destra</string>
+    <string name="suggestion_keys_ctrl_digits">Ctrl+1, 2 o 3: il suggerimento a sinistra, al centro o a destra (fila dei numeri)</string>
+    <string name="suggestion_keys_off">Disattivato</string>
+    <string name="speech_keep_listening_title">La dettatura continua ad ascoltare</string>
+    <string name="speech_keep_listening_description">Le pause non chiudono la dettatura: continua frase per frase finché non tocchi il microfono o resti in silenzio</string>
+    <string name="recommended_settings_title">Impostazioni consigliate</string>
+    <string name="recommended_settings_description">Imposta Pastiera come consigliato, calibrata su un Titan 2 Elite: tema, LED, modificatori, SYM, varianti, app e altro. Mostra prima quanto cambierebbe.</string>
+    <string name="recommended_settings_nothing">Le tue impostazioni corrispondono già a quelle consigliate. Applicando di nuovo si ripristinano anche mappature e varianti consigliate.</string>
+    <string name="recommended_settings_apply">Applica</string>
+    <string name="recommended_settings_applied">Impostazioni consigliate applicate</string>
+    <string name="recommended_settings_failed">Impossibile applicare le impostazioni consigliate</string>
+    <plurals name="recommended_settings_differ">
+        <item quantity="one">%d impostazione è diversa da quelle consigliate. Applicando la sostituisci, insieme a mappature e varianti consigliate. Fai prima un backup se potresti volerla recuperare.</item>
+        <item quantity="other">%d impostazioni sono diverse da quelle consigliate. Applicando le sostituisci, insieme a mappature e varianti consigliate. Fai prima un backup se potresti volerle recuperare.</item>
+    </plurals>
 </resources>

@@ -1081,7 +1081,6 @@ object SettingLinkRegistry {
         SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
         SettingsDestination.Developer to R.string.developer_options_title,
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
-        SettingsDestination.LedColors to R.string.led_colors_title,
         SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 

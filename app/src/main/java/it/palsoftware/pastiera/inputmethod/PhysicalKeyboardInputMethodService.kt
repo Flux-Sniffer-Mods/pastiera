@@ -1,10 +1,13 @@
 package it.palsoftware.pastiera.inputmethod
 
+import it.palsoftware.pastiera.clipboard.PasteSuggestion
 import it.palsoftware.pastiera.shortcuts.AppShortcutRemapper
 import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
 import it.palsoftware.pastiera.shortcuts.KeyCombo
 import it.palsoftware.pastiera.shortcuts.ShortcutAction
 import it.palsoftware.pastiera.shortcuts.toIntent
+import it.palsoftware.pastiera.inputmethod.suggestions.EmojiSuggestion
+import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
 import it.palsoftware.pastiera.shortcuts.AppActionDiscovery
 import it.palsoftware.pastiera.shortcuts.DiscoveredAppActions
 import android.content.BroadcastReceiver
@@ -17,6 +20,7 @@ import it.palsoftware.pastiera.AppBroadcastActions
 import it.palsoftware.pastiera.ClicksPowerKeyboardController
 import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.data.desktop.DesktopKeyboardLayout
+import it.palsoftware.pastiera.data.gif.GifCollections
 import it.palsoftware.pastiera.SoftwareKeyboardModeActions
 import android.inputmethodservice.InputMethodService
 import android.hardware.input.InputManager
@@ -182,10 +186,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    // The key of a suggestion shortcut, whose key-up is ours too
+    private var suggestionKeyUpPending: Int = KeyEvent.KEYCODE_UNKNOWN
     // The focused app is on the "hide keyboard in these apps" list: no UI, keys go to the app
     private var keyboardHiddenForApp: Boolean = false
     // ...but with "Show status LEDs only": the LED strip stays, following observed modifiers
     private var hiddenAppShowsLeds: Boolean = false
+    // ...and this hidden app lets the emoji key and Sym open Pastiera (per-app option)
+    private var hiddenAppAllowsPanels: Boolean = false
     private val observedModifierLeds = ObservedModifierLeds()
     // Hidden app with the panels option: Pastiera's surface is up for an emoji/symbols panel
     private var hiddenAppPanelShown: Boolean = false
@@ -445,9 +453,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private val symPage: Int
         get() = if (::symLayoutController.isInitialized) symLayoutController.currentSymPage() else 0
 
+    // The input type an app gave its field, before onStartInput adds NO_SUGGESTIONS for the
+    // keyboard's own reasons: exact typing must follow what the app asked for, not that flag
+    private var appInputType: Pair<EditorInfo, Int>? = null
+
     private fun updateInputContextState(info: EditorInfo?) {
         val state = InputContextState.fromEditorInfo(info)
-        inputContextState = if (info != null && SettingsManager.isExactTypingField(this, info.packageName, info.inputType)) {
+        val requestedType = appInputType?.takeIf { it.first === info }?.second ?: info?.inputType ?: 0
+        inputContextState = if (info != null && SettingsManager.isExactTypingField(this, info.packageName, requestedType)) {
             state.copy(exactTyping = true)
         } else {
             state
@@ -2282,13 +2295,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key != null && key.startsWith("led_")) {
+            if (key == it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.PREF_SWITCH_BY_APP) {
+                alternateCharacterManager.setEmojiLayerOverride(
+                    if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
+                        it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(currentInputEditorInfo?.packageName)?.let { profile -> it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.layerMappings(this, profile) }
+                    } else null
+                )
+                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
+            } else if (key != null && key.startsWith("led_")) {
                 // LED colours: repaint the LEDs even though no modifier changed
                 Handler(Looper.getMainLooper()).post {
                     invalidateRenderedStatusSnapshot()
                     updateStatusBarText()
                 }
-            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
+            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY ||
+                key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_CHOICE
+            ) {
                 alternateCharacterManager.reloadModifierAndDeviceSymMappings()
                 Handler(Looper.getMainLooper()).post { updateStatusBarText() }
             } else if (key == "sym_mappings_custom") {
@@ -2908,8 +2930,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        it.palsoftware.pastiera.otp.OneTimeCodes.onNewCode = null
+        it.palsoftware.pastiera.spellcheck.PastieraSpellCheckerService.keyboardController = null
+        gifScope.cancel()
         HiddenAppKeyObserver.sink = null
         HiddenAppKeyObserver.interceptor = null
+        HiddenAppKeyObserver.hiddenAppInFront = false
         ClicksAccessibilityKeyBridge.unregister(this)
         clicksPowerShiftTapFilter.reset()
         accidentalKeyPressFilter.reset()
@@ -3084,82 +3110,6 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     private fun requestKeyboardInputView() = requestShowSelf(0)
 
-    /** Hidden app with the panels option and an emoji or symbols panel open. */
-    private fun hiddenAppPanelOpen(): Boolean =
-        keyboardHiddenForApp && symPage > 0 && SettingsManager.getHiddenAppsAllowPanels(this)
-
-    /** Hidden apps keep Pastiera's surface closed, except for the status LEDs or an open panel. */
-    private fun hiddenAppSurfaceBlocked(): Boolean =
-        keyboardHiddenForApp && !hiddenAppShowsLeds && !hiddenAppPanelOpen()
-
-    /** In a hidden app with the panels option: its panel keys, and every key while a panel is open. */
-    private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
-        if (!SettingsManager.getHiddenAppsAllowPanels(this)) return false
-        if (symPage > 0) return true
-        val emojiKey = SettingsManager.getEmojiPickerKey(this)
-        return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
-    }
-
-    /** Show Pastiera while a panel is open in a hidden app; hide it (or back to LEDs) afterwards. */
-    private fun syncHiddenAppPanel() {
-        if (!keyboardHiddenForApp) return
-        val panelOpen = hiddenAppPanelOpen()
-        if (::candidatesBarController.isInitialized) {
-            candidatesBarController.setLedsOnlyMode(hiddenAppShowsLeds && !panelOpen)
-        }
-        if (panelOpen == hiddenAppPanelShown) return
-        hiddenAppPanelShown = panelOpen
-        invalidateRenderedStatusSnapshot()
-        if (panelOpen) {
-            ensureImeSurfaceVisible()
-        } else {
-            hideSurfaceIfHiddenForApp()
-        }
-        // Re-render in the new mode once the current pass is over
-        uiHandler.post { updateStatusBarText() }
-    }
-
-    /**
-     * Accessibility path for hidden apps that read keys before any input method (Termux:X11):
-     * hands the panel keys, and every key while a panel is open, to Pastiera.
-     */
-    private fun interceptHiddenAppKey(event: KeyEvent): Boolean {
-        if (!keyboardHiddenForApp || currentInputConnection == null) return false
-        val keyCode = event.keyCode
-        if (keyCode in HIDDEN_APP_SYSTEM_KEYS) return false
-        val take = when (event.action) {
-            KeyEvent.ACTION_DOWN -> hiddenAppKeyGoesToPastiera(keyCode).also { taken ->
-                if (taken && event.repeatCount == 0) hiddenAppInterceptedKeys += keyCode
-            }
-            // Only releases of presses Pastiera took; others belong to the app
-            KeyEvent.ACTION_UP -> hiddenAppInterceptedKeys.remove(keyCode)
-            else -> false
-        }
-        if (!take) return false
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> onKeyDown(keyCode, event)
-            KeyEvent.ACTION_UP -> onKeyUp(keyCode, event)
-        }
-        return true
-    }
-
-    /** Hidden app with status LEDs: mirror modifier keys the app receives, never consume them. */
-    private fun observeHiddenAppKey(event: KeyEvent?) {
-        if (!hiddenAppShowsLeds || event == null) return
-        val changed = observedModifierLeds.onKey(
-            event.keyCode, event.action, event.repeatCount, event.downTime, event.eventTime
-        )
-        if (changed) updateStatusBarText()
-    }
-
-    /** Close any Pastiera surface once the framework's start/show pass is over. */
-    private fun hideSurfaceIfHiddenForApp() {
-        if (!hiddenAppSurfaceBlocked() || !::keyboardVisibilityController.isInitialized) return
-        uiHandler.post {
-            if (hiddenAppSurfaceBlocked()) keyboardVisibilityController.hideForApp()
-        }
-    }
-
     /**
      * A GIF picked in the emoji picker. Fields that take GIF content get the file itself
      * (through the FileProvider); anywhere else, or if the download fails, its link is typed.
@@ -3229,6 +3179,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
         if (!hiddenAppAllowsPanels) return false
         if (symPage > 0) return true
+        // Keys pressed with SYM held are its chords (SYM + Space: the quick launcher): with only
+        // SYM reaching the keyboard, SYM would count as a tap and open its panel
+        if (symKeyHeld) return true
         val emojiKey = SettingsManager.getEmojiPickerKey(this)
         return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
     }
@@ -3868,11 +3821,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (!restarting) {
             val editable = info != null && info.inputType != EditorInfo.TYPE_NULL
             info?.packageName?.let { QuickLauncherOpener.foregroundPackage = it }
-            QuickLauncherOpener.NiagaraReturn.onInputStarted(info?.packageName, editable)?.let { pkg ->
-                packageManager.getLaunchIntentForPackage(pkg)?.let { intent ->
-                    runCatching { startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-                }
-            }
+            QuickLauncherOpener.NiagaraReturn.onInputStarted(info?.packageName, editable)?.let(::returnToApp)
         }
         // Emoji layer profiles: the layer follows the app when switching by app
         if (::alternateCharacterManager.isInitialized) alternateCharacterManager.setEmojiLayerOverride(
@@ -3892,7 +3841,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         super.onStartInput(info, restarting)
         EmojiCompatSupport.onStartInput(info)
         keyboardHiddenForApp = SettingsManager.isKeyboardHiddenForApp(this, info?.packageName)
-        val showLeds = keyboardHiddenForApp && SettingsManager.getHiddenAppsShowLeds(this)
+        HiddenAppKeyObserver.hiddenAppInFront = keyboardHiddenForApp
+        val showLeds = keyboardHiddenForApp && SettingsManager.hiddenAppShowsLeds(this, info?.packageName)
+        hiddenAppAllowsPanels = keyboardHiddenForApp && SettingsManager.hiddenAppAllowsPanels(this, info?.packageName)
         if (showLeds != hiddenAppShowsLeds || !restarting) observedModifierLeds.reset()
         hiddenAppShowsLeds = showLeds
         if (::candidatesBarController.isInitialized) candidatesBarController.setLedsOnlyMode(showLeds)
@@ -3956,6 +3907,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         
         if (info != null && isEditable) {
+            // The field as the app asked for it, before the flag the keyboard adds for itself
+            appInputType = info to info.inputType
             info.inputType = info.inputType or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         }
         
@@ -4092,8 +4045,27 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
     }
 
+    /** A key held longer than a tap (Android's long-press time), judged at its release. */
+    private fun isLongHold(event: KeyEvent): Boolean =
+        event.eventTime - event.downTime >= android.view.ViewConfiguration.getLongPressTimeout()
+
+    /** Back to [packageName]'s task, as it was. */
+    private fun returnToApp(packageName: String) {
+        packageManager.getLaunchIntentForPackage(packageName)?.let { intent ->
+            runCatching { startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+    }
+
     override fun onFinishInput() {
+        // Niagara's search closed: back to the app unless one opens from it meanwhile
+        if (QuickLauncherOpener.NiagaraReturn.onInputFinished(currentInputEditorInfo?.packageName)) {
+            uiHandler.postDelayed({
+                QuickLauncherOpener.NiagaraReturn.decide()?.let(::returnToApp)
+            }, QuickLauncherOpener.NiagaraReturn.DECIDE_AFTER_MS)
+        }
         clearInlineAutofill()
+        symSticky = false
+        emojiSticky = false
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onFinishInput()
@@ -5285,7 +5257,26 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         return super.onKeyLongPress(keyCode, event)
     }
 
+    // SYM physically held, wherever its keys go; and whether a chord used it in a hidden app
+    private var symKeyHeld = false
+    private var hiddenAppSymChordUsed = false
+
+    // Back taken from Niagara's search to return to the app: its release is ours too
+    private var niagaraBackReturnTo: String? = null
+
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyCode_ == KEYCODE_SYM && (event_?.repeatCount ?: 0) == 0) {
+            symKeyHeld = true
+            hiddenAppSymChordUsed = false
+        }
+        if (keyCode_ == KeyEvent.KEYCODE_BACK && (event_?.repeatCount ?: 0) == 0) {
+            // Returning happens on the release: done on the press, the release would reach the
+            // app and press Back there too
+            QuickLauncherOpener.NiagaraReturn.onBackPressed(currentInputEditorInfo?.packageName)?.let { pkg ->
+                niagaraBackReturnTo = pkg
+                return true
+            }
+        }
         terminalEmojiKeyAsAlt(keyCode_, event_)?.let { return onKeyDown(KeyEvent.KEYCODE_ALT_LEFT, it) }
         withoutEmojiAltShift(event_)?.let { return onKeyDown(keyCode_, it) }
         if (emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode_ != emojiPickerKeyUpPending) {
@@ -5301,10 +5292,21 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
                 if (translateHiddenAppKey(event_)) return true
                 if (firstPress) hiddenAppPassedThroughKeys += keyCode_
+                HiddenAppKeyObserver.logKey(event_, "input method, to the app")
                 observeHiddenAppKey(event_)
                 return super.onKeyDown(keyCode_, event_)
             }
+            HiddenAppKeyObserver.logKey(event_, "input method, to the keyboard")
             if (firstPress) hiddenAppPastieraKeys += keyCode_
+            // SYM + Space in a hidden app (the Niagara home screen): the quick launcher, and SYM
+            // doesn't then open its panel
+            if (firstPress && symKeyHeld && keyCode_ == KeyEvent.KEYCODE_SPACE) {
+                symChordUsedSinceKeyDown = true
+                symTogglePendingOnKeyUp = false
+                hiddenAppSymChordUsed = true
+                openQuickLauncher()
+                return true
+            }
         }
         val handled = handleKeyDown(keyCode_, event_)
         if (keyboardHiddenForApp || terminalHidesKeyboard) syncHiddenAppPanel()
@@ -5381,6 +5383,11 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val hasEditableField = initialInputConnection != null && inputType != EditorInfo.TYPE_NULL
         if (hasEditableField && !isInputViewActive) {
             isInputViewActive = true
+        }
+        if (pasteSuggestionShown && event?.repeatCount == 0 && !KeyEvent.isModifierKey(keyCode)) {
+            // Typing: the paste suggestion goes away (it is offered once per copy)
+            clearPasteSuggestion()
+            if (::clipboardHistoryManager.isInitialized) clipboardHistoryManager.consumeRecentCopy()
         }
         if (remapAppShortcut(keyCode_, event, hasEditableField)) {
             return true
@@ -6111,6 +6118,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyCode_ == KEYCODE_SYM) {
+            symKeyHeld = false
+            // Released after a chord in a hidden app: no panel
+            if (hiddenAppSymChordUsed) {
+                hiddenAppSymChordUsed = false
+                hiddenAppPastieraKeys.remove(keyCode_)
+                symTogglePendingOnKeyUp = false
+                return true
+            }
+        }
+        if (keyCode_ == KeyEvent.KEYCODE_BACK && niagaraBackReturnTo != null) {
+            val pkg = niagaraBackReturnTo!!
+            niagaraBackReturnTo = null
+            requestHideSelf(0)
+            returnToApp(pkg)
+            return true
+        }
         terminalEmojiKeyAsAlt(keyCode_, event_)?.let { return onKeyUp(KeyEvent.KEYCODE_ALT_LEFT, it) }
         withoutEmojiAltShift(event_)?.let { return onKeyUp(keyCode_, it) }
         if (keyboardHiddenForApp) {
@@ -6121,7 +6145,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 else -> hiddenAppKeyGoesToPastiera(keyCode_)
             }
             if (!toPastiera && translateHiddenAppKey(event_)) return true
-            HiddenAppKeyObserver.logKey(event_, if (toPastiera) "input method, to Pastiera" else "input method, to the app")
+            HiddenAppKeyObserver.logKey(event_, if (toPastiera) "input method, to the keyboard" else "input method, to the app")
             if (!toPastiera) {
                 observeHiddenAppKey(event_)
                 return super.onKeyUp(keyCode_, event_)
@@ -6177,8 +6201,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         if (emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiPickerKeyUpPending) {
             emojiPickerKeyUpPending = KeyEvent.KEYCODE_UNKNOWN
-            if (KeyEvent.isModifierKey(keyCode) && !emojiPickerKeyChorded) toggleEmojiKeyScreen()
+            // Held past a tap without choosing anything: the emoji key just lets go
+            val heldWithoutChoice = event != null && isLongHold(event)
+            if (KeyEvent.isModifierKey(keyCode) && !emojiPickerKeyChorded && !heldWithoutChoice) {
+                if (!emojiSticky && symPage == 0 && SettingsManager.getEmojiStickyTap(this)) {
+                    // A tap: the next key types its emoji; a second tap opens the emoji screen
+                    emojiSticky = true
+                    symSticky = false
+                } else {
+                    emojiSticky = false
+                    toggleEmojiKeyScreen()
+                }
+            }
             emojiPickerKeyChorded = false
+            updateStatusBarText()
             return true
         }
         clicksPowerShiftTapFilter.shouldConsumeKeyUp(keyCode, event)?.let { suppressed ->
@@ -6390,7 +6426,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         
         // Toggle SYM layout on key release only when SYM was tapped alone.
         if (keyCode == KEYCODE_SYM) {
-            val tapped = symTogglePendingOnKeyUp && !symChordUsedSinceKeyDown
+            // Held past a tap without choosing a symbol: SYM just lets go
+            val tapped = symTogglePendingOnKeyUp && !symChordUsedSinceKeyDown && !(event != null && isLongHold(event))
             symTogglePendingOnKeyUp = false
             symChordUsedSinceKeyDown = false
             if (tapped) {
@@ -6662,15 +6699,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val directional = SettingsManager.getTrackpadSuggestionSwipeDirections(this)
         val rightwardDistance = deltaX
         val downwardDistance = deltaY
-        val rightEnough = rightwardDistance >= suggestionThreshold &&
-            kotlin.math.abs(deltaY) < rightwardDistance / 4f &&
-            rightwardDistance / durationMs >= NATIVE_TRACKPAD_MIN_SWIPE_VELOCITY_PX_PER_MS
-        val leftPicks = leftwardDistance >= suggestionThreshold && mostlyHorizontal && horizontalFastEnough
-        val downEnough = downwardDistance >= deleteThreshold &&
-            kotlin.math.abs(deltaX) < downwardDistance / 4f &&
+        // Direction picks: the dominant direction counts (a 45° wedge each way) and a shorter
+        // swipe does, so a swipe works from anywhere on the keys, edges included
+        val pickDistance = suggestionThreshold * 0.6f
+        val horizontalDominant = kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY)
+        val pickFastEnough = maxOf(kotlin.math.abs(deltaX), kotlin.math.abs(deltaY)) / durationMs >=
+            NATIVE_TRACKPAD_MIN_SWIPE_VELOCITY_PX_PER_MS
+        val rightEnough = horizontalDominant && rightwardDistance >= pickDistance && pickFastEnough
+        val leftPicks = horizontalDominant && leftwardDistance >= pickDistance && pickFastEnough
+        val upPicks = !horizontalDominant && upwardDistance >= pickDistance && pickFastEnough
+        val downEnough = !horizontalDominant && downwardDistance >= deleteThreshold * 0.6f &&
             downwardDistance / durationMs >= NATIVE_TRACKPAD_MIN_SWIPE_VELOCITY_PX_PER_MS
         val direction = when {
             verticalEnough && mostlyVertical && verticalFastEnough -> NativeTrackpadSwipeDirection.UP
+            directional && upPicks -> NativeTrackpadSwipeDirection.UP
             directional && rightEnough -> NativeTrackpadSwipeDirection.RIGHT
             directional && leftPicks -> NativeTrackpadSwipeDirection.LEFT
             !directional &&
