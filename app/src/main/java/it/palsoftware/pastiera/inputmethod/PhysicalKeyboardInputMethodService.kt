@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import it.palsoftware.pastiera.AppBroadcastActions
 import it.palsoftware.pastiera.ClicksPowerKeyboardController
 import it.palsoftware.pastiera.SettingsManager
+import it.palsoftware.pastiera.data.desktop.DesktopKeyboardLayout
 import it.palsoftware.pastiera.SoftwareKeyboardModeActions
 import android.inputmethodservice.InputMethodService
 import android.hardware.input.InputManager
@@ -3665,6 +3666,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         // Every hidden app: panel keys (with the panels option) and the Titan's Ctrl and Sym
         HiddenAppKeyObserver.interceptor = if (keyboardHiddenForApp) ::interceptHiddenAppKey else null
+        if (keyboardHiddenForApp) {
+            // Keep the Linux desktop's keyboard layout in step with Pastiera's Alt map and SYM
+            // page (written only when it changed; the chroot picks it up at the next start)
+            val appContext = applicationContext
+            Thread({
+                runCatching { DesktopKeyboardLayout.export(appContext) }
+            }, "desktop-layout").start()
+        }
         hiddenAppTranslatedKeys.clear()
         hiddenAppWrappedKeys.clear()
         hiddenAppStandardCtrlHeld = false
