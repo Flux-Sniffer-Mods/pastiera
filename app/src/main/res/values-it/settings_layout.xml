@@ -198,4 +198,5 @@
     <string name="alt_key_editor_copy_to_edit">Copia per modificare</string>
     <string name="alt_key_editor_use_description">Usa questo profilo per il livello SYM del dispositivo su ogni tastiera.</string>
     <string name="alt_key_editor_in_use_now">Questo è ora il tuo livello SYM del dispositivo.</string>
+    <string name="sym_symbols_pencil_description">Modifica le varianti. Tieni premuto per modificare il livello simboli.</string>
 </resources>

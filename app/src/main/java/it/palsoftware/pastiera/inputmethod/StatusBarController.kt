@@ -2520,9 +2520,7 @@ class StatusBarController(
             isFocusable = true
         }
         
-        button.setOnClickListener {
-            openSymCustomization(page = page, keyCode = null, openPicker = false)
-        }
+        bindSymPencil(button, page)
         
         placeholder.addView(button)
         return placeholder
@@ -2552,10 +2550,41 @@ class StatusBarController(
             )
         }
         button.addView(icon)
-        button.setOnClickListener {
-            openSymCustomization(page = page, keyCode = null, openPicker = false)
-        }
+        bindSymPencil(button, page)
         return button
+    }
+
+    /**
+     * The pencil on a SYM page. On the symbols page it opens the variations mapping (the
+     * alternates each character offers); holding it opens the symbols layer editor as before.
+     */
+    private fun bindSymPencil(button: View, page: Int) {
+        if (page != 2) {
+            button.setOnClickListener { openSymCustomization(page = page, keyCode = null, openPicker = false) }
+            return
+        }
+        button.contentDescription = context.getString(R.string.sym_symbols_pencil_description)
+        button.setOnClickListener { openVariationsMapping() }
+        button.setOnLongClickListener {
+            openSymCustomization(page = page, keyCode = null, openPicker = false)
+            true
+        }
+    }
+
+    private fun openVariationsMapping() {
+        val currentSymPage = context.getSharedPreferences("pastiera_prefs", Context.MODE_PRIVATE)
+            .getInt("current_sym_page", 0)
+        if (currentSymPage > 0) SettingsManager.setPendingRestoreSymPage(context, currentSymPage)
+        val intent = Intent(context, SettingsActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(SettingsActivity.EXTRA_DESTINATION, SettingsActivity.DESTINATION_CUSTOMIZATION)
+            putExtra(SettingsActivity.EXTRA_CUSTOMIZATION_DESTINATION, SettingsActivity.CUSTOMIZATION_DESTINATION_VARIATIONS)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Couldn't open the variations mapping", e)
+        }
     }
 
     private fun openSymCustomization(page: Int, keyCode: Int?, openPicker: Boolean) {
