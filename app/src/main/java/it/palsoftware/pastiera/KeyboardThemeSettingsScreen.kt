@@ -155,7 +155,7 @@ fun KeyboardThemeScreen(
                 context,
                 SettingsManager.KeyboardThemeTarget.HARDWARE,
                 dark = false
-            ).toKeyboardThemePreset("Pastiera Light")
+            ).toKeyboardThemePreset("Flux Light")
         )
     }
     var hardwareDarkTheme by remember {
@@ -164,7 +164,7 @@ fun KeyboardThemeScreen(
                 context,
                 SettingsManager.KeyboardThemeTarget.HARDWARE,
                 dark = true
-            ).toKeyboardThemePreset("Pastiera Dark")
+            ).toKeyboardThemePreset("Flux Dark")
         )
     }
     var softwareLightTheme by remember {
@@ -173,7 +173,7 @@ fun KeyboardThemeScreen(
                 context,
                 SettingsManager.KeyboardThemeTarget.SOFTWARE,
                 dark = false
-            ).toKeyboardThemePreset("Pastiera Light")
+            ).toKeyboardThemePreset("Flux Light")
         )
     }
     var softwareDarkTheme by remember {
@@ -182,7 +182,7 @@ fun KeyboardThemeScreen(
                 context,
                 SettingsManager.KeyboardThemeTarget.SOFTWARE,
                 dark = true
-            ).toKeyboardThemePreset("Pastiera Dark")
+            ).toKeyboardThemePreset("Flux Dark")
         )
     }
     var exportTheme by remember { mutableStateOf<KeyboardThemePreset?>(null) }
@@ -1224,6 +1224,32 @@ private fun KeyboardThemeAssignmentSection(
                     modifier = Modifier.weight(1f),
                     onClick = { onModeChanged(SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) }
                 )
+            }
+            // Flux Keyboard: the theme's colours from the wallpaper (Android 12+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val themeContext = androidx.compose.ui.platform.LocalContext.current
+                var wallpaperColours by remember { mutableStateOf(SettingsManager.getKeyboardWallpaperColours(themeContext)) }
+                Row(
+                    modifier = Modifier.fillMaxWidth().settingRow(SettingLinkIds.KEYBOARD_THEME_WALLPAPER_COLOURS),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.keyboard_theme_wallpaper_colours_title), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            stringResource(R.string.keyboard_theme_wallpaper_colours_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = wallpaperColours,
+                        onCheckedChange = {
+                            wallpaperColours = it
+                            SettingsManager.setKeyboardWallpaperColours(themeContext, it)
+                        }
+                    )
+                }
             }
             if (mode == SettingsManager.KEYBOARD_THEME_ASSIGNMENT_MODE_FOLLOW_SYSTEM) {
                 KeyboardThemePickerRow(
@@ -2671,7 +2697,7 @@ private fun KeyboardThemeSwatchButton(
 }
 
 @Composable
-private fun KeyboardThemeColorPickerDialog(
+internal fun KeyboardThemeColorPickerDialog(
     initialColor: Int,
     onDismiss: () -> Unit,
     onColorSelected: (Int) -> Unit,

@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RoundedCorner
 import androidx.compose.material.icons.filled.ShortText
@@ -164,6 +166,13 @@ fun LookSoundHubScreen(
         )
 
         SettingsSectionDivider(stringResource(R.string.settings_section_status_bar))
+        SettingsCategoryRow(
+            icon = Icons.Filled.Lightbulb,
+            title = stringResource(R.string.led_colors_title),
+            description = stringResource(R.string.led_colors_description),
+            linkId = SettingLinkIds.MAIN_LED_COLORS,
+            onClick = { onNavigate(SettingsDestination.LedColors) }
+        )
         SettingsCategoryRow(
             icon = Icons.Filled.SmartButton,
             title = stringResource(R.string.status_bar_buttons_title),
@@ -416,14 +425,6 @@ fun DeveloperOptionsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     }
     FluxScreenScaffold(stringResource(R.string.developer_options_title), onBack, modifier) {
         FluxNote(stringResource(R.string.developer_options_note))
-        if (fluxTitanScreenAvailable(context)) {
-            FluxActionRow(
-                linkId = "advanced.corner_calibration",
-                title = stringResource(R.string.corner_calibration_title),
-                description = stringResource(R.string.corner_calibration_description),
-                onClick = { context.startActivity(android.content.Intent(context, CornerCalibrationActivity::class.java)) }
-            )
-        }
         FluxActionRow(
             linkId = SettingLinkIds.TRACKPAD_DEBUG,
             title = stringResource(R.string.trackpad_debug_title),

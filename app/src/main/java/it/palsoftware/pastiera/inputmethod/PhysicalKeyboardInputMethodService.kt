@@ -2282,14 +2282,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key == it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.PREF_SWITCH_BY_APP) {
-                alternateCharacterManager.setEmojiLayerOverride(
-                    if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
-                        it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(currentInputEditorInfo?.packageName)?.let { profile -> it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.layerMappings(this, profile) }
-                    } else null
-                )
-                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
-            } else if (key != null && key.startsWith("led_")) {
+            if (key != null && key.startsWith("led_")) {
                 // LED colours: repaint the LEDs even though no modifier changed
                 Handler(Looper.getMainLooper()).post {
                     invalidateRenderedStatusSnapshot()

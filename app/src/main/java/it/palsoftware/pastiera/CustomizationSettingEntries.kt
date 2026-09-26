@@ -411,8 +411,8 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         titleRes = R.string.titan2_elite_rounded_corners_title,
         summaryRes = R.string.titan2_elite_rounded_corners_description,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         )
     ),
     SettingEntry(
@@ -452,8 +452,8 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         titleRes = R.string.titan2_elite_top_corner_title,
         summaryRes = R.string.titan2_elite_top_corner_description,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         ),
         availabilityCheck = { SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(it) },
         unavailableFallbackId = "status_bar.rounded_corners"
@@ -462,11 +462,19 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
         id = "status_bar.max_icon_shrink",
         titleRes = R.string.setting_link_max_icon_shrink,
         route = SettingRoute(
-            destination = SettingsDestination.Customization,
-            customizationDestination = "status_bar_buttons"
+            // On the Titan 2 Elite screen with the other Titan 2 Elite settings
+            destination = SettingsDestination.FluxTitanScreen
         ),
         availabilityCheck = { SettingsManager.getTitan2EliteRoundedCornerInsetsEnabled(it) },
         unavailableFallbackId = "status_bar.rounded_corners"
+    ),
+    SettingEntry(
+        id = "status_bar.menu_bar",
+        titleRes = R.string.menu_bar_section,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "status_bar_buttons"
+        )
     ),
     SettingEntry(
         id = "status_bar.extended_left",
@@ -635,6 +643,18 @@ internal fun customizationSettingEntries(): List<SettingEntry> = listOf(
             customizationDestination = "keyboard_theme_assignment",
             keyboardThemeTarget = SettingsManager.KeyboardThemeTarget.HARDWARE
         )
+    ),
+    SettingEntry(
+        id = SettingLinkIds.KEYBOARD_THEME_WALLPAPER_COLOURS,
+        titleRes = R.string.keyboard_theme_wallpaper_colours_title,
+        summaryRes = R.string.keyboard_theme_wallpaper_colours_description,
+        route = SettingRoute(
+            destination = SettingsDestination.Customization,
+            customizationDestination = "keyboard_theme_assignment",
+            keyboardThemeTarget = SettingsManager.KeyboardThemeTarget.HARDWARE
+        ),
+        availabilityCheck = { android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S },
+        unavailableFallbackId = "keyboard_theme.hardware.assignment"
     ),
     SettingEntry(
         id = "keyboard_theme.hardware.light_theme",

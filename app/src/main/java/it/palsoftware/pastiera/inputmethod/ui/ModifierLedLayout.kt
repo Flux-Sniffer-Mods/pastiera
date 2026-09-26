@@ -134,7 +134,7 @@ internal object ModifierLedLayouts {
             normalizedOverride == "titan2elite_qwerty" ||
             (useAutoDetectedProfile && titan2EliteAutoDetected)
         ) {
-            TITAN_2_ELITE
+            TITAN_2_ELITE_SPLIT
         } else {
             DEFAULT
         }

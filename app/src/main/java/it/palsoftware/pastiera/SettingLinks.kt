@@ -95,14 +95,7 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
     const val MAIN_LED_COLORS = "main.led_colors"
-    const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
-    const val RECOMMENDED_SETTINGS = "system.recommended_settings"
-    const val TERMINAL_MODE_HIDE_KEYBOARD = "terminal_mode.hide_keyboard"
-    const val TERMINAL_MODE_EMOJI_KEY = "terminal_mode.emoji_key"
-    const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
-    const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
     const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
-    const val LED_LOCKED_ANIMATION = "led_colors.locked_animation"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 
@@ -179,6 +172,7 @@ object SettingLinkIds {
     const val KEYBOARD_THEME_TOGGLE_PREVIEW_ON_HOLD = "keyboard_theme.toggle_preview_on_hold"
     const val KEYBOARD_THEME_TOGGLE_CHARACTER_PICKER = "keyboard_theme.toggle_character_picker"
     const val KEYBOARD_THEME_LED_COLORS = "keyboard_theme.led_colors"
+    const val KEYBOARD_THEME_WALLPAPER_COLOURS = "keyboard_theme.wallpaper_colours"
 
     // Modifier indicator chips (rendered on the modifiers screen)
     const val MODIFIERS_INDICATOR_BOTTOM_STRIP = "modifiers.indicator_bottom_strip"
@@ -1086,6 +1080,8 @@ object SettingLinkRegistry {
         SettingsDestination.Apps to R.string.settings_apps_title,
         SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
         SettingsDestination.Developer to R.string.developer_options_title,
+        SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
+        SettingsDestination.LedColors to R.string.led_colors_title,
         SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 

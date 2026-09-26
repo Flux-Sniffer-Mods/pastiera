@@ -68,6 +68,8 @@ class ClipboardButtonFactory : StatusBarButtonFactory {
         val previousCount = view.getTag(R.id.tag_previous_count) as? Int
         
         updateBadge(badge, state.itemCount)
+        // The icon steps a little left while a count shows, so the two never touch
+        view.translationX = if (state.itemCount > 0) -dpToPx(view.context, 2.5f).toFloat() else 0f
         setStateDescriptionIfChanged(
             view,
             if (state.itemCount <= 0) {
@@ -105,17 +107,24 @@ class ClipboardButtonFactory : StatusBarButtonFactory {
         }
     }
     
+    // A small pill in the button's top corner, clear of the icon (the theme recolours it)
     private fun createBadge(context: Context): TextView {
-        val padding = dpToPx(context, 2f)
+        val padH = dpToPx(context, 3.5f)
+        val size = dpToPx(context, 13f)
         return TextView(context).apply {
-            background = null
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = size / 2f
+                setColor(Color.parseColor("#1E88E5"))
+            }
             setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 8.5f)
             typeface = android.graphics.Typeface.DEFAULT_BOLD
+            includeFontPadding = false
             gravity = Gravity.CENTER
-            setPadding(padding, padding, padding, padding)
-            minWidth = 0
-            minHeight = 0
+            setPadding(padH, 0, padH, 0)
+            minWidth = size
+            minHeight = size
             visibility = View.GONE
         }
     }

@@ -57,7 +57,7 @@
     <string name="smart_ctrl_off_description">A tapped Ctrl switches off after one shortcut such as copy, paste or undo; cursor and selection moves keep it on</string>
     <string name="developer_options_title">Developer options</string>
     <string name="developer_options_description">Show calibration, debugging and preview tools</string>
-    <string name="developer_options_row_description">Display corner calibration, trackpad debug, release notes preview</string>
+    <string name="developer_options_row_description">Trackpad debug and the release notes preview</string>
     <string name="developer_options_note">Tools for calibrating, debugging and previewing Pastiera. Most people never need them.</string>
     <string name="terminal_mode_title">Terminal mode</string>
     <string name="terminal_mode_description">Termux and other terminals: Alt and SYM type symbols, Ctrl stays Ctrl</string>
@@ -135,6 +135,11 @@
     <string name="led_colors_individual_on">Each LED has its own colour: dim when off, the colour when active, brighter and more saturated when locked.</string>
     <string name="led_colors_section">LEDs</string>
     <string name="led_colors_states">Off, active, locked. Tap to change.</string>
+    <string name="led_colors_tap_hint">Tap an LED to change its colour</string>
+    <string name="led_colors_level_off">Off</string>
+    <string name="led_colors_level_active">Active</string>
+    <string name="led_colors_level_locked">Locked</string>
+    <string name="led_colors_sym_states">Active: emoji layer · Locked: symbols</string>
     <string name="led_colors_shift">Shift</string>
     <string name="led_colors_ctrl">Ctrl</string>
     <string name="led_colors_alt">Alt</string>
@@ -195,7 +200,6 @@
     <string name="terminal_emoji_key_ctrl_z">Ctrl+Z (suspend)</string>
     <string name="terminal_emoji_key_ctrl_l">Ctrl+L (clear the screen)</string>
     <string name="terminal_emoji_key_ctrl_r">Ctrl+R (search history)</string>
-    <string name="terminal_emoji_key_alt">Alt (hold with another key)</string>
     <string name="alt_key_editor_in_use_title">Device SYM layer in use</string>
     <string name="alt_key_editor_in_use_auto">Automatic: %1$s (from your keyboard)</string>
     <string name="alt_key_editor_curated_section">Curated profiles</string>
@@ -205,6 +209,12 @@
     <string name="alt_key_editor_use_description">Use this profile for the Device SYM layer on every keyboard.</string>
     <string name="alt_key_editor_in_use_now">This is your Device SYM layer now.</string>
     <string name="sym_symbols_pencil_description">Edit variations. Hold to edit this symbol layer.</string>
+    <string name="default_config_title">Default configuration</string>
+    <string name="default_config_description">Set Pastiera up the way it comes on a fresh install, tuned on a Titan 2 Elite: theme, LEDs, modifiers, SYM, variations, apps and more.</string>
+    <string name="default_config_confirm">This replaces your current settings with the default configuration. Back up first if you might want them back.</string>
+    <string name="default_config_apply">Replace my settings</string>
+    <string name="default_config_applied">Default configuration applied</string>
+    <string name="default_config_failed">Couldn\'t apply the default configuration</string>
     <string name="exact_typing_title">Exact typing</string>
     <string name="exact_typing_description">Apps where what you type stays as typed: SSH, code, AI agents</string>
     <string name="exact_typing_note">In these apps nothing rewrites what you type: no auto-correct, text replacements, auto-capitals, double-space full stop or automatic spaces. Suggestions still show, and only change a word when you pick one.</string>
@@ -218,24 +228,4 @@
     <string name="menu_bar_move_up">Move up (further left in the bar)</string>
     <string name="menu_bar_move_down">Move down (further right in the bar)</string>
     <string name="menu_bar_reset">Reset the menu bar</string>
-    <string name="suggestions_bold_title">Bold suggestions</string>
-    <string name="suggestions_bold_description">Suggestion bar words in bold, easier to spot at a glance</string>
-    <string name="clean_links_title">Clean pasted links</string>
-    <string name="clean_links_description">Links you paste from the clipboard lose tracking (utm_, fbclid, si…) and open the full site, not the mobile one</string>
-    <string name="suggestion_keys_title">Pick suggestions from the keyboard</string>
-    <string name="suggestion_keys_ctrl_shift_qwe">Ctrl+Shift+Q, W or E: the left, middle or right suggestion</string>
-    <string name="suggestion_keys_ctrl_digits">Ctrl+1, 2 or 3: the left, middle or right suggestion (number row)</string>
-    <string name="suggestion_keys_off">Off</string>
-    <string name="speech_keep_listening_title">Voice input keeps listening</string>
-    <string name="speech_keep_listening_description">Pauses don\'t end dictation: it carries on sentence by sentence until you tap the mic or stay silent</string>
-    <string name="recommended_settings_title">Recommended settings</string>
-    <string name="recommended_settings_description">Set Pastiera up as recommended, tuned on a Titan 2 Elite: theme, LEDs, modifiers, SYM, variations, apps and more. Shows how much would change first.</string>
-    <string name="recommended_settings_nothing">Your settings already match the recommended ones. Applying again restores the recommended mappings and variations too.</string>
-    <string name="recommended_settings_apply">Apply</string>
-    <string name="recommended_settings_applied">Recommended settings applied</string>
-    <string name="recommended_settings_failed">Couldn\'t apply the recommended settings</string>
-    <plurals name="recommended_settings_differ">
-        <item quantity="one">%d of your settings differs from the recommended ones. Applying replaces it, along with the recommended mappings and variations. Back up first if you might want yours back.</item>
-        <item quantity="other">%d of your settings differ from the recommended ones. Applying replaces them, along with the recommended mappings and variations. Back up first if you might want yours back.</item>
-    </plurals>
 </resources>

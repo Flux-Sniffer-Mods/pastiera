@@ -68,8 +68,10 @@ internal class CurvedCornerButtonDrawable(
             // Calibration already includes the intended visible gap. Offset only the
             // stroke centerline so its outside edge follows that exact contour.
             val contourInset = halfStroke
+            // Lifted status bar: the same display curve, moved up with the row
+            val displayBottom = chrome.height.toFloat() - chrome.liftFor(view)
             displayPath.set(it.palsoftware.pastiera.T2eCornerGeometry.path(
-                chrome.width.toFloat(), chrome.height.toFloat(),
+                chrome.width.toFloat(), displayBottom,
                 radii.first.toFloat(), radii.second.toFloat(), calibration, contourInset
             ))
             displayPath.offset(-x, -y)
@@ -79,7 +81,7 @@ internal class CurvedCornerButtonDrawable(
             val outerX = (if (leftEdge) -x else chrome.width - x) + calibration.shiftXPx
             fun boundary(atY: Float): Float =
                 it.palsoftware.pastiera.T2eCornerGeometry.atY(
-                    radius, chrome.height.toFloat(), atY + y - calibration.shiftYPx, calibration, contourInset
+                    radius, displayBottom, atY + y - calibration.shiftYPx, calibration, contourInset
                 ).x
             val joinY = (rect.top + topRadius).coerceAtMost(rect.bottom - bottomRadius)
             val joinX = boundary(joinY)
