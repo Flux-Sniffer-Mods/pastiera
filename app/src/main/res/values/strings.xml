@@ -1777,4 +1777,5 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_api_key_label">KLIPY API key</string>
     <string name="gif_api_key_help">Sign up at partner.klipy.com and create a key under API Keys → Add Platform. The key stays on this phone and isn’t included in backups.</string>
     <string name="gif_get_key">Get a free key</string>
+    <string name="symbol_search_placeholder">Search symbols…</string>
 </resources>

@@ -170,6 +170,19 @@ class CandidatesBarController(
             candidatesStatusBar.onGifChosen = value
         }
 
+    var onSymbolSearchRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onSymbolSearchRequested = value
+            candidatesStatusBar.onSymbolSearchRequested = value
+        }
+
+    /** The next time the emoji picker shows, open its symbol search. */
+    fun requestSymbolSearch() {
+        inputStatusBar.requestSymbolSearch()
+        candidatesStatusBar.requestSymbolSearch()
+    }
+
     /** The next time the emoji picker shows, open its GIF search. */
     fun requestEmojiPickerGifs() {
         inputStatusBar.requestEmojiPickerGifs()

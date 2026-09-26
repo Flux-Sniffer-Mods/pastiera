@@ -1094,4 +1094,5 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_api_key_label">Chiave API KLIPY</string>
     <string name="gif_api_key_help">Registrati su partner.klipy.com e crea una chiave in API Keys → Add Platform. La chiave resta su questo telefono e non è inclusa nei backup.</string>
     <string name="gif_get_key">Ottieni una chiave gratuita</string>
+    <string name="symbol_search_placeholder">Cerca simboli…</string>
 </resources>

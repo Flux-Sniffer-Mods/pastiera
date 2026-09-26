@@ -1959,6 +1959,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             updateStatusBarText()
         }
         candidatesBarController.onGifChosen = { gif -> sendGif(gif) }
+        candidatesBarController.onSymbolSearchRequested = {
+            // A symbols page's search: the picker, in symbol search
+            candidatesBarController.requestSymbolSearch()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
         candidatesBarController.onEmojiLayerRecentsToggled = {
             if (symLayoutController.toggleEmojiLayerRecents()) {
                 updateStatusBarText()

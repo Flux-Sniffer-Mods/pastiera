@@ -44,6 +44,7 @@ import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
 import it.palsoftware.pastiera.data.emoji.EmojiCompatSupport
 import it.palsoftware.pastiera.data.gif.GifResult
 import it.palsoftware.pastiera.data.gif.KlipyGifs
+import it.palsoftware.pastiera.data.symbols.SymbolSearch
 import java.nio.ByteBuffer
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import kotlinx.coroutines.CancellationException
@@ -126,6 +127,12 @@ class EmojiPickerView(
 
     /** A GIF was tapped in GIF mode; the input method sends it. */
     var onGifChosen: ((GifResult) -> Unit)? = null
+
+    // Symbol mode: search every Unicode symbol by name (from the SYM symbols pages)
+    private var symbolMode: Boolean = false
+    private var symbolJob: Job? = null
+    private val symbolAdapter = SymbolAdapter()
+    private val symbolGrid: RecyclerView
     private var isSearchMode: Boolean = false
     private var isSearchPanelVisible: Boolean = false
     private var searchInputCaptureEnabled: Boolean = true
@@ -361,6 +368,18 @@ class EmojiPickerView(
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
+        symbolGrid = RecyclerView(context).apply {
+            layoutManager = GridLayoutManager(context, 8)
+            adapter = symbolAdapter
+            itemAnimator = null
+            clipToPadding = false
+            setPadding(smallPadding, smallPadding, smallPadding, smallPadding)
+            visibility = View.GONE
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
         // KLIPY asks for attribution where its content is shown
         gifAttribution = TextView(context).apply {
             text = context.getString(R.string.gif_attribution)
@@ -415,6 +434,7 @@ class EmojiPickerView(
                 addView(recyclerView)
                 // GIF mode draws over the emoji grid (opaque), messages above both
                 addView(gifGrid)
+                addView(symbolGrid)
                 // Keep empty/error states inside the result area. A root-level MATCH_PARENT
                 // overlay would hide the search field and bottom controls when no emoji matches.
                 addView(emptyView)
@@ -553,6 +573,7 @@ class EmojiPickerView(
     fun refresh() {
         refreshGifAvailability()
         if (gifMode) setGifMode(false)
+        if (symbolMode) setSymbolMode(false)
         loadCategories()
     }
 
@@ -997,6 +1018,7 @@ class EmojiPickerView(
 
     private fun setGifMode(enabled: Boolean) {
         if (gifMode == enabled) return
+        if (enabled && symbolMode) setSymbolMode(false)
         gifMode = enabled
         gifTabButton.background = createTabBackground(enabled)
         gifGrid.visibility = if (enabled) View.VISIBLE else View.GONE
@@ -1041,6 +1063,49 @@ class EmojiPickerView(
         }
     }
 
+    /** Opens symbol search: every Unicode symbol the fonts can draw, searchable by name. */
+    fun openSymbols() {
+        setSymbolMode(true)
+        setSearchPanelVisible(true)
+    }
+
+    private fun setSymbolMode(enabled: Boolean) {
+        if (symbolMode == enabled) return
+        if (enabled && gifMode) setGifMode(false)
+        symbolMode = enabled
+        symbolGrid.visibility = if (enabled) View.VISIBLE else View.GONE
+        tabRow.alpha = if (enabled) 0.55f else 1f
+        searchField.hint = context.getString(
+            if (enabled) R.string.symbol_search_placeholder else R.string.emoji_picker_search_placeholder
+        )
+        if (enabled) {
+            loadSymbols(searchQuery)
+        } else {
+            symbolJob?.cancel()
+            symbolAdapter.submit(emptyList())
+            emptyView.visibility = View.GONE
+            applySearchNow()
+        }
+    }
+
+    private fun loadSymbols(query: String) {
+        symbolJob?.cancel()
+        symbolJob = coroutineScope.launch {
+            val results = withContext(Dispatchers.Default) { SymbolSearch.search(query) }
+            symbolAdapter.submit(results)
+            symbolGrid.scrollToPosition(0)
+            showGifMessage(if (results.isEmpty()) R.string.emoji_picker_no_results else null)
+        }
+    }
+
+    private fun onSymbolChosen(entry: SymbolSearch.Entry) {
+        currentInputConnection?.commitText(entry.symbol, 1)
+        // Symbols come from the SYM pages, so SYM's auto-close applies
+        if (SettingsManager.getSymAutoClose(context) && SettingsManager.getSymAutoCloseOnTouch(context)) {
+            onCloseRequested?.invoke()
+        }
+    }
+
     private fun showGifMessage(messageRes: Int?) {
         if (messageRes == null) {
             emptyView.visibility = View.GONE
@@ -1070,6 +1135,10 @@ class EmojiPickerView(
     private fun applySearchNow() {
         if (gifMode) {
             loadGifs(searchQuery)
+            return
+        }
+        if (symbolMode) {
+            loadSymbols(searchQuery)
             return
         }
         val query = searchQuery.trim()
@@ -1182,6 +1251,7 @@ class EmojiPickerView(
                 )
                 setOnClickListener {
                     if (gifMode) setGifMode(false)
+                    if (symbolMode) setSymbolMode(false)
                     if (isSearchMode) return@setOnClickListener
                     selectedCategoryId = category.id
                     updateTabsSelection()
@@ -1403,6 +1473,9 @@ class EmojiPickerView(
         val theme = themeOverride
         val background = theme?.background ?: Color.TRANSPARENT
         gifGrid.setBackgroundColor(if (background == Color.TRANSPARENT) Color.BLACK else background)
+        symbolGrid.setBackgroundColor(if (background == Color.TRANSPARENT) Color.BLACK else background)
+        @Suppress("NotifyDataSetChanged")
+        symbolAdapter.notifyDataSetChanged()
         gifTabButton.setTextColor(theme?.textAndIcons ?: Color.WHITE)
         gifTabButton.background = createTabBackground(gifMode)
         gifAttribution.setTextColor(theme?.textAndIcons ?: Color.WHITE)
@@ -1933,6 +2006,43 @@ class EmojiPickerView(
             job = null
             (image.drawable as? AnimatedImageDrawable)?.stop()
             image.setImageDrawable(null)
+        }
+    }
+
+    /** Symbol grid: plain characters, named for accessibility. */
+    private inner class SymbolAdapter : RecyclerView.Adapter<SymbolHolder>() {
+        private var items: List<SymbolSearch.Entry> = emptyList()
+
+        fun submit(list: List<SymbolSearch.Entry>) {
+            items = list
+            @Suppress("NotifyDataSetChanged")
+            notifyDataSetChanged()
+        }
+
+        override fun getItemCount(): Int = items.size
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SymbolHolder {
+            val cell = TextView(parent.context).apply {
+                layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(44f))
+                gravity = Gravity.CENTER
+                textSize = 22f
+                isClickable = true
+                isFocusable = true
+            }
+            return SymbolHolder(cell)
+        }
+
+        override fun onBindViewHolder(holder: SymbolHolder, position: Int) {
+            holder.bind(items[position])
+        }
+    }
+
+    private inner class SymbolHolder(private val cell: TextView) : RecyclerView.ViewHolder(cell) {
+        fun bind(entry: SymbolSearch.Entry) {
+            cell.text = entry.symbol
+            cell.contentDescription = entry.name
+            cell.setTextColor(themeOverride?.textAndIcons ?: Color.WHITE)
+            cell.setOnClickListener { onSymbolChosen(entry) }
         }
     }
 }
