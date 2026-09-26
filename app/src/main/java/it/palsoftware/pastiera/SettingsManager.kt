@@ -2705,6 +2705,8 @@ object SettingsManager {
     fun getStaticVariationBarPreset(context: Context): String {
         val prefs = getPreferences(context)
         val stored = prefs.getString(KEY_STATIC_VARIATION_BAR_PRESET, null)
+        // Nothing chosen yet (not even the older on/off switch): Dev's choice
+        if (stored == null && !prefs.contains(KEY_STATIC_VARIATION_BAR_MODE)) return STATIC_VARIATION_PRESET_DEV_CHOICE
         val fallback = if (prefs.getBoolean(KEY_STATIC_VARIATION_BAR_MODE, DEFAULT_STATIC_VARIATION_BAR_MODE)) {
             if (prefs.getBoolean(
                     KEY_STATIC_VARIATION_BAR_BASE_LAYER_ENABLED,
@@ -5387,8 +5389,11 @@ object SettingsManager {
      * Apps where Pastiera shows nothing and leaves every key to the app, e.g. an X11 desktop
      * such as Termux:X11 that handles the keyboard itself.
      */
+    /** Niagara Launcher by default: its own search reads keys directly, so Pastiera stays out of sight. */
     fun getHiddenKeyboardApps(context: Context): List<String> =
-        parsePackageList(getPreferences(context).getString(KEY_HIDDEN_KEYBOARD_APPS, "") ?: "")
+        parsePackageList(getPreferences(context).getString(KEY_HIDDEN_KEYBOARD_APPS, DEFAULT_HIDDEN_KEYBOARD_APPS) ?: "")
+
+    const val DEFAULT_HIDDEN_KEYBOARD_APPS = "bitpit.launcher"
 
     fun setHiddenKeyboardApps(context: Context, packages: Collection<String>) {
         val clean = packages.joinToString("\n").let(::parsePackageList)

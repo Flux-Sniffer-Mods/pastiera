@@ -54,3 +54,35 @@ internal fun RecommendedSettingsRow() {
         )
     }
 }
+
+/** Privacy & system > Backup: applies the bundled default configuration (DefaultConfig). */
+@Composable
+internal fun DefaultConfigRow() {
+    val context = LocalContext.current
+    var confirming by remember { mutableStateOf(false) }
+    FluxActionRow(
+        linkId = SettingLinkIds.DEFAULT_CONFIG,
+        title = stringResource(R.string.default_config_title),
+        description = stringResource(R.string.default_config_description),
+        onClick = { confirming = true }
+    )
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text(stringResource(R.string.default_config_title)) },
+            text = { Text(stringResource(R.string.default_config_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirming = false
+                    val ok = DefaultConfig.apply(context)
+                    Toast.makeText(
+                        context,
+                        if (ok) R.string.default_config_applied else R.string.default_config_failed,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }) { Text(stringResource(R.string.default_config_apply)) }
+            },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+}
