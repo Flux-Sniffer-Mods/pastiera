@@ -49,5 +49,13 @@ internal fun layoutSettingEntries(): List<SettingEntry> = listOf(
         route = SettingRoute(SettingsDestination.TerminalMode)),
     SettingEntry(SettingLinkIds.TERMINAL_MODE_ENABLED, R.string.terminal_mode_enabled_title,
         summaryRes = R.string.terminal_mode_enabled_description,
-        route = SettingRoute(SettingsDestination.TerminalMode))
+        route = SettingRoute(SettingsDestination.TerminalMode)),
+    SettingEntry(SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS, R.string.incognito_always_title,
+        summaryRes = R.string.incognito_always_description,
+        route = SettingRoute(SettingsDestination.Advanced)),
+    SettingEntry(SettingLinkIds.PRIVACY_INCOGNITO_FOLLOW_APPS, R.string.incognito_follow_apps_title,
+        summaryRes = R.string.incognito_follow_apps_description,
+        route = SettingRoute(SettingsDestination.Advanced),
+        availabilityCheck = { !SettingsManager.getIncognitoAlways(it) },
+        unavailableFallbackId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS)
 )

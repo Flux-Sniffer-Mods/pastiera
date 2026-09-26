@@ -67,4 +67,8 @@
     <string name="terminal_mode_remove_app">%1$s · Tocca per rimuovere</string>
     <string name="terminal_mode_add_app">Aggiungi un’app terminale</string>
     <string name="terminal_mode_add_app_description">Client SSH e altri terminali</string>
+    <string name="incognito_always_title">Digitazione in incognito</string>
+    <string name="incognito_always_description">Non imparare nulla da ciò che scrivi: nessuna nuova previsione della parola successiva</string>
+    <string name="incognito_follow_apps_title">In incognito quando un’app lo chiede</string>
+    <string name="incognito_follow_apps_description">Non imparare nulla nei campi che lo chiedono alle tastiere, come le schede private dei browser</string>
 </resources>

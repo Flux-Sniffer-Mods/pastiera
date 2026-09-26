@@ -120,4 +120,15 @@ class SettingsLayoutTest {
         // Corner calibration also needs the Titan 2 Elite screen
         assertEquals(SettingsDestination.Developer, route("advanced.corner_calibration").destination)
     }
+
+    @Test
+    fun incognitoFollowsAppsUnlessAlwaysOn() {
+        val noLearning = android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+        assertFalse(SettingsManager.isIncognitoField(context, 0))
+        assertTrue(SettingsManager.isIncognitoField(context, noLearning))
+        SettingsManager.setIncognitoFollowApps(context, false)
+        assertFalse(SettingsManager.isIncognitoField(context, noLearning))
+        SettingsManager.setIncognitoAlways(context, true)
+        assertTrue(SettingsManager.isIncognitoField(context, 0))
+    }
 }

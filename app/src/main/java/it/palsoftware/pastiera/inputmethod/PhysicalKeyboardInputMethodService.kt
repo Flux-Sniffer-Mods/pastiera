@@ -3742,6 +3742,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Reset clipboard overlay when starting new input
 
         updateInputContextState(info)
+        if (::suggestionController.isInitialized) {
+            suggestionController.incognito = SettingsManager.isIncognitoField(this, info?.imeOptions ?: 0)
+        }
         val state = inputContextState
         val isEditable = state.isEditable
         val isReallyEditable = state.isReallyEditable

@@ -106,6 +106,8 @@ fun AdvancedSettingsScreen(
         mutableStateOf(SettingsManager.getClipboardRetentionTime(context).toString())
     }
     var developerOptions by remember { mutableStateOf(SettingsManager.getDeveloperOptionsEnabled(context)) }
+    var incognitoAlways by remember { mutableStateOf(SettingsManager.getIncognitoAlways(context)) }
+    var incognitoFollowApps by remember { mutableStateOf(SettingsManager.getIncognitoFollowApps(context)) }
     var experimentalCandidatesViewEnabled by remember {
         mutableStateOf(SettingsManager.getExperimentalCandidatesViewEnabled(context))
     }
@@ -297,6 +299,29 @@ fun AdvancedSettingsScreen(
                             linkId = SettingLinkIds.MAIN_FLUX_OFFLINE,
                             onClick = { onNavigate(SettingsDestination.FluxOffline) }
                         )
+
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.PRIVACY_INCOGNITO_ALWAYS,
+                            title = stringResource(R.string.incognito_always_title),
+                            description = stringResource(R.string.incognito_always_description),
+                            checked = incognitoAlways,
+                            onCheckedChange = {
+                                incognitoAlways = it
+                                SettingsManager.setIncognitoAlways(context, it)
+                            }
+                        )
+                        if (!incognitoAlways) {
+                            FluxSwitchRow(
+                                linkId = SettingLinkIds.PRIVACY_INCOGNITO_FOLLOW_APPS,
+                                title = stringResource(R.string.incognito_follow_apps_title),
+                                description = stringResource(R.string.incognito_follow_apps_description),
+                                checked = incognitoFollowApps,
+                                onCheckedChange = {
+                                    incognitoFollowApps = it
+                                    SettingsManager.setIncognitoFollowApps(context, it)
+                                }
+                            )
+                        }
 
                         SettingsSectionDivider(stringResource(R.string.settings_section_backup))
                         // Backup

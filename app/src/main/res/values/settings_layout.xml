@@ -68,4 +68,8 @@
     <string name="terminal_mode_remove_app">%1$s · Tap to remove</string>
     <string name="terminal_mode_add_app">Add a terminal app</string>
     <string name="terminal_mode_add_app_description">SSH clients and other terminals</string>
+    <string name="incognito_always_title">Incognito typing</string>
+    <string name="incognito_always_description">Learn nothing from what you type: no new next-word predictions anywhere</string>
+    <string name="incognito_follow_apps_title">Incognito when an app asks</string>
+    <string name="incognito_follow_apps_description">Learn nothing in fields that ask keyboards not to, such as private browser tabs</string>
 </resources>

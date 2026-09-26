@@ -38,6 +38,8 @@ object SettingLinkIds {
     const val MAIN_APP_SHORTCUTS = "main.app_shortcuts"
     const val MAIN_DEVELOPER = "main.developer"
     const val MAIN_TERMINAL_MODE = "main.terminal_mode"
+    const val PRIVACY_INCOGNITO_ALWAYS = "privacy.incognito_always"
+    const val PRIVACY_INCOGNITO_FOLLOW_APPS = "privacy.incognito_follow_apps"
     const val TERMINAL_MODE_ENABLED = "terminal_mode.enabled"
     const val DEVELOPER_OPTIONS_ENABLED = "system.developer_options"
 
