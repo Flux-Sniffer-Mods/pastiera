@@ -124,4 +124,5 @@
     <string name="autocorrect_section_dictionary">Dizionario e ortografia</string>
     <string name="autocorrect_section_replacements">Sostituzioni del testo</string>
     <string name="autocorrect_section_tuning">Regolazioni</string>
+    <string name="clicks_launcher_interception_service_description">Permette a Pastiera di gestire i tasti che altrimenti un\'app leggerebbe per prima: i pulsanti a cui hai assegnato azioni di Pastiera e, nelle app dove Pastiera è nascosta, i tasti per i LED di stato, il tasto emoji e Sym, se hai attivato queste opzioni.</string>
 </resources>

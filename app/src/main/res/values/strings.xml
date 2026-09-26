@@ -541,7 +541,7 @@
     <string name="clicks_button_binding_failure">Button assignment could not be applied.</string>
     <string name="clicks_button_binding_pending">Will be applied when a supported keyboard connection is ready.</string>
     <string name="clicks_launcher_interception_service_label">Pastiera key interception</string>
-    <string name="clicks_launcher_interception_service_description">Handles the Clicks Power Keyboard buttons you configure. In apps where Pastiera is hidden, it also follows your keys for the status LEDs and passes the emoji key and Sym to Pastiera, if you turned those options on.</string>
+    <string name="clicks_launcher_interception_service_description">Lets Pastiera handle the keys an app would otherwise read first: buttons you assigned to Pastiera actions and, in apps where Pastiera is hidden, the keys for the status LEDs, the emoji key and Sym, if you turned those options on.</string>
     <string name="clicks_launcher_interception_title">Android Clicks-button interception</string>
     <string name="clicks_launcher_interception_enabled">Enabled · Only explicitly configured buttons of a supported Clicks Power Keyboard are filtered.</string>
     <string name="clicks_launcher_interception_disabled">Required for software-assigned Clicks buttons. Tap to enable it in Android Accessibility settings.</string>
