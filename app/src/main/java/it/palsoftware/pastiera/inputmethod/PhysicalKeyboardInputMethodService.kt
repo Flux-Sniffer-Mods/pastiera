@@ -2272,7 +2272,14 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key != null && key.startsWith("led_")) {
+            if (key == it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.PREF_SWITCH_BY_APP) {
+                alternateCharacterManager.setEmojiLayerOverride(
+                    if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
+                        it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(currentInputEditorInfo?.packageName)?.mappings
+                    } else null
+                )
+                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
+            } else if (key != null && key.startsWith("led_")) {
                 // LED colours: repaint the LEDs even though no modifier changed
                 Handler(Looper.getMainLooper()).post {
                     invalidateRenderedStatusSnapshot()
@@ -3754,6 +3761,12 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        // Emoji layer profiles: the layer follows the app when switching by app
+        if (::alternateCharacterManager.isInitialized) alternateCharacterManager.setEmojiLayerOverride(
+            if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
+                it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(info?.packageName)?.mappings
+            } else null
+        )
         terminalModeActive = SettingsManager.isTerminalModeApp(this, info?.packageName) && TerminalMode.apply(info)
         terminalCtrlKeysDown.clear()
         terminalCtrlSent.clear()

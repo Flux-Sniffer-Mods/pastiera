@@ -64,6 +64,7 @@ enum class SettingsDestination {
     AppLanguage,
     DeviceSymLayerEditor,
     LedColors,
+    EmojiProfiles,
     Modifiers,
     FluxEmojiGifs,
     FluxTitanScreen,
@@ -356,6 +357,9 @@ fun SettingsScreen(
             }
             SettingsDestination.AppLanguage -> {
                 AppLanguageSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.EmojiProfiles -> {
+                EmojiLayerProfilesScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.LedColors -> {
                 LedColorsScreen(modifier = modifier, onBack = { navigateBack() })

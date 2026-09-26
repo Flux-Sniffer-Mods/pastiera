@@ -94,6 +94,9 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
     const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
     const val MAIN_LED_COLORS = "main.led_colors"
+    const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
+    const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
+    const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
     const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
@@ -1068,6 +1071,7 @@ object SettingLinkRegistry {
         SettingsDestination.Developer to R.string.developer_options_title,
         SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
         SettingsDestination.LedColors to R.string.led_colors_title,
+        SettingsDestination.EmojiProfiles to R.string.emoji_profiles_title,
         SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 

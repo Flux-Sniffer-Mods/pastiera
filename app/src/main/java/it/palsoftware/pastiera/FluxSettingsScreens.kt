@@ -388,6 +388,12 @@ fun FluxEmojiGifsScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
         }
 
         SettingsSectionDivider(stringResource(R.string.flux_section_emoji_layer))
+        FluxActionRow(
+            linkId = SettingLinkIds.MAIN_EMOJI_PROFILES,
+            title = stringResource(R.string.emoji_profiles_title),
+            description = stringResource(R.string.emoji_profiles_description),
+            onClick = { openSettingsPage(context, SettingsPage(SettingsDestination.EmojiProfiles)) }
+        )
 
         // Recents key on the emoji layer
         Surface(
