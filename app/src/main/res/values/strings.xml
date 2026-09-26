@@ -1650,7 +1650,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="snippets_prefix_description">One printable symbol. A colon is reserved for emoji and symbol shortcodes.</string>
     <string name="snippets_prefix_error">Choose one non-whitespace symbol other than a colon.</string>
     <string name="snippets_manage_title">Manage snippets</string>
-    <string name="snippets_manage_description">Add global shortcuts and multiline replacement text.</string>
+    <string name="snippets_manage_description">Add global shortcuts and multiline replacement text. {date}, {time}, {datetime}, {isodate}, {day} and {clipboard} fill in when a snippet expands.</string>
     <string name="snippets_add">Add snippet</string>
     <string name="snippets_edit">Edit snippet</string>
     <string name="snippets_delete">Delete snippet</string>
