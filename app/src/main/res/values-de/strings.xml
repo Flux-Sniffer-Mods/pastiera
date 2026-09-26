@@ -1199,7 +1199,7 @@ Jede Taste kann als Keycode, Aktion, Native Ctrl oder Keine konfiguriert werden.
     <string name="speech_recognition_error_network">Netzwerkfehler.</string>
     <string name="speech_recognition_error_generic">Fehler bei der Spracherkennung.</string>
     <string name="speech_recognition_error_not_available">Spracherkennung nicht verfügbar.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="emoji_category_emoticons">Emoticons</string>
     <string name="settings_update_section_title">Plektra</string>
     <string name="settings_update_section_description">Nach einer neuen Plektra-Veröffentlichung suchen.</string>

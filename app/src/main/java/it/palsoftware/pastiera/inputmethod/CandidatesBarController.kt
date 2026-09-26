@@ -142,6 +142,65 @@ class CandidatesBarController(
             candidatesStatusBar.onSymCloseRequested = value
         }
 
+    var onEmojiLayerSearchRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerSearchRequested = value
+            candidatesStatusBar.onEmojiLayerSearchRequested = value
+        }
+
+    var onEmojiLayerRecentsToggled: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerRecentsToggled = value
+            candidatesStatusBar.onEmojiLayerRecentsToggled = value
+        }
+
+    var onEmojiLayerGifRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerGifRequested = value
+            candidatesStatusBar.onEmojiLayerGifRequested = value
+        }
+
+    var onGifChosen: ((it.palsoftware.pastiera.data.gif.GifResult) -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onGifChosen = value
+            candidatesStatusBar.onGifChosen = value
+        }
+
+    var onSymbolSearchRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onSymbolSearchRequested = value
+            candidatesStatusBar.onSymbolSearchRequested = value
+        }
+
+    /** The next time the emoji picker shows, open its symbol search. */
+    fun requestSymbolSearch(initialText: String? = null) {
+        inputStatusBar.requestSymbolSearch(initialText)
+        candidatesStatusBar.requestSymbolSearch(initialText)
+    }
+
+    /** The next time the emoji picker shows, open its GIF search. */
+    fun requestEmojiPickerGifs() {
+        inputStatusBar.requestEmojiPickerGifs()
+        candidatesStatusBar.requestEmojiPickerGifs()
+    }
+
+    /** The emoji picker is showing: its search (or GIF/symbol search) takes typing. */
+    fun focusEmojiPickerSearch() {
+        inputStatusBar.focusEmojiPickerSearch()
+        candidatesStatusBar.focusEmojiPickerSearch()
+    }
+
+    /** The next time the emoji picker shows, open its search. */
+    fun requestEmojiPickerSearch(initialText: String? = null) {
+        inputStatusBar.requestEmojiPickerSearch(initialText)
+        candidatesStatusBar.requestEmojiPickerSearch(initialText)
+    }
+
     var onUndoRequested: (() -> Unit)? = null
         set(value) {
             field = value

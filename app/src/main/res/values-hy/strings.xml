@@ -478,7 +478,7 @@
     <string name="speech_recognition_error_network">Ցանցի սխալ։</string>
     <string name="speech_recognition_error_generic">Խոսքի ճանաչման սխալ։</string>
     <string name="speech_recognition_error_not_available">Խոսքի ճանաչումը հասանելի չէ։</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="emoji_category_emoticons">Էմոտիկոններ</string>
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>

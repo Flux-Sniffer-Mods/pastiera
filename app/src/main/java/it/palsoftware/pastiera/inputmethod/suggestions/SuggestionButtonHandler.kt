@@ -40,7 +40,11 @@ object SuggestionButtonHandler {
                 shouldDisableAutoCapitalize = shouldDisableAutoCapitalize
             ) && SettingsManager.getAutoCapitalizeFirstLetter(context)
 
-            val committed = replaceCurrentWord(inputConnection, suggestion, forceLeadingCapital)
+            val committed = if (EmojiSuggestion.isEmoji(suggestion)) {
+                EmojiSuggestion.commitAfterWord(inputConnection, suggestion)
+            } else {
+                replaceCurrentWord(inputConnection, suggestion, forceLeadingCapital)
+            }
             if (committed) {
                 onSuggestionCommitted?.invoke()
             }

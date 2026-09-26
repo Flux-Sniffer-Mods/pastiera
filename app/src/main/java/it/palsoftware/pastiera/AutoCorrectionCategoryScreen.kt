@@ -56,6 +56,9 @@ fun AutoCorrectionCategoryScreen(
     var suggestionsEnabled by remember {
         mutableStateOf(SettingsManager.getSuggestionsEnabled(context))
     }
+    var emojiSuggestionsEnabled by remember {
+        mutableStateOf(SettingsManager.getEmojiSuggestionsEnabled(context))
+    }
     var accentMatchingEnabled by remember {
         mutableStateOf(SettingsManager.getAccentMatchingEnabled(context))
     }
@@ -440,6 +443,17 @@ fun AutoCorrectionCategoryScreen(
                                     )
                                 }
                             }
+
+                        FluxSwitchRow(
+                            linkId = SettingLinkIds.AUTO_CORRECTION_EMOJI_SUGGESTIONS,
+                            title = stringResource(R.string.emoji_suggestions_title),
+                            description = stringResource(R.string.emoji_suggestions_description),
+                            checked = emojiSuggestionsEnabled,
+                            onCheckedChange = { enabled ->
+                                emojiSuggestionsEnabled = enabled
+                                SettingsManager.setEmojiSuggestionsEnabled(context, enabled)
+                            }
+                        )
 
                         Surface(
                             modifier = Modifier

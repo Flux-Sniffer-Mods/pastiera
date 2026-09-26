@@ -274,6 +274,19 @@
     <string name="sym_enable_emoji_picker_page_description">Show the full emoji picker when cycling.</string>
     <string name="emoji_picker_expanded_height_title">Larger emoji picker</string>
     <string name="emoji_picker_expanded_height_description">Use about 1.5x height for the emoji search page; other SYM pages keep their normal height.</string>
+    <string name="emoji_picker_key_title">Emoji picker key</string>
+    <string name="emoji_picker_key_description">Press this key in a text field to open or close the emoji picker. While typing it no longer works as its usual key; outside text fields it is unchanged.</string>
+    <string name="emoji_picker_key_off">Off</string>
+    <string name="emoji_picker_key_right_shift">Right Shift</string>
+    <string name="emoji_picker_key_left_shift">Left Shift</string>
+    <string name="emoji_picker_key_right_alt">Right Alt</string>
+    <string name="emoji_picker_key_right_ctrl">Right Ctrl</string>
+    <string name="emoji_picker_key_left_alt">Left Alt</string>
+    <string name="emoji_picker_key_left_ctrl">Left Ctrl</string>
+    <string name="emoji_picker_key_current">Current key: %1$s</string>
+    <string name="emoji_picker_key_press_prompt">Press the key you want to use now.</string>
+    <string name="emoji_picker_key_rejected">That key types text or is needed while typing. Try another one.</string>
+    <string name="emoji_picker_key_turn_off">Turn off</string>
     <string name="sym_swap_pages_title">Arrange SYM pages order</string>
     <string name="sym_swap_pages_description">Drag or use the arrows to set the cycle order. The switch only controls whether an item appears in the cycle.</string>
     <string name="sym_cycle_device_layer">Device SYM Layer</string>
@@ -921,7 +934,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="nav_mode_key_mappings">Key Mappings</string>
     <string name="nav_mode_revert_to_default">Revert to Default</string>
     <string name="nav_mode_note">Note: Modifying nav mode keys also affects Ctrl+key combinations in text fields.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Configure %1$s</string>
     <string name="nav_mode_type">Type</string>
     <string name="nav_mode_keycode">Keycode</string>
@@ -1599,6 +1612,8 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="status_bar_button_settings_description">Open settings</string>
     <string name="status_bar_button_symbols">Symbols</string>
     <string name="status_bar_button_symbols_description">Symbols keyboard</string>
+    <string name="status_bar_button_gif">GIFs</string>
+    <string name="status_bar_button_gif_description">GIF search</string>
     <string name="status_bar_button_undo">Undo</string>
     <string name="status_bar_button_undo_description">Send Ctrl+Z</string>
     <string name="status_bar_button_redo">Redo</string>
@@ -1754,7 +1769,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="gif_tab_description">GIF search</string>
     <string name="gif_attribution">Powered by KLIPY</string>
     <string name="gif_search_placeholder">Search KLIPY</string>
-    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Emoji, symbols &amp; GIFs → GIF search.</string>
+    <string name="gif_no_api_key">Add your KLIPY API key under Settings → Pastiera Flux → Emoji, symbols &amp; GIFs → GIF search.</string>
     <string name="gif_sent_as_link">This app doesn’t take GIFs here, so its link was typed instead.</string>
     <string name="gif_settings_title">GIF search</string>
     <string name="gif_settings_description">Adds a GIF key to the emoji layer and a GIF tab to the emoji picker, with GIFs from KLIPY. Searches and GIFs are only fetched from KLIPY while GIF search is open.</string>
@@ -1772,7 +1787,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="emoji_layer_gif_key_description">Press the emoji layer key that opens GIF search (P unless you change it). It works while GIF search is on.</string>
     <string name="emoji_layer_key_rejected">Press a letter key that isn’t already the Recents or GIF key.</string>
     <string name="symbol_error_detail">Symbol search failed (%1$s).</string>
-    <string name="settings_group_flux">Flux Keyboard</string>
+    <string name="settings_group_flux">Pastiera Flux</string>
     <string name="flux_emoji_gifs_title">Emoji, symbols &amp; GIFs</string>
     <string name="flux_emoji_gifs_description">Emoji key, emoji layer keys, and Enter in emoji, symbol and GIF search</string>
     <string name="flux_emoji_gifs_note">A key that opens the emoji picker or emoji layer, the emoji layer’s Recents and GIF keys, GIF search, and what Enter does in emoji, symbol and GIF search.</string>
@@ -1838,7 +1853,7 @@ Each key can be configured as Keycode, Action, Native Ctrl, or None. Use overrid
     <string name="flux_offline_switch_description">Nothing in Pastiera goes online.</string>
     <string name="flux_section_offline_affects">While it’s on</string>
     <string name="flux_offline_affects">• GIF search is gone, with its tab and the emoji layer’s GIF key\n• Dictionaries and layouts can’t be downloaded\n• No update checks or release notes\n• Emoji come from the system font only, without the downloadable emoji font (from the next start of the keyboard)</string>
-    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Privacy &amp; system → Offline mode).</string>
+    <string name="flux_gifs_offline_note">Offline mode is on, so GIF search is off (Settings → Pastiera Flux → Offline mode).</string>
     <string name="search_key_title">Search key</string>
     <string name="search_key_description">On the emoji layer and the symbols pages this key opens search; in the emoji picker and GIF search it puts typing into the search. A unless you change it; it can’t be the Recents or GIF key.</string>
 </resources>

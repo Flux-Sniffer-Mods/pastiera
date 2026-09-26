@@ -49,4 +49,21 @@ class ModifierLedLayoutTest {
             ModifierLedLayouts.resolve("titan2", titan2EliteAutoDetected = true)
         )
     }
+
+    @Test
+    fun emojiLedMakesFiveEqualLedsOnEveryLayout() {
+        listOf(
+            ModifierLedLayouts.resolve("titan2elite_qwerty", false, emojiLed = true),
+            ModifierLedLayouts.resolve(null, false, emojiLed = true)
+        ).forEach { layout ->
+            assertEquals(5, layout.segments.size)
+            assertEquals(1, layout.segments.count { it.state == ModifierLedState.EMOJI })
+            val widths = layout.segments.map { it.width }.distinct()
+            assertEquals(1, widths.size)
+        }
+        assertEquals(
+            ModifierLedLayouts.TITAN_2_ELITE_SPLIT,
+            ModifierLedLayouts.resolve("titan2elite_qwerty", false, emojiLed = false)
+        )
+    }
 }

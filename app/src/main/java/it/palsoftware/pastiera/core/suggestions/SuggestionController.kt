@@ -263,6 +263,9 @@ class SuggestionController(
         if (!repository.isReady) return null
         return if (repository.isKnownWord(candidate)) null else candidate
     }
+    /** The word being typed, as the suggestions see it. */
+    fun currentWord(): String = tracker.currentWord
+
     var suggestionsListener: ((List<SuggestionResult>) -> Unit)? = onSuggestionsUpdated
 
     fun onCharacterCommitted(text: CharSequence, inputConnection: InputConnection?) {

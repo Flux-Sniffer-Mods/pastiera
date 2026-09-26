@@ -200,6 +200,19 @@
     <string name="sym_enable_emoji_picker_page_description">Mostra il selettore emoji completo durante il ciclo.</string>
     <string name="emoji_picker_expanded_height_title">Selettore emoji più grande</string>
     <string name="emoji_picker_expanded_height_description">Usa circa 1,5 volte l\'altezza per la pagina di ricerca emoji; le altre pagine SYM mantengono l\'altezza normale.</string>
+    <string name="emoji_picker_key_title">Tasto selettore emoji</string>
+    <string name="emoji_picker_key_description">Premi questo tasto in un campo di testo per aprire o chiudere il selettore emoji. Durante la scrittura non svolge più la sua funzione abituale; fuori dai campi di testo resta invariato.</string>
+    <string name="emoji_picker_key_off">Disattivato</string>
+    <string name="emoji_picker_key_right_shift">Shift destro</string>
+    <string name="emoji_picker_key_left_shift">Shift sinistro</string>
+    <string name="emoji_picker_key_right_alt">Alt destro</string>
+    <string name="emoji_picker_key_right_ctrl">Ctrl destro</string>
+    <string name="emoji_picker_key_left_alt">Alt sinistro</string>
+    <string name="emoji_picker_key_left_ctrl">Ctrl sinistro</string>
+    <string name="emoji_picker_key_current">Tasto attuale: %1$s</string>
+    <string name="emoji_picker_key_press_prompt">Premi ora il tasto che vuoi usare.</string>
+    <string name="emoji_picker_key_rejected">Quel tasto scrive testo o serve durante la digitazione. Provane un altro.</string>
+    <string name="emoji_picker_key_turn_off">Disattiva</string>
     <string name="sym_swap_pages_title">Scambia Ordine Pagine SYM</string>
     <string name="sym_swap_pages_description">Scegli quale pagina SYM appare per prima quando si alterna.</string>
     <string name="sym_order_emoji_first">Emoji prima</string>
@@ -439,7 +452,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="nav_mode_key_mappings">Mappature Tasti</string>
     <string name="nav_mode_revert_to_default">Ripristina Predefiniti</string>
     <string name="nav_mode_note">Nota: Modificare i tasti del nav mode influisce anche sulle combinazioni Ctrl+tasto nei campi di testo.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Configura %1$s</string>
     <string name="nav_mode_type">Tipo</string>
     <string name="nav_mode_keycode">Keycode</string>
@@ -945,6 +958,8 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="status_bar_button_settings_description">Apri impostazioni</string>
     <string name="status_bar_button_symbols">Simboli</string>
     <string name="status_bar_button_symbols_description">Tastiera simboli</string>
+    <string name="status_bar_button_gif">GIF</string>
+    <string name="status_bar_button_gif_description">Cerca GIF</string>
     <string name="status_bar_button_undo">Annulla</string>
     <string name="status_bar_button_undo_description">Invia Ctrl+Z</string>
     <string name="status_bar_button_redo">Ripeti</string>
@@ -1071,7 +1086,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="gif_tab_description">Cerca GIF</string>
     <string name="gif_attribution">Fornito da KLIPY</string>
     <string name="gif_search_placeholder">Cerca su KLIPY</string>
-    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Emoji, simboli e GIF → Ricerca GIF.</string>
+    <string name="gif_no_api_key">Aggiungi la tua chiave API KLIPY in Impostazioni → Pastiera Flux → Emoji, simboli e GIF → Ricerca GIF.</string>
     <string name="gif_sent_as_link">Questa app non accetta GIF qui, quindi è stato scritto il link.</string>
     <string name="gif_settings_title">Cerca GIF</string>
     <string name="gif_settings_description">Aggiunge un tasto GIF al livello emoji e una scheda GIF al selettore emoji, con GIF da KLIPY. Ricerche e GIF vengono scaricate da KLIPY solo mentre la ricerca GIF è aperta.</string>
@@ -1089,7 +1104,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="emoji_layer_gif_key_description">Premi il tasto del livello emoji che apre la ricerca GIF (P se non lo cambi). Funziona mentre la ricerca GIF è attiva.</string>
     <string name="emoji_layer_key_rejected">Premi un tasto lettera che non sia già il tasto Recenti o GIF.</string>
     <string name="symbol_error_detail">Ricerca simboli non riuscita (%1$s).</string>
-    <string name="settings_group_flux">Flux Keyboard</string>
+    <string name="settings_group_flux">Pastiera Flux</string>
     <string name="flux_emoji_gifs_title">Emoji, simboli e GIF</string>
     <string name="flux_emoji_gifs_description">Tasto emoji, tasti del livello emoji e Invio nella ricerca di emoji, simboli e GIF</string>
     <string name="flux_emoji_gifs_note">Un tasto che apre il selettore o il livello emoji, i tasti Recenti e GIF del livello emoji, la ricerca GIF e cosa fa Invio nella ricerca di emoji, simboli e GIF.</string>
@@ -1155,7 +1170,7 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="flux_offline_switch_description">Nulla in Pastiera va online.</string>
     <string name="flux_section_offline_affects">Mentre è attiva</string>
     <string name="flux_offline_affects">• La ricerca GIF sparisce, con la sua scheda e il tasto GIF del livello emoji\n• Dizionari e layout non si possono scaricare\n• Nessun controllo degli aggiornamenti né note di rilascio\n• Le emoji vengono solo dal font di sistema, senza il font emoji scaricabile (dal prossimo avvio della tastiera)</string>
-    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Privacy e sistema → Modalità offline).</string>
+    <string name="flux_gifs_offline_note">La modalità offline è attiva, quindi la ricerca GIF è spenta (Impostazioni → Pastiera Flux → Modalità offline).</string>
     <string name="search_key_title">Tasto ricerca</string>
     <string name="search_key_description">Nel livello emoji e nelle pagine dei simboli questo tasto apre la ricerca; nel selettore emoji e nella ricerca GIF manda la digitazione alla ricerca. A se non lo cambi; non può essere il tasto Recenti o GIF.</string>
 </resources>
