@@ -142,6 +142,26 @@ class CandidatesBarController(
             candidatesStatusBar.onSymCloseRequested = value
         }
 
+    var onEmojiLayerSearchRequested: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerSearchRequested = value
+            candidatesStatusBar.onEmojiLayerSearchRequested = value
+        }
+
+    var onEmojiLayerRecentsToggled: (() -> Unit)? = null
+        set(value) {
+            field = value
+            inputStatusBar.onEmojiLayerRecentsToggled = value
+            candidatesStatusBar.onEmojiLayerRecentsToggled = value
+        }
+
+    /** The next time the emoji picker shows, open its search. */
+    fun requestEmojiPickerSearch() {
+        inputStatusBar.requestEmojiPickerSearch()
+        candidatesStatusBar.requestEmojiPickerSearch()
+    }
+
     var onUndoRequested: (() -> Unit)? = null
         set(value) {
             field = value

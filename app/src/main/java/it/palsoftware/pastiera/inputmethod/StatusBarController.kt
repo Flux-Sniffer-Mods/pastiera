@@ -153,6 +153,17 @@ class StatusBarController(
     var onSoftwareKeyboardSymToggleRequested: (() -> Unit)? = null
 
     var onSymCloseRequested: (() -> Unit)? = null
+    // Emoji layer: its search button, and its Recents key when tapped
+    var onEmojiLayerSearchRequested: (() -> Unit)? = null
+    var onEmojiLayerRecentsToggled: (() -> Unit)? = null
+    private var lastSnapshotSymPage: Int = 0
+    private var lastEmojiScreenFromEmojiKey: Boolean = false
+    private var pendingEmojiPickerSearch: Boolean = false
+
+    /** The next time the emoji picker shows, open its search. */
+    fun requestEmojiPickerSearch() {
+        pendingEmojiPickerSearch = true
+    }
 
     /**
      * Fired when the inline emoji picker toggles its search panel visibility. The host must
@@ -298,6 +309,8 @@ class StatusBarController(
         val shiftLayerLatched: Boolean = false,
         val altModifierLayerLatched: Boolean = false,
         val activeKeyboardLayoutName: String = "qwerty",
+        // The emoji key opened the current SYM page (its auto-close follows the emoji key setting)
+        val emojiScreenFromEmojiKey: Boolean = false,
         val softwareSymPreviewLabels: Map<Int, String> = emptyMap(),
         val softwareSymPreviewTextLabels: Map<String, String> = emptyMap(),
         val softwareCtrlPreviewLabels: Map<Int, String> = emptyMap(),
@@ -327,6 +340,10 @@ class StatusBarController(
     private var emojiPickerView: EmojiPickerView? = null
     // Pastierina: the picker's search field sits in the middle of the compact bar
     private var emojiSearchInBar: Boolean = false
+    // Pastierina: on the emoji layer, a search bar sits there instead (tap for the picker's search)
+    private var emojiLayerSearchBar: TextView? = null
+    // The emoji layer grid was last built with its own search button (outside Pastierina)
+    private var lastEmojiLayerSearchInGrid: Boolean? = null
 
     /** Hidden app with "Show status LEDs only": draw nothing but the LED strip, over the app. */
     var ledsOnlyMode: Boolean = false
@@ -1203,6 +1220,11 @@ class StatusBarController(
         view.onSearchPanelVisibilityChanged = { visible ->
             onEmojiPickerSearchPanelToggled?.invoke(visible)
         }
+        if (pendingEmojiPickerSearch) {
+            // Opened from the emoji layer's search button: search once the picker is in place
+            pendingEmojiPickerSearch = false
+            view.post { view.openSearch() }
+        }
         view.themeOverride = (if (
             mode == Mode.INPUT_VIEW &&
                 SettingsManager.resolveEffectiveSoftwareKeyboardMode(context) == SettingsManager.SoftwareKeyboardMode.FORCE_VIRTUAL
@@ -1293,6 +1315,7 @@ class StatusBarController(
         ledStatusView.update(snapshot)
         hideHamburgerMenu()
         releaseEmojiSearchFromBar()
+        updateEmojiLayerSearchBar(false)
         fullSuggestionsBar?.ensureView()?.visibility = View.GONE
         variationBarView?.hideImmediate()
         variationsWrapper?.visibility = View.GONE
@@ -1306,6 +1329,54 @@ class StatusBarController(
         symShown = false
         wasSymActive = false
         lastSymPageRendered = 0
+    }
+
+    /**
+     * Emoji layer in Pastierina: a search bar in the middle of the bar, looking like the picker's
+     * own search field there. Physical keys keep typing the layer's emoji; tapping the bar opens
+     * the picker with search ready, and the picker's field then takes this same spot.
+     */
+    private fun updateEmojiLayerSearchBar(show: Boolean) {
+        val bar = fullSuggestionsBar
+        val host = bar?.centerAccessoryHost()
+        val existing = emojiLayerSearchBar
+        if (show && bar != null && host != null) {
+            val searchBar = existing ?: TextView(context).apply {
+                textSize = 14f
+                setSingleLine(true)
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                setPadding(dpToPx(8f), 0, dpToPx(8f), 0)
+                isClickable = true
+                isFocusable = true
+                contentDescription = context.getString(R.string.emoji_layer_search_button)
+                setOnClickListener { onEmojiLayerSearchRequested?.invoke() }
+            }.also { emojiLayerSearchBar = it }
+            if (searchBar.parent !== host) {
+                (searchBar.parent as? ViewGroup)?.removeView(searchBar)
+                host.removeAllViews()
+                host.addView(
+                    searchBar,
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    ).apply { setMargins(dpToPx(4f), dpToPx(3f), dpToPx(4f), dpToPx(3f)) }
+                )
+            }
+            // Same look as the picker's search field (EmojiPickerView)
+            val theme = activeThemeColors()
+            searchBar.hint = context.getString(R.string.emoji_picker_search_placeholder)
+            searchBar.setHintTextColor((theme.textAndIcons and 0x00FFFFFF) or (160 shl 24))
+            searchBar.background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(theme.suggestion)
+                setStroke(dpToPx(1f), theme.divider)
+                cornerRadius = dpToPx(7f).toFloat()
+            }
+            bar.setCenterAccessoryActive(true)
+        } else if (existing != null && existing.parent != null) {
+            (existing.parent as? ViewGroup)?.removeView(existing)
+            if (!emojiSearchInBar) bar?.setCenterAccessoryActive(false)
+        }
     }
 
     private fun releaseEmojiSearchFromBar() {
@@ -1406,9 +1477,14 @@ class StatusBarController(
         container.setPadding(sidePadding, gap, sidePadding, gap)
         val inputConnectionChanged = lastInputConnectionUsed != inputConnection
         val inputConnectionBecameAvailable = lastInputConnectionUsed == null && inputConnection != null
-        if (lastSymPageRendered == page && lastSymMappingsRendered == symMappings && !inputConnectionChanged && !inputConnectionBecameAvailable) {
+        // Pastierina has the emoji layer's search in the bar; elsewhere it's a grid key
+        val searchInGrid = page == 1 && !pastierinaModeActive
+        if (lastSymPageRendered == page && lastSymMappingsRendered == symMappings && !inputConnectionChanged &&
+            !inputConnectionBecameAvailable && lastEmojiLayerSearchInGrid == searchInGrid
+        ) {
             return
         }
+        lastEmojiLayerSearchInGrid = searchInGrid
         
         // Rimuovi tutti i tasti esistenti
         container.removeAllViews()
@@ -1487,7 +1563,12 @@ class StatusBarController(
                         for ((index, keyCode) in row.withIndex()) {
                             addKeyToRow(rowLayout, keyCode, symMappings, fixedKeyWidth, keyHeight, keySpacing, page, inputConnection, false)
                         }
-                        rowLayout.addView(View(context), LinearLayout.LayoutParams(fixedKeyWidth, keyHeight))
+                        if (searchInGrid) {
+                            // Emoji layer outside Pastierina: search in the free slot after L
+                            rowLayout.addView(createEmojiLayerSearchButton(keyHeight, fixedKeyWidth))
+                        } else {
+                            rowLayout.addView(View(context), LinearLayout.LayoutParams(fixedKeyWidth, keyHeight))
+                        }
                     }
                     2 -> { // Row 3: Z X C V [Editor] [Globe] B N M [Close]
                         // Z X C V (4 keys)
@@ -2582,6 +2663,29 @@ class StatusBarController(
         }
     }
 
+    /** Emoji layer: opens the emoji picker with its search ready for typing. */
+    private fun createEmojiLayerSearchButton(height: Int, width: Int): View {
+        val theme = activeThemeColors()
+        val button = FrameLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(width, height)
+            isClickable = true
+            isFocusable = true
+            contentDescription = context.getString(R.string.emoji_layer_search_button)
+        }
+        val icon = ImageView(context).apply {
+            setImageResource(R.drawable.ic_search_24)
+            setColorFilter(theme.textAndIcons)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        button.addView(icon)
+        button.setOnClickListener { onEmojiLayerSearchRequested?.invoke() }
+        return button
+    }
+
     private fun createKeyboardSelectionButton(height: Int, width: Int): View {
         val theme = activeThemeColors()
         val button = FrameLayout(context).apply {
@@ -2690,9 +2794,15 @@ class StatusBarController(
     }
 
     private fun closeSymAfterTouchKeyIfNeeded(): Boolean {
-        val shouldClose =
+        val shouldClose = if (lastSnapshotSymPage == 1) {
+            // Emoji layer: the emoji key's own auto-close when the emoji key opened it
+            SettingsManager.emojiScreenClosesAfterInput(
+                context, isPicker = false, openedByEmojiKey = lastEmojiScreenFromEmojiKey, byTouch = true
+            )
+        } else {
             SettingsManager.getSymAutoClose(context) &&
-            SettingsManager.getSymAutoCloseOnTouch(context)
+                SettingsManager.getSymAutoCloseOnTouch(context)
+        }
         if (shouldClose) {
             onSymCloseRequested?.invoke()
         }
@@ -2747,7 +2857,14 @@ class StatusBarController(
             true
         }
         
-        if (content.isNotEmpty() && inputConnection != null) {
+        val recentsKey = page == 1 && keyCode == SettingsManager.getEmojiLayerRecentsKey(context)
+        if (recentsKey) {
+            // Emoji layer's Recents key: recent emoji on the keys, or back
+            keyButton.isClickable = true
+            keyButton.isFocusable = true
+            keyButton.contentDescription = context.getString(R.string.emoji_layer_recents_key_title)
+            keyButton.setOnClickListener { onEmojiLayerRecentsToggled?.invoke() }
+        } else if (content.isNotEmpty() && inputConnection != null) {
             keyButton.isClickable = true
             keyButton.isFocusable = true
             keyButton.setOnClickListener {
@@ -3100,6 +3217,8 @@ class StatusBarController(
     
 
     fun update(snapshot: StatusSnapshot, emojiMapText: String = "", inputConnection: android.view.inputmethod.InputConnection? = null, symMappings: Map<Int, String>? = null) {
+        lastSnapshotSymPage = snapshot.symPage
+        lastEmojiScreenFromEmojiKey = snapshot.emojiScreenFromEmojiKey
         isTitan2Layout = SettingsManager.isTitan2LayoutEnabled(context)
         val isFullSoftwareKeyboardMode =
             mode == Mode.INPUT_VIEW &&
@@ -3209,6 +3328,10 @@ class StatusBarController(
         emojiSearchInBar = pastierinaModeActive && !isFullSoftwareKeyboardMode &&
             snapshot.symPage == 4 && !snapshot.clipboardOverlay
         if (!emojiSearchInBar) releaseEmojiSearchFromBar()
+        updateEmojiLayerSearchBar(
+            pastierinaModeActive && !isFullSoftwareKeyboardMode &&
+                snapshot.symPage == 1 && !snapshot.clipboardOverlay
+        )
         val suggestionsAnnouncementDelayMs = SettingsManager.getAccessibilitySuggestionsAnnouncementDelayMs(context)
         fullSuggestionsBar?.setAccessibilityAnnouncementConfig(
             liveAnnouncementsEnabled = isAccessibilityLiveAnnouncementsEnabled(),

@@ -1063,10 +1063,20 @@ Ogni tasto può essere configurato come Keycode, Azione, Native Ctrl o Nessuno. 
     <string name="hidden_keyboard_apps_description">Pastiera resta nascosta nelle app elencate e lascia loro tutti i tasti. Utile per i desktop Termux:X11.</string>
     <string name="hidden_keyboard_apps_search">Cerca app</string>
     <string name="hidden_keyboard_apps_done">Fatto</string>
-    <string name="hidden_keyboard_apps_leds_only_title">Mostra solo i LED di stato</string>
-    <string name="hidden_keyboard_apps_leds_only_description">Mantiene visibili i LED dei modificatori in queste app, disegnati sopra l’app. Non compare nient’altro e non occupa spazio sullo schermo.</string>
-    <string name="hidden_keyboard_apps_panels_title">Tasto emoji e Sym aprono Pastiera</string>
-    <string name="hidden_keyboard_apps_panels_description">Il tasto del selettore emoji apre le emoji, Sym apre la pagina dei simboli. Mentre una è aperta, i tasti vanno a Pastiera. In Termux:X11, Sym non arriva più a X.</string>
+    <string name="hidden_keyboard_apps_per_app_options">Ogni app spuntata ha due opzioni. LED di stato mantiene visibili i LED dei modificatori sopra l\'app. Emoji e Sym permette al tasto emoji e a Sym di aprire Pastiera; Sym non arriva più all\'app.</string>
+    <string name="hidden_keyboard_apps_option_leds">LED di stato</string>
+    <string name="hidden_keyboard_apps_option_panels">Emoji e Sym</string>
     <string name="hidden_keyboard_apps_accessibility_hint">Le app che leggono direttamente la tastiera, come Termux:X11, richiedono il servizio di accessibilità di Pastiera per queste opzioni.</string>
     <string name="hidden_keyboard_apps_open_accessibility">Apri impostazioni di accessibilità</string>
+    <string name="emoji_key_target_title">Il tasto emoji apre</string>
+    <string name="emoji_key_target_picker">Selettore emoji</string>
+    <string name="emoji_key_target_layer">Livello emoji</string>
+    <string name="emoji_key_auto_close_title">Chiudi dopo aver scelto un\'emoji</string>
+    <string name="emoji_key_auto_close_description">Per il selettore emoji e per il livello emoji quando lo apre il tasto emoji. La chiusura automatica di SYM non si applica più a questi.</string>
+    <string name="emoji_layer_recents_key_title">Tasto recenti nel livello emoji</string>
+    <string name="emoji_layer_recents_key_description">Scegli un tasto del livello emoji. Premendolo, le emoji recenti del selettore compaiono sugli altri tasti; premilo di nuovo per tornare indietro.</string>
+    <string name="emoji_layer_recents_key_off">Disattivato</string>
+    <string name="emoji_layer_recents_key_current">Tasto %1$s</string>
+    <string name="emoji_layer_recents_key_turn_off">Disattiva</string>
+    <string name="emoji_layer_search_button">Cerca emoji</string>
 </resources>

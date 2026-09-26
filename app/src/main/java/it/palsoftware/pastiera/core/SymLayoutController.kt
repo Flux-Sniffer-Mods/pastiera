@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.inputmethod.InputConnection
 import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.SymPagesConfig
+import it.palsoftware.pastiera.data.emoji.RecentEmojiManager
 import it.palsoftware.pastiera.inputmethod.AlternateCharacterManager
 
 class SymLayoutController(
@@ -18,6 +19,12 @@ class SymLayoutController(
 
     companion object {
         private const val PREF_CURRENT_SYM_PAGE = "current_sym_page"
+        /**
+         * Labels of the emoji layer's Recents key, as text symbols rather than emoji: shows the
+         * recent emoji / back to the layer. U+FE0E keeps the arrow from turning into an emoji.
+         */
+        const val RECENTS_KEY_LABEL = "\u21BA"         // ↺
+        const val RECENTS_BACK_LABEL = "\u21A9\uFE0E"  // ↩ (text presentation)
     }
 
     private enum class SymPage {
@@ -36,6 +43,22 @@ class SymLayoutController(
 
     private var symPage: Int = prefs.getInt(PREF_CURRENT_SYM_PAGE, 0)
 
+    /**
+     * The emoji key (not the Sym cycle) opened the current page: the emoji layer is allowed even
+     * when it isn't in the cycle, and its auto-close follows the emoji key's own setting.
+     */
+    var openedByEmojiKey: Boolean = false
+        private set
+
+    /** The emoji layer shows recent emoji on its keys (its Recents key was pressed). */
+    var emojiLayerShowsRecents: Boolean = false
+        private set
+
+    private fun leavePage() {
+        openedByEmojiKey = false
+        emojiLayerShowsRecents = false
+    }
+
     init {
         alignSymPageToConfig(SettingsManager.getSymPagesConfig(context))
     }
@@ -52,6 +75,7 @@ class SymLayoutController(
         alignSymPageToConfig(config)
         val pages = buildActivePages(config)
         symPage = nextSymPageValue(pages)
+        leavePage()
         persistSymPage()
         return symPage
     }
@@ -67,6 +91,7 @@ class SymLayoutController(
             return false
         }
         symPage = 0
+        leavePage()
         persistSymPage()
         return true
     }
@@ -81,6 +106,7 @@ class SymLayoutController(
             return false
         }
         symPage = clipboardPageValue
+        leavePage()
         persistSymPage()
         return true
     }
@@ -95,8 +121,48 @@ class SymLayoutController(
             return false
         }
         symPage = emojiPickerPageValue
+        leavePage()
         persistSymPage()
         return true
+    }
+
+    /** The emoji key: toggles the emoji picker, or the emoji layer when [layer]. */
+    fun toggleEmojiKeyPage(layer: Boolean): Boolean {
+        val target = (if (layer) SymPage.EMOJI else SymPage.EMOJI_PICKER).toPrefValue()
+        if (symPage == target) {
+            closeSymPage()
+            return false
+        }
+        symPage = target
+        leavePage()
+        openedByEmojiKey = true
+        persistSymPage()
+        return true
+    }
+
+    /** The emoji layer's Recents key: recent emoji on the keys, or back to the layer. */
+    fun toggleEmojiLayerRecents(): Boolean {
+        if (currentPageType() != SymPage.EMOJI) return false
+        emojiLayerShowsRecents = !emojiLayerShowsRecents
+        return true
+    }
+
+    /**
+     * The emoji layer's keys: its own emoji, or the recent ones (most recent on Q, then along the
+     * rows) while Recents is shown. The Recents key keeps its toggle label either way.
+     */
+    private fun emojiLayerMappings(): Map<Int, String> {
+        val base = alternateCharacterManager.getSymMappings()
+        val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
+        if (recentsKey == KeyEvent.KEYCODE_UNKNOWN) return base
+        val shown = if (emojiLayerShowsRecents) {
+            val keys = SettingsManager.EMOJI_LAYER_KEYS.filter { it != recentsKey }
+            keys.zip(RecentEmojiManager.getRecentEmojis(context, keys.size)).toMap().toMutableMap()
+        } else {
+            base.toMutableMap()
+        }
+        shown[recentsKey] = if (emojiLayerShowsRecents) RECENTS_BACK_LABEL else RECENTS_KEY_LABEL
+        return shown
     }
 
     fun openEmojiPage(): Boolean {
@@ -107,6 +173,7 @@ class SymLayoutController(
             return false
         }
         symPage = emojiPageValue
+        leavePage()
         persistSymPage()
         return true
     }
@@ -121,12 +188,14 @@ class SymLayoutController(
             return false
         }
         symPage = symbolsPageValue
+        leavePage()
         persistSymPage()
         return true
     }
 
     fun reset() {
         symPage = 0
+        leavePage()
         persistSymPage()
     }
 
@@ -156,7 +225,7 @@ class SymLayoutController(
     fun currentSymMappings(): Map<Int, String>? {
         return when (currentPageType()) {
             SymPage.DEVICE -> alternateCharacterManager.getDeviceSymMappings()
-            SymPage.EMOJI -> alternateCharacterManager.getSymMappings()
+            SymPage.EMOJI -> emojiLayerMappings()
             SymPage.SYMBOLS -> alternateCharacterManager.getSymMappings2()
             SymPage.CLIPBOARD -> null // Clipboard doesn't use mappings
             SymPage.EMOJI_PICKER -> null // Emoji picker doesn't use mappings
@@ -265,8 +334,23 @@ class SymLayoutController(
         updateStatusBar: () -> Unit,
         handleBoundaryText: (String, InputConnection?) -> Boolean = { _, _ -> false }
     ): SymKeyResult {
-        val autoCloseEnabled = SettingsManager.getSymAutoClose(context)
         val page = currentPageType()
+        // The emoji layer opened with the emoji key follows the emoji key's auto-close
+        val autoCloseEnabled = if (page == SymPage.EMOJI && openedByEmojiKey) {
+            SettingsManager.emojiScreenClosesAfterInput(
+                context, isPicker = false, openedByEmojiKey = true, byTouch = false
+            )
+        } else {
+            SettingsManager.getSymAutoClose(context)
+        }
+
+        val recentsKey = SettingsManager.getEmojiLayerRecentsKey(context)
+        if (page == SymPage.EMOJI && recentsKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == recentsKey) {
+            if ((event?.repeatCount ?: 0) == 0 && toggleEmojiLayerRecents()) {
+                updateStatusBar()
+            }
+            return SymKeyResult.CONSUME
+        }
 
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
@@ -287,7 +371,7 @@ class SymLayoutController(
 
         val symChar = when (page) {
             SymPage.DEVICE -> alternateCharacterManager.getDeviceSymMappings()[keyCode]
-            SymPage.EMOJI -> alternateCharacterManager.getSymMappings()[keyCode]
+            SymPage.EMOJI -> emojiLayerMappings()[keyCode]
             SymPage.SYMBOLS -> alternateCharacterManager.getSymMappings2()[keyCode]
             SymPage.CLIPBOARD -> null // Clipboard doesn't use key mappings
             SymPage.EMOJI_PICKER -> null // Emoji picker doesn't use key mappings
@@ -367,6 +451,8 @@ class SymLayoutController(
 
     private fun alignSymPageToConfig(config: SymPagesConfig = SettingsManager.getSymPagesConfig(context)) {
         val allowedValues = buildActivePages(config).map { it.toPrefValue() }
+        // The emoji layer opened with the emoji key stays, even when it isn't in the Sym cycle
+        if (openedByEmojiKey && symPage == SymPage.EMOJI.toPrefValue()) return
         if (allowedValues.isEmpty()) {
             if (symPage != 0 && symPage !in 2..5) {
                 // Allow symbols page (2), clipboard page (3) and emoji picker page (4) even if all cycling pages are disabled

@@ -24,12 +24,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,8 +57,8 @@ import kotlinx.coroutines.withContext
 private data class HiddenAppRow(val packageName: String, val name: String, val icon: Drawable?)
 
 /**
- * Picks the apps where Pastiera stays hidden, plus what it may still show there. Changes are
- * saved as they are made.
+ * Picks the apps where Pastiera stays hidden and, per app, what it may still do there (status
+ * LEDs; the emoji key and Sym opening Pastiera). Changes are saved as they are made.
  */
 @Composable
 fun HiddenKeyboardAppsDialog(onDismiss: () -> Unit) {
@@ -66,8 +66,12 @@ fun HiddenKeyboardAppsDialog(onDismiss: () -> Unit) {
     var selected by remember { mutableStateOf(SettingsManager.getHiddenKeyboardApps(context).toSet()) }
     // Order is fixed when the dialog opens, so rows don't jump while you tick them
     val initiallySelected = remember { selected }
-    var showLeds by remember { mutableStateOf(SettingsManager.getHiddenAppsShowLeds(context)) }
-    var allowPanels by remember { mutableStateOf(SettingsManager.getHiddenAppsAllowPanels(context)) }
+    var ledsApps by remember {
+        mutableStateOf(selected.filter { SettingsManager.hiddenAppShowsLeds(context, it) }.toSet())
+    }
+    var panelsApps by remember {
+        mutableStateOf(selected.filter { SettingsManager.hiddenAppAllowsPanels(context, it) }.toSet())
+    }
     var apps by remember { mutableStateOf<List<InstalledApp>?>(null) }
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
@@ -136,23 +140,14 @@ fun HiddenKeyboardAppsDialog(onDismiss: () -> Unit) {
                     )
                     LaunchedEffect(Unit) { runCatching { searchFocus.requestFocus() } }
                 }
-                OptionRow(
-                    title = stringResource(R.string.hidden_keyboard_apps_leds_only_title),
-                    description = stringResource(R.string.hidden_keyboard_apps_leds_only_description),
-                    checked = showLeds
-                ) {
-                    showLeds = it
-                    SettingsManager.setHiddenAppsShowLeds(context, it)
-                }
-                OptionRow(
-                    title = stringResource(R.string.hidden_keyboard_apps_panels_title),
-                    description = stringResource(R.string.hidden_keyboard_apps_panels_description),
-                    checked = allowPanels
-                ) {
-                    allowPanels = it
-                    SettingsManager.setHiddenAppsAllowPanels(context, it)
-                }
-                if ((showLeds || allowPanels) && !accessibilityOn) {
+                Text(
+                    text = stringResource(R.string.hidden_keyboard_apps_per_app_options),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 6.dp)
+                )
+                val anyOptionOn = selected.any { it in ledsApps || it in panelsApps }
+                if (anyOptionOn && !accessibilityOn) {
                     Text(
                         text = stringResource(R.string.hidden_keyboard_apps_accessibility_hint),
                         style = MaterialTheme.typography.bodySmall,
@@ -177,7 +172,22 @@ fun HiddenKeyboardAppsDialog(onDismiss: () -> Unit) {
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         items(rows, key = { it.packageName }) { row ->
-                            AppRowItem(row, checked = row.packageName in selected) { toggle(row.packageName) }
+                            val pkg = row.packageName
+                            AppRowItem(
+                                row = row,
+                                checked = pkg in selected,
+                                showsLeds = pkg in ledsApps,
+                                allowsPanels = pkg in panelsApps,
+                                onToggle = { toggle(pkg) },
+                                onLedsChange = { enabled ->
+                                    ledsApps = if (enabled) ledsApps + pkg else ledsApps - pkg
+                                    SettingsManager.setHiddenAppShowsLeds(context, pkg, enabled)
+                                },
+                                onPanelsChange = { enabled ->
+                                    panelsApps = if (enabled) panelsApps + pkg else panelsApps - pkg
+                                    SettingsManager.setHiddenAppAllowsPanels(context, pkg, enabled)
+                                }
+                            )
                         }
                     }
                 }
@@ -187,26 +197,15 @@ fun HiddenKeyboardAppsDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun OptionRow(title: String, description: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable { onChange(!checked) }.padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-            Text(
-                description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-@Composable
-private fun AppRowItem(row: HiddenAppRow, checked: Boolean, onToggle: () -> Unit) {
+private fun AppRowItem(
+    row: HiddenAppRow,
+    checked: Boolean,
+    showsLeds: Boolean,
+    allowsPanels: Boolean,
+    onToggle: () -> Unit,
+    onLedsChange: (Boolean) -> Unit,
+    onPanelsChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -236,6 +235,21 @@ private fun AppRowItem(row: HiddenAppRow, checked: Boolean, onToggle: () -> Unit
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (checked) {
+                // What Pastiera may still do in this hidden app
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = showsLeds,
+                        onClick = { onLedsChange(!showsLeds) },
+                        label = { Text(stringResource(R.string.hidden_keyboard_apps_option_leds)) }
+                    )
+                    FilterChip(
+                        selected = allowsPanels,
+                        onClick = { onPanelsChange(!allowsPanels) },
+                        label = { Text(stringResource(R.string.hidden_keyboard_apps_option_panels)) }
+                    )
+                }
+            }
         }
         Checkbox(checked = checked, onCheckedChange = { onToggle() })
     }

@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -78,6 +79,10 @@ fun SymCustomizationScreen(
         mutableStateOf(SettingsManager.getEmojiPickerKey(context))
     }
     var showEmojiPickerKeyDialog by remember { mutableStateOf(false) }
+    var emojiKeyOpensLayer by remember { mutableStateOf(SettingsManager.getEmojiKeyOpensLayer(context)) }
+    var emojiKeyAutoClose by remember { mutableStateOf(SettingsManager.getEmojiKeyAutoClose(context)) }
+    var emojiLayerRecentsKey by remember { mutableStateOf(SettingsManager.getEmojiLayerRecentsKey(context)) }
+    var showRecentsKeyDialog by remember { mutableStateOf(false) }
 
     val titan2LayoutEnabled = remember {
         SettingsManager.isTitan2LayoutEnabled(context)
@@ -763,6 +768,117 @@ fun SymCustomizationScreen(
 
         HorizontalDivider()
 
+        if (emojiPickerKey != KeyEvent.KEYCODE_UNKNOWN) {
+            // What the emoji key opens
+            Column(
+                modifier = Modifier.settingRow("sym.emoji_key_target")
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.emoji_key_target_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                listOf(false to R.string.emoji_key_target_picker, true to R.string.emoji_key_target_layer)
+                    .forEach { (layer, label) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                emojiKeyOpensLayer = layer
+                                SettingsManager.setEmojiKeyOpensLayer(context, layer)
+                            },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = emojiKeyOpensLayer == layer,
+                                onClick = {
+                                    emojiKeyOpensLayer = layer
+                                    SettingsManager.setEmojiKeyOpensLayer(context, layer)
+                                }
+                            )
+                            Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+            }
+
+            HorizontalDivider()
+
+            // Auto-close for the emoji key's screens, separate from SYM auto-close
+            Row(
+                modifier = Modifier.settingRow("sym.emoji_key_auto_close")
+                    .fillMaxWidth()
+                    .clickable {
+                        emojiKeyAutoClose = !emojiKeyAutoClose
+                        SettingsManager.setEmojiKeyAutoClose(context, emojiKeyAutoClose)
+                    }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_key_auto_close_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.emoji_key_auto_close_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = emojiKeyAutoClose,
+                    onCheckedChange = { enabled ->
+                        emojiKeyAutoClose = enabled
+                        SettingsManager.setEmojiKeyAutoClose(context, enabled)
+                    }
+                )
+            }
+
+            HorizontalDivider()
+        }
+
+        // Recents key on the emoji layer
+        Surface(
+            modifier = Modifier.settingRow("sym.emoji_layer_recents_key")
+                .fillMaxWidth()
+                .clickable { showRecentsKeyDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.History,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_layer_recents_key_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = if (emojiLayerRecentsKey == KeyEvent.KEYCODE_UNKNOWN) {
+                            stringResource(R.string.emoji_layer_recents_key_off)
+                        } else {
+                            stringResource(R.string.emoji_layer_recents_key_current, getLetterFromKeyCode(emojiLayerRecentsKey))
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider()
+
         }
 
         // Dedicated emoji picker key: press the key to use (works with whatever keys the device has)
@@ -834,6 +950,53 @@ fun SymCustomizationScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showEmojiPickerKeyDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
+        }
+
+        // Recents key on the emoji layer: pick one of the layer's letter keys
+        if (showRecentsKeyDialog) {
+            AlertDialog(
+                onDismissRequest = { showRecentsKeyDialog = false },
+                title = { Text(stringResource(R.string.emoji_layer_recents_key_title)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = stringResource(R.string.emoji_layer_recents_key_description),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        SettingsManager.EMOJI_LAYER_KEYS.chunked(7).forEach { keys ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                keys.forEach { keyCode ->
+                                    val selected = keyCode == emojiLayerRecentsKey
+                                    FilterChip(
+                                        selected = selected,
+                                        onClick = {
+                                            if (SettingsManager.setEmojiLayerRecentsKey(context, keyCode)) {
+                                                emojiLayerRecentsKey = keyCode
+                                                showRecentsKeyDialog = false
+                                            }
+                                        },
+                                        label = { Text(getLetterFromKeyCode(keyCode)) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                        emojiLayerRecentsKey = KeyEvent.KEYCODE_UNKNOWN
+                        showRecentsKeyDialog = false
+                    }) {
+                        Text(stringResource(R.string.emoji_layer_recents_key_turn_off))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRecentsKeyDialog = false }) {
                         Text(stringResource(R.string.cancel))
                     }
                 }

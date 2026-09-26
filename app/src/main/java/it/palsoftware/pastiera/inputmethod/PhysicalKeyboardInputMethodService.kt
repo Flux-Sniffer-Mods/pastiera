@@ -167,6 +167,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var keyboardHiddenForApp: Boolean = false
     // ...but with "Show status LEDs only": the LED strip stays, following observed modifiers
     private var hiddenAppShowsLeds: Boolean = false
+    // ...and this hidden app lets the emoji key and Sym open Pastiera (per-app option)
+    private var hiddenAppAllowsPanels: Boolean = false
     private val observedModifierLeds = ObservedModifierLeds()
     // Hidden app with the panels option: Pastiera's surface is up for an emoji/symbols panel
     private var hiddenAppPanelShown: Boolean = false
@@ -1934,6 +1936,17 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 updateStatusBarText()
             }
         }
+        candidatesBarController.onEmojiLayerSearchRequested = {
+            // Emoji layer's search button: the picker, with its search ready for typing
+            candidatesBarController.requestEmojiPickerSearch()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
+        candidatesBarController.onEmojiLayerRecentsToggled = {
+            if (symLayoutController.toggleEmojiLayerRecents()) {
+                updateStatusBarText()
+            }
+        }
         candidatesBarController.onEmojiPickerSearchPanelToggled = {
             // The picker's search panel state is not part of the rendered snapshot; force a
             // re-render so the picker moves to its popup surface while searching.
@@ -2940,7 +2953,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     /** Hidden app with the panels option and an emoji or symbols panel open. */
     private fun hiddenAppPanelOpen(): Boolean =
-        keyboardHiddenForApp && symPage > 0 && SettingsManager.getHiddenAppsAllowPanels(this)
+        keyboardHiddenForApp && symPage > 0 && hiddenAppAllowsPanels
 
     /** Hidden apps keep Pastiera's surface closed, except for the status LEDs or an open panel. */
     private fun hiddenAppSurfaceBlocked(): Boolean =
@@ -2948,7 +2961,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     /** In a hidden app with the panels option: its panel keys, and every key while a panel is open. */
     private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
-        if (!SettingsManager.getHiddenAppsAllowPanels(this)) return false
+        if (!hiddenAppAllowsPanels) return false
         if (symPage > 0) return true
         val emojiKey = SettingsManager.getEmojiPickerKey(this)
         return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
@@ -3180,6 +3193,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             shiftLayerLatched = shiftLayerLatched,
             altModifierLayerLatched = altModifierLayerLatched,
             activeKeyboardLayoutName = activeKeyboardLayoutName,
+            emojiScreenFromEmojiKey = symLayoutController.openedByEmojiKey,
             softwareSymPreviewLabels = softwareSymPreviewProjection.contentByKeyCode,
             softwareSymPreviewTextLabels = softwareSymPreviewProjection.contentByBaseText,
             softwareCtrlPreviewLabels = buildSoftwareCtrlPreviewLabels(modifierSnapshot),
@@ -3458,7 +3472,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         super.onStartInput(info, restarting)
         EmojiCompatSupport.onStartInput(info)
         keyboardHiddenForApp = SettingsManager.isKeyboardHiddenForApp(this, info?.packageName)
-        val showLeds = keyboardHiddenForApp && SettingsManager.getHiddenAppsShowLeds(this)
+        val showLeds = keyboardHiddenForApp && SettingsManager.hiddenAppShowsLeds(this, info?.packageName)
+        hiddenAppAllowsPanels = keyboardHiddenForApp && SettingsManager.hiddenAppAllowsPanels(this, info?.packageName)
         if (showLeds != hiddenAppShowsLeds || !restarting) observedModifierLeds.reset()
         hiddenAppShowsLeds = showLeds
         if (::candidatesBarController.isInitialized) candidatesBarController.setLedsOnlyMode(showLeds)
@@ -3470,8 +3485,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (keyboardHiddenForApp && ::symLayoutController.isInitialized && symLayoutController.isSymActive()) {
             symLayoutController.closeSymPage()
         }
-        HiddenAppKeyObserver.interceptor =
-            if (keyboardHiddenForApp && SettingsManager.getHiddenAppsAllowPanels(this)) ::interceptHiddenAppKey else null
+        HiddenAppKeyObserver.interceptor = if (hiddenAppAllowsPanels) ::interceptHiddenAppKey else null
         hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
@@ -4353,6 +4367,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         updateStatusBarText()
     }
 
+    /** The dedicated emoji key: the emoji picker, or the emoji layer (SYM settings). */
+    private fun toggleEmojiKeyScreen() {
+        ensureImeSurfaceVisible()
+        symLayoutController.toggleEmojiKeyPage(layer = SettingsManager.getEmojiKeyOpensLayer(this))
+        updateStatusBarText()
+    }
+
     private data class AccidentalKeyInput(
         val resolution: PhysicalKeyResolver.Resolution,
         val configuration: AccidentalKeyPressFilter.Configuration
@@ -4683,7 +4704,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             keyCode == emojiPickerKey
         ) {
             if ((event?.repeatCount ?: 0) == 0) {
-                toggleEmojiPicker()
+                toggleEmojiKeyScreen()
             }
             emojiPickerKeyUpPending = keyCode
             return true

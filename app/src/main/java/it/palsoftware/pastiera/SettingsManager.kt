@@ -143,9 +143,16 @@ object SettingsManager {
     private const val KEY_CTRL_LATCH_STAYS_ON_SPACE = "ctrl_latch_stays_on_space"
     private const val KEY_EMOJI_PICKER_EXPANDED_HEIGHT = "emoji_picker_expanded_height"
     private const val KEY_HIDDEN_KEYBOARD_APPS = "hidden_keyboard_apps" // Packages where Pastiera stays hidden
+    // Earlier global switches; still read once, as the default for apps hidden at the time
     private const val KEY_HIDDEN_APPS_SHOW_LEDS = "hidden_keyboard_apps_show_leds"
     private const val KEY_HIDDEN_APPS_ALLOW_PANELS = "hidden_keyboard_apps_allow_panels"
+    // Per hidden app (package names, one per line)
+    private const val KEY_HIDDEN_APPS_LEDS = "hidden_keyboard_apps_leds"
+    private const val KEY_HIDDEN_APPS_PANELS = "hidden_keyboard_apps_panels"
     private const val KEY_EMOJI_PICKER_KEY = "emoji_picker_key" // Physical key that toggles the emoji picker (KEYCODE_UNKNOWN = off)
+    private const val KEY_EMOJI_KEY_OPENS_LAYER = "emoji_key_opens_layer" // Emoji key opens the emoji layer instead of the picker
+    private const val KEY_EMOJI_KEY_AUTO_CLOSE = "emoji_key_auto_close" // Emoji key screens close after an emoji
+    private const val KEY_EMOJI_LAYER_RECENTS_KEY = "emoji_layer_recents_key" // Emoji layer key that shows recents
     private const val KEY_DISMISSED_RELEASES = "dismissed_releases" // Set of release tag_names that were dismissed
     private const val KEY_TUTORIAL_COMPLETED = "tutorial_completed" // Whether the first-run tutorial has been completed
     private const val KEY_LAST_SEEN_WHATS_NEW_VERSION = "last_seen_whats_new_version"
@@ -5260,21 +5267,42 @@ object SettingsManager {
     fun isKeyboardHiddenForApp(context: Context, packageName: String?): Boolean =
         !packageName.isNullOrBlank() && packageName in getHiddenKeyboardApps(context)
 
-    /** In hidden apps, keep the modifier LEDs visible instead of hiding everything. */
-    fun getHiddenAppsShowLeds(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, false)
-
-    fun setHiddenAppsShowLeds(context: Context, enabled: Boolean) {
-        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_SHOW_LEDS, enabled).apply()
+    /**
+     * Hidden apps with a per-app option on. Until the first per-app change, the earlier global
+     * switch ([legacyKey]) still applies to every app that was hidden.
+     */
+    private fun hiddenAppsWithOption(context: Context, key: String, legacyKey: String): Set<String> {
+        val prefs = getPreferences(context)
+        if (!prefs.contains(key)) {
+            return if (prefs.getBoolean(legacyKey, false)) getHiddenKeyboardApps(context).toSet() else emptySet()
+        }
+        return parsePackageList(prefs.getString(key, "").orEmpty()).toSet()
     }
 
-    /** In hidden apps, the emoji picker key and Sym still open Pastiera's emoji and symbols. */
-    fun getHiddenAppsAllowPanels(context: Context): Boolean =
-        getPreferences(context).getBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, false)
-
-    fun setHiddenAppsAllowPanels(context: Context, enabled: Boolean) {
-        getPreferences(context).edit().putBoolean(KEY_HIDDEN_APPS_ALLOW_PANELS, enabled).apply()
+    private fun setHiddenAppOption(context: Context, key: String, legacyKey: String, packageName: String, enabled: Boolean) {
+        val apps = hiddenAppsWithOption(context, key, legacyKey).toMutableSet()
+        if (enabled) apps += packageName else apps -= packageName
+        getPreferences(context).edit()
+            .putString(key, apps.sorted().joinToString("\n"))
+            .remove(legacyKey)
+            .apply()
     }
+
+    /** This hidden app keeps the modifier LEDs visible, drawn over it. */
+    fun hiddenAppShowsLeds(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            packageName in hiddenAppsWithOption(context, KEY_HIDDEN_APPS_LEDS, KEY_HIDDEN_APPS_SHOW_LEDS)
+
+    fun setHiddenAppShowsLeds(context: Context, packageName: String, enabled: Boolean) =
+        setHiddenAppOption(context, KEY_HIDDEN_APPS_LEDS, KEY_HIDDEN_APPS_SHOW_LEDS, packageName, enabled)
+
+    /** In this hidden app, the emoji picker key and Sym still open Pastiera's emoji and symbols. */
+    fun hiddenAppAllowsPanels(context: Context, packageName: String?): Boolean =
+        !packageName.isNullOrBlank() &&
+            packageName in hiddenAppsWithOption(context, KEY_HIDDEN_APPS_PANELS, KEY_HIDDEN_APPS_ALLOW_PANELS)
+
+    fun setHiddenAppAllowsPanels(context: Context, packageName: String, enabled: Boolean) =
+        setHiddenAppOption(context, KEY_HIDDEN_APPS_PANELS, KEY_HIDDEN_APPS_ALLOW_PANELS, packageName, enabled)
 
     /** Stores [keyCode] (KEYCODE_UNKNOWN turns the feature off). Returns false if not allowed. */
     fun setEmojiPickerKey(context: Context, keyCode: Int): Boolean {
@@ -5282,6 +5310,62 @@ object SettingsManager {
         getPreferences(context).edit()
             .putInt(KEY_EMOJI_PICKER_KEY, keyCode)
             .apply()
+        return true
+    }
+
+    /** The emoji key opens the emoji layer (SYM page 1) instead of the emoji picker. */
+    fun getEmojiKeyOpensLayer(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_KEY_OPENS_LAYER, false)
+
+    fun setEmojiKeyOpensLayer(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_KEY_OPENS_LAYER, enabled).apply()
+    }
+
+    /** Emoji screens of the emoji key close after an emoji is entered (separate from SYM auto-close). */
+    fun getEmojiKeyAutoClose(context: Context): Boolean =
+        getPreferences(context).getBoolean(KEY_EMOJI_KEY_AUTO_CLOSE, false)
+
+    fun setEmojiKeyAutoClose(context: Context, enabled: Boolean) {
+        getPreferences(context).edit().putBoolean(KEY_EMOJI_KEY_AUTO_CLOSE, enabled).apply()
+    }
+
+    /**
+     * Whether an emoji screen closes after an emoji is entered. With an emoji key set, the emoji
+     * picker, and the emoji layer when the emoji key opened it, follow the emoji key's own
+     * setting; everything else follows SYM auto-close ([byTouch]: also needs "close after
+     * on-screen SYM keys").
+     */
+    fun emojiScreenClosesAfterInput(
+        context: Context,
+        isPicker: Boolean,
+        openedByEmojiKey: Boolean,
+        byTouch: Boolean
+    ): Boolean {
+        if (getEmojiPickerKey(context) != KeyEvent.KEYCODE_UNKNOWN && (isPicker || openedByEmojiKey)) {
+            return getEmojiKeyAutoClose(context)
+        }
+        return getSymAutoClose(context) && (!byTouch || getSymAutoCloseOnTouch(context))
+    }
+
+    /** Keys of the emoji layer (letters) that can become its Recents key. */
+    val EMOJI_LAYER_KEYS: List<Int> = listOf(
+        KeyEvent.KEYCODE_Q, KeyEvent.KEYCODE_W, KeyEvent.KEYCODE_E, KeyEvent.KEYCODE_R, KeyEvent.KEYCODE_T,
+        KeyEvent.KEYCODE_Y, KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_I, KeyEvent.KEYCODE_O, KeyEvent.KEYCODE_P,
+        KeyEvent.KEYCODE_A, KeyEvent.KEYCODE_S, KeyEvent.KEYCODE_D, KeyEvent.KEYCODE_F, KeyEvent.KEYCODE_G,
+        KeyEvent.KEYCODE_H, KeyEvent.KEYCODE_J, KeyEvent.KEYCODE_K, KeyEvent.KEYCODE_L,
+        KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_V,
+        KeyEvent.KEYCODE_B, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_M
+    )
+
+    /** The emoji layer key that shows recent emoji instead of its own (KEYCODE_UNKNOWN = none). */
+    fun getEmojiLayerRecentsKey(context: Context): Int {
+        val keyCode = getPreferences(context).getInt(KEY_EMOJI_LAYER_RECENTS_KEY, KeyEvent.KEYCODE_UNKNOWN)
+        return if (keyCode in EMOJI_LAYER_KEYS) keyCode else KeyEvent.KEYCODE_UNKNOWN
+    }
+
+    fun setEmojiLayerRecentsKey(context: Context, keyCode: Int): Boolean {
+        if (keyCode != KeyEvent.KEYCODE_UNKNOWN && keyCode !in EMOJI_LAYER_KEYS) return false
+        getPreferences(context).edit().putInt(KEY_EMOJI_LAYER_RECENTS_KEY, keyCode).apply()
         return true
     }
 

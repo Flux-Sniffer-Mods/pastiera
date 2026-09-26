@@ -1,0 +1,131 @@
+package it.palsoftware.pastiera.core
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.view.KeyEvent
+import it.palsoftware.pastiera.SettingsManager
+import it.palsoftware.pastiera.SymPagesConfig
+import it.palsoftware.pastiera.data.emoji.RecentEmojiManager
+import it.palsoftware.pastiera.inputmethod.AlternateCharacterManager
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
+class EmojiKeyScreensTest {
+    private val context: Context get() = RuntimeEnvironment.getApplication()
+    private lateinit var prefs: SharedPreferences
+    private lateinit var controller: SymLayoutController
+
+    @Before
+    fun setUp() {
+        SettingsManager.getPreferences(context).edit().clear().commit()
+        context.getSharedPreferences("recent_emojis_prefs", Context.MODE_PRIVATE).edit().clear().commit()
+        prefs = context.getSharedPreferences("emoji_key_screens_test", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        controller = SymLayoutController(context, prefs, AlternateCharacterManager(context.assets, prefs, context))
+    }
+
+    @Test
+    fun emojiKeyTogglesThePickerOrTheLayer() {
+        assertTrue(controller.toggleEmojiKeyPage(layer = false))
+        assertEquals(4, controller.currentSymPage())
+        assertTrue(controller.openedByEmojiKey)
+
+        assertFalse(controller.toggleEmojiKeyPage(layer = false))
+        assertEquals(0, controller.currentSymPage())
+        assertFalse(controller.openedByEmojiKey)
+
+        assertTrue(controller.toggleEmojiKeyPage(layer = true))
+        assertEquals(1, controller.currentSymPage())
+    }
+
+    @Test
+    fun layerOpenedByTheEmojiKeyStaysWhenItIsNotInTheSymCycle() {
+        SettingsManager.setSymPagesConfig(context, SymPagesConfig(emojiEnabled = false))
+
+        controller.toggleEmojiKeyPage(layer = true)
+
+        assertEquals(1, controller.currentSymPage())
+    }
+
+    @Test
+    fun symCycleClearsTheEmojiKeyFlag() {
+        controller.toggleEmojiKeyPage(layer = true)
+
+        controller.toggleSymPage()
+
+        assertFalse(controller.openedByEmojiKey)
+    }
+
+    @Test
+    fun recentsKeyShowsRecentEmojiOnTheOtherKeys() {
+        SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_Q)
+        RecentEmojiManager.addRecentEmoji(context, "🙂")
+        RecentEmojiManager.addRecentEmoji(context, "🎉")
+        controller.toggleEmojiKeyPage(layer = true)
+        assertEquals(SymLayoutController.RECENTS_KEY_LABEL, controller.currentSymMappings()!![KeyEvent.KEYCODE_Q])
+
+        assertTrue(controller.toggleEmojiLayerRecents())
+
+        val shown = controller.currentSymMappings()!!
+        assertEquals(SymLayoutController.RECENTS_BACK_LABEL, shown[KeyEvent.KEYCODE_Q])
+        assertEquals("🎉", shown[KeyEvent.KEYCODE_W])
+        assertEquals("🙂", shown[KeyEvent.KEYCODE_E])
+        assertNull(shown[KeyEvent.KEYCODE_R])
+    }
+
+    @Test
+    fun pressingTheRecentsKeyTogglesInsteadOfTyping() {
+        SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_Q)
+        controller.toggleEmojiKeyPage(layer = true)
+        var updates = 0
+
+        val result = controller.handleKeyWhenActive(
+            KeyEvent.KEYCODE_Q,
+            KeyEvent(0L, 0L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_Q, 0),
+            null,
+            ctrlLatchActive = false,
+            altLatchActive = false,
+            updateStatusBar = { updates++ }
+        )
+
+        assertEquals(SymLayoutController.SymKeyResult.CONSUME, result)
+        assertTrue(controller.emojiLayerShowsRecents)
+        assertEquals(1, updates)
+    }
+
+    @Test
+    fun recentsKeyMustBeAnEmojiLayerKey() {
+        assertFalse(SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_SPACE))
+        assertEquals(KeyEvent.KEYCODE_UNKNOWN, SettingsManager.getEmojiLayerRecentsKey(context))
+        assertTrue(SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_M))
+        assertEquals(KeyEvent.KEYCODE_M, SettingsManager.getEmojiLayerRecentsKey(context))
+    }
+
+    @Test
+    fun emojiScreensUseTheirOwnAutoCloseOnlyWithAnEmojiKey() {
+        SettingsManager.setSymAutoClose(context, true)
+        SettingsManager.setSymAutoCloseOnTouch(context, true)
+        SettingsManager.setEmojiKeyAutoClose(context, false)
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
+
+        // Emoji key set: the picker and the emoji key's layer follow the emoji key setting
+        assertFalse(SettingsManager.emojiScreenClosesAfterInput(context, isPicker = true, openedByEmojiKey = false, byTouch = true))
+        assertFalse(SettingsManager.emojiScreenClosesAfterInput(context, isPicker = false, openedByEmojiKey = true, byTouch = false))
+        // ...while the layer reached through Sym keeps SYM auto-close
+        assertTrue(SettingsManager.emojiScreenClosesAfterInput(context, isPicker = false, openedByEmojiKey = false, byTouch = true))
+
+        // No emoji key: everything follows SYM auto-close, as before
+        SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)
+        assertTrue(SettingsManager.emojiScreenClosesAfterInput(context, isPicker = true, openedByEmojiKey = false, byTouch = true))
+    }
+}

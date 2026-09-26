@@ -43,4 +43,41 @@ class HiddenKeyboardAppsTest {
         assertFalse(SettingsManager.isKeyboardHiddenForApp(context, "com.termux"))
         assertFalse(SettingsManager.isKeyboardHiddenForApp(context, null))
     }
+
+    @Test
+    fun perAppOptionsAreOffByDefaultAndIndependent() {
+        SettingsManager.setHiddenKeyboardApps(context, listOf("com.termux.x11", "org.example.app"))
+        assertFalse(SettingsManager.hiddenAppShowsLeds(context, "com.termux.x11"))
+        assertFalse(SettingsManager.hiddenAppAllowsPanels(context, "com.termux.x11"))
+
+        SettingsManager.setHiddenAppShowsLeds(context, "com.termux.x11", true)
+        SettingsManager.setHiddenAppAllowsPanels(context, "org.example.app", true)
+
+        assertTrue(SettingsManager.hiddenAppShowsLeds(context, "com.termux.x11"))
+        assertFalse(SettingsManager.hiddenAppAllowsPanels(context, "com.termux.x11"))
+        assertFalse(SettingsManager.hiddenAppShowsLeds(context, "org.example.app"))
+        assertTrue(SettingsManager.hiddenAppAllowsPanels(context, "org.example.app"))
+
+        SettingsManager.setHiddenAppShowsLeds(context, "com.termux.x11", false)
+        assertFalse(SettingsManager.hiddenAppShowsLeds(context, "com.termux.x11"))
+        assertFalse(SettingsManager.hiddenAppShowsLeds(context, null))
+    }
+
+    @Test
+    fun earlierGlobalSwitchCarriesOverToAppsHiddenAtTheTime() {
+        SettingsManager.setHiddenKeyboardApps(context, listOf("com.termux.x11", "org.example.app"))
+        SettingsManager.getPreferences(context).edit()
+            .putBoolean("hidden_keyboard_apps_show_leds", true)
+            .commit()
+
+        assertTrue(SettingsManager.hiddenAppShowsLeds(context, "com.termux.x11"))
+        assertTrue(SettingsManager.hiddenAppShowsLeds(context, "org.example.app"))
+        assertFalse(SettingsManager.hiddenAppAllowsPanels(context, "com.termux.x11"))
+
+        // The first per-app change keeps the others as they were and retires the global switch
+        SettingsManager.setHiddenAppShowsLeds(context, "org.example.app", false)
+        assertTrue(SettingsManager.hiddenAppShowsLeds(context, "com.termux.x11"))
+        assertFalse(SettingsManager.hiddenAppShowsLeds(context, "org.example.app"))
+        assertFalse(SettingsManager.getPreferences(context).contains("hidden_keyboard_apps_show_leds"))
+    }
 }

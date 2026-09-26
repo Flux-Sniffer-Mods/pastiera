@@ -990,8 +990,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     fun hiddenApp_withPanels_emojiKeyOpensPickerAndClosesItAgain() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
-        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
+        setField(service, "hiddenAppAllowsPanels", true)
 
         val (openDown, openUp) = pressKey(KeyEvent.KEYCODE_SHIFT_RIGHT, 12_000L)
         assertTrue(openDown)
@@ -1006,8 +1006,8 @@ class PhysicalKeyboardInputMethodServiceDeviceBehaviorTest {
     fun hiddenApp_withPanels_keyPressedBeforeThePanelReleasesToTheApp() {
         val context = RuntimeEnvironment.getApplication()
         SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_SHIFT_RIGHT)
-        SettingsManager.setHiddenAppsAllowPanels(context, true)
         setField(service, "keyboardHiddenForApp", true)
+        setField(service, "hiddenAppAllowsPanels", true)
 
         val shiftDown = service.onKeyDown(
             KeyEvent.KEYCODE_SHIFT_LEFT,

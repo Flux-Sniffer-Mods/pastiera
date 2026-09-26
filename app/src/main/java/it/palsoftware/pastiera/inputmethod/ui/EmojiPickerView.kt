@@ -917,6 +917,11 @@ class EmojiPickerView(
         }
     }
 
+    /** Opens the search, focused for typing (e.g. from the emoji layer's search button). */
+    fun openSearch() {
+        setSearchPanelVisible(true)
+    }
+
     private fun setSearchPanelVisible(visible: Boolean) {
         isSearchPanelVisible = visible
         searchPanel.visibility = if (visible && searchFieldHost == null) View.VISIBLE else View.GONE
@@ -1092,11 +1097,11 @@ class EmojiPickerView(
         // Commit synchronously before closing: a post{} on a view that the close detaches
         // would only run again when the picker is re-attached (i.e. the next time it opens).
         inputConnection?.commitText(emoji, 1)
+        // With an emoji key set, the picker follows the emoji key's own auto-close
         val shouldClose = closeAfterCommit
-            ?: (
-                SettingsManager.getSymAutoClose(context) &&
-                    SettingsManager.getSymAutoCloseOnTouch(context)
-                )
+            ?: SettingsManager.emojiScreenClosesAfterInput(
+                context, isPicker = true, openedByEmojiKey = false, byTouch = true
+            )
         if (shouldClose) {
             onCloseRequested?.invoke()
         }
