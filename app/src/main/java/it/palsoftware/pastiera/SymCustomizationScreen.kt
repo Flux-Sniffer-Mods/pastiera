@@ -5,6 +5,7 @@ import android.content.Intent
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,9 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +36,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -69,6 +75,18 @@ fun SymCustomizationScreen(
     var emojiPickerExpandedHeight by remember {
         mutableStateOf(SettingsManager.getEmojiPickerExpandedHeight(context))
     }
+    var emojiPickerKey by remember {
+        mutableStateOf(SettingsManager.getEmojiPickerKey(context))
+    }
+    var showEmojiPickerKeyDialog by remember { mutableStateOf(false) }
+    var emojiKeyOpensLayer by remember { mutableStateOf(SettingsManager.getEmojiKeyOpensLayer(context)) }
+    var emojiKeyAutoClose by remember { mutableStateOf(SettingsManager.getEmojiKeyAutoClose(context)) }
+    var emojiLayerRecentsKey by remember { mutableStateOf(SettingsManager.getEmojiLayerRecentsKey(context)) }
+    var showRecentsKeyDialog by remember { mutableStateOf(false) }
+    var gifsEnabled by remember { mutableStateOf(SettingsManager.getGifsEnabled(context)) }
+    var klipyApiKey by remember { mutableStateOf(SettingsManager.getUserKlipyApiKey(context)) }
+    var emojiLayerGifKey by remember { mutableStateOf(SettingsManager.getEmojiLayerGifKey(context)) }
+    var showGifKeyDialog by remember { mutableStateOf(false) }
 
     val titan2LayoutEnabled = remember {
         SettingsManager.isTitan2LayoutEnabled(context)
@@ -716,6 +734,355 @@ fun SymCustomizationScreen(
 
         HorizontalDivider()
 
+        Surface(
+            modifier = Modifier.settingRow("sym.emoji_key")
+                .fillMaxWidth()
+                .height(64.dp)
+                .clickable { showEmojiPickerKeyDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.EmojiEmotions,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_picker_key_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = emojiPickerKeyLabel(context, emojiPickerKey),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        if (emojiPickerKey != KeyEvent.KEYCODE_UNKNOWN) {
+            // What the emoji key opens
+            Column(
+                modifier = Modifier.settingRow("sym.emoji_key_target")
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.emoji_key_target_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                listOf(false to R.string.emoji_key_target_picker, true to R.string.emoji_key_target_layer)
+                    .forEach { (layer, label) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                emojiKeyOpensLayer = layer
+                                SettingsManager.setEmojiKeyOpensLayer(context, layer)
+                            },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = emojiKeyOpensLayer == layer,
+                                onClick = {
+                                    emojiKeyOpensLayer = layer
+                                    SettingsManager.setEmojiKeyOpensLayer(context, layer)
+                                }
+                            )
+                            Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+            }
+
+            HorizontalDivider()
+
+            // Auto-close for the emoji key's screens, separate from SYM auto-close
+            Row(
+                modifier = Modifier.settingRow("sym.emoji_key_auto_close")
+                    .fillMaxWidth()
+                    .clickable {
+                        emojiKeyAutoClose = !emojiKeyAutoClose
+                        SettingsManager.setEmojiKeyAutoClose(context, emojiKeyAutoClose)
+                    }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_key_auto_close_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.emoji_key_auto_close_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = emojiKeyAutoClose,
+                    onCheckedChange = { enabled ->
+                        emojiKeyAutoClose = enabled
+                        SettingsManager.setEmojiKeyAutoClose(context, enabled)
+                    }
+                )
+            }
+
+            HorizontalDivider()
+        }
+
+        // Recents key on the emoji layer
+        Surface(
+            modifier = Modifier.settingRow("sym.emoji_layer_recents_key")
+                .fillMaxWidth()
+                .clickable { showRecentsKeyDialog = true }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.History,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.emoji_layer_recents_key_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = if (emojiLayerRecentsKey == KeyEvent.KEYCODE_UNKNOWN) {
+                            stringResource(R.string.emoji_layer_recents_key_off)
+                        } else {
+                            stringResource(R.string.emoji_layer_recents_key_current, getLetterFromKeyCode(emojiLayerRecentsKey))
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        // GIF search (KLIPY): a GIF key on the emoji layer and a GIF tab in the picker
+        Column(
+            modifier = Modifier.settingRow("sym.gifs")
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.gif_settings_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.gif_settings_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = gifsEnabled,
+                    onCheckedChange = { enabled ->
+                        gifsEnabled = enabled
+                        SettingsManager.setGifsEnabled(context, enabled)
+                    }
+                )
+            }
+            if (gifsEnabled) {
+                OutlinedTextField(
+                    value = klipyApiKey,
+                    onValueChange = { value ->
+                        klipyApiKey = value
+                        SettingsManager.setKlipyApiKey(context, value)
+                    },
+                    label = { Text(stringResource(R.string.gif_api_key_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+                Text(
+                    text = stringResource(
+                        if (SettingsManager.hasBuiltInKlipyApiKey()) R.string.gif_api_key_help_builtin
+                        else R.string.gif_api_key_help
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                TextButton(onClick = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(it.palsoftware.pastiera.data.gif.KlipyGifs.SIGNUP_URL))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                }) {
+                    Text(stringResource(R.string.gif_get_key))
+                }
+                // The emoji layer key that opens GIF search
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable { showGifKeyDialog = true }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.emoji_layer_gif_key_title),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = if (emojiLayerGifKey == KeyEvent.KEYCODE_UNKNOWN) {
+                                stringResource(R.string.emoji_layer_recents_key_off)
+                            } else {
+                                stringResource(R.string.emoji_layer_recents_key_current, getLetterFromKeyCode(emojiLayerGifKey))
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider()
+
+        }
+
+        // Dedicated emoji picker key: press the key to use (works with whatever keys the device has)
+        if (showEmojiPickerKeyDialog) {
+            val keyCaptureFocus = remember { FocusRequester() }
+            var rejectedKey by remember { mutableStateOf(false) }
+            AlertDialog(
+                onDismissRequest = { showEmojiPickerKeyDialog = false },
+                title = { Text(stringResource(R.string.emoji_picker_key_title)) },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(keyCaptureFocus)
+                            .focusable()
+                            .onPreviewKeyEvent { event ->
+                                val native = event.nativeKeyEvent
+                                // Let Back close the dialog as usual
+                                if (native.keyCode == KeyEvent.KEYCODE_BACK) return@onPreviewKeyEvent false
+                                if (native.action == KeyEvent.ACTION_DOWN && native.repeatCount == 0) {
+                                    if (SettingsManager.isAllowedEmojiPickerKey(native.keyCode, native.isPrintingKey)) {
+                                        SettingsManager.setEmojiPickerKey(context, native.keyCode)
+                                        emojiPickerKey = native.keyCode
+                                        showEmojiPickerKeyDialog = false
+                                    } else {
+                                        rejectedKey = true
+                                    }
+                                }
+                                true
+                            },
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.emoji_picker_key_description),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.emoji_picker_key_current,
+                                emojiPickerKeyLabel(context, emojiPickerKey)
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(
+                                if (rejectedKey) R.string.emoji_picker_key_rejected
+                                else R.string.emoji_picker_key_press_prompt
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (rejectedKey) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    LaunchedEffect(Unit) {
+                        runCatching { keyCaptureFocus.requestFocus() }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            SettingsManager.setEmojiPickerKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                            emojiPickerKey = KeyEvent.KEYCODE_UNKNOWN
+                            showEmojiPickerKeyDialog = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.emoji_picker_key_turn_off))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEmojiPickerKeyDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
+        }
+
+        // Recents key on the emoji layer: press the letter key to use, like the emoji key
+        if (showRecentsKeyDialog) {
+            EmojiLayerKeyDialog(
+                title = stringResource(R.string.emoji_layer_recents_key_title),
+                description = stringResource(R.string.emoji_layer_recents_key_description),
+                currentKey = emojiLayerRecentsKey,
+                letterFor = ::getLetterFromKeyCode,
+                onKeyPressed = { keyCode ->
+                    SettingsManager.setEmojiLayerRecentsKey(context, keyCode).also { if (it) emojiLayerRecentsKey = keyCode }
+                },
+                onTurnOff = {
+                    SettingsManager.setEmojiLayerRecentsKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                    emojiLayerRecentsKey = KeyEvent.KEYCODE_UNKNOWN
+                },
+                onDismiss = { showRecentsKeyDialog = false }
+            )
+        }
+
+        // GIF key on the emoji layer: the same, for opening GIF search
+        if (showGifKeyDialog) {
+            EmojiLayerKeyDialog(
+                title = stringResource(R.string.emoji_layer_gif_key_title),
+                description = stringResource(R.string.emoji_layer_gif_key_description),
+                currentKey = emojiLayerGifKey,
+                letterFor = ::getLetterFromKeyCode,
+                onKeyPressed = { keyCode ->
+                    SettingsManager.setEmojiLayerGifKey(context, keyCode).also { if (it) emojiLayerGifKey = keyCode }
+                },
+                onTurnOff = {
+                    SettingsManager.setEmojiLayerGifKey(context, KeyEvent.KEYCODE_UNKNOWN)
+                    emojiLayerGifKey = KeyEvent.KEYCODE_UNKNOWN
+                },
+                onDismiss = { showGifKeyDialog = false }
+            )
         }
 
         // Emoji picker dialog
@@ -834,4 +1201,96 @@ fun SymCustomizationScreen(
         }
         }
     }
+}
+
+internal fun emojiPickerKeyLabel(context: Context, keyCode: Int): String = when (keyCode) {
+    KeyEvent.KEYCODE_UNKNOWN -> context.getString(R.string.emoji_picker_key_off)
+    KeyEvent.KEYCODE_SHIFT_RIGHT -> context.getString(R.string.emoji_picker_key_right_shift)
+    KeyEvent.KEYCODE_SHIFT_LEFT -> context.getString(R.string.emoji_picker_key_left_shift)
+    KeyEvent.KEYCODE_ALT_RIGHT -> context.getString(R.string.emoji_picker_key_right_alt)
+    KeyEvent.KEYCODE_ALT_LEFT -> context.getString(R.string.emoji_picker_key_left_alt)
+    KeyEvent.KEYCODE_CTRL_RIGHT -> context.getString(R.string.emoji_picker_key_right_ctrl)
+    KeyEvent.KEYCODE_CTRL_LEFT -> context.getString(R.string.emoji_picker_key_left_ctrl)
+    KeyEvent.KEYCODE_FUNCTION -> "Fn"
+    else -> KeyEvent.keyCodeToString(keyCode)
+        .removePrefix("KEYCODE_")
+        .replace('_', ' ')
+        .lowercase()
+        .replaceFirstChar { it.uppercase() }
+}
+
+/**
+ * Press-to-assign dialog for an emoji layer key (Recents, GIF): waits for a letter key press.
+ * [onKeyPressed] stores it and returns false when it isn't allowed (not a layer key, or the
+ * other special key).
+ */
+@Composable
+private fun EmojiLayerKeyDialog(
+    title: String,
+    description: String,
+    currentKey: Int,
+    letterFor: (Int) -> String,
+    onKeyPressed: (Int) -> Boolean,
+    onTurnOff: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val keyFocus = remember { FocusRequester() }
+    var rejected by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(keyFocus)
+                    .focusable()
+                    .onPreviewKeyEvent { event ->
+                        val native = event.nativeKeyEvent
+                        // Let Back close the dialog as usual
+                        if (native.keyCode == KeyEvent.KEYCODE_BACK) return@onPreviewKeyEvent false
+                        if (native.action == KeyEvent.ACTION_DOWN && native.repeatCount == 0) {
+                            if (onKeyPressed(native.keyCode)) onDismiss() else rejected = true
+                        }
+                        true
+                    },
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = description, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (currentKey == KeyEvent.KEYCODE_UNKNOWN) {
+                        stringResource(R.string.emoji_layer_recents_key_off)
+                    } else {
+                        stringResource(R.string.emoji_layer_recents_key_current, letterFor(currentKey))
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = stringResource(
+                        if (rejected) R.string.emoji_layer_key_rejected
+                        else R.string.emoji_layer_recents_key_press_prompt
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (rejected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+            }
+            LaunchedEffect(Unit) {
+                runCatching { keyFocus.requestFocus() }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onTurnOff()
+                onDismiss()
+            }) {
+                Text(stringResource(R.string.emoji_layer_recents_key_turn_off))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
 }

@@ -72,7 +72,24 @@ enum class SettingsDestination {
     CustomInputStyles,
     AppLanguage,
     DeviceSymLayerEditor,
-    Modifiers
+    LedColors,
+    EmojiProfiles,
+    Modifiers,
+    FluxEmojiGifs,
+    FluxTitanScreen,
+    FluxHiddenApps,
+    FluxLinuxDesktop,
+    FluxOffline,
+    KeyboardsLayouts,
+    Typing,
+    EditingKeys,
+    TextExpansion,
+    LookSound,
+    TrackpadGestures,
+    Apps,
+    AppShortcuts,
+    Developer,
+    TerminalMode
 }
 
 /** The destination payload of one SettingsActivity, also used by deep links. */
@@ -309,6 +326,12 @@ fun SettingsScreen(
             }
             SettingsDestination.AppLanguage -> {
                 AppLanguageSettingsScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.EmojiProfiles -> {
+                EmojiLayerProfilesScreen(modifier = modifier, onBack = { navigateBack() })
+            }
+            SettingsDestination.LedColors -> {
+                LedColorsScreen(modifier = modifier, onBack = { navigateBack() })
             }
             SettingsDestination.DeviceSymLayerEditor -> {
                 DeviceSymLayerEditorStubScreen(modifier = modifier, onBack = { navigateBack() })

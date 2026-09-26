@@ -112,7 +112,8 @@ class LedStatusView(
         val altActive = (snapshot.altPhysicallyPressed || snapshot.altOneShot) && !altLocked
         updateLeds(ModifierLedState.ALT, altLocked, altActive)
 
-        updateSymLeds(snapshot.symPage)
+        updateSymLeds(snapshot)
+        syncLockAnimation()
     }
 
     private fun rebuildSegments() {
@@ -169,9 +170,16 @@ class LedStatusView(
                 val rightRadius = radii.second.toFloat().coerceIn(inset, maxOf(inset, width / 2f))
                 val leftArc = leftRadius - inset
                 val rightArc = rightRadius - inset
-                val contour = Path().apply {
-                    moveTo(inset, 0f)
-                    lineTo(inset, height - leftRadius)
+                // One LED per modifier: spread along the corners and bottom edge only; the vertical
+                // side runs sit behind the bar and would swallow the outer LEDs.
+                val cornersAndBottomOnly = ModifierLedLayouts.isSplit(layout)
+                val contour = straightContour() ?: liftedContour(radii) ?: Path().apply {
+                    if (cornersAndBottomOnly) {
+                        moveTo(inset, height - leftRadius)
+                    } else {
+                        moveTo(inset, 0f)
+                        lineTo(inset, height - leftRadius)
+                    }
                     if (leftArc > 0f) {
                         arcTo(inset, height - leftRadius - leftArc,
                             leftRadius + leftArc, height - inset, 180f, -90f, false)
@@ -220,17 +228,34 @@ class LedStatusView(
         ledsByState[state].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
     }
 
-    private fun updateSymLeds(symPage: Int) {
-        statePriority[ModifierLedState.SYM] = if (symPage == 2) 2 else if (symPage > 0) 1 else 0
-        val theme = themeOverride
-        val targetColor = when (symPage) {
-            1 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            2 -> theme?.ledLocked ?: LED_COLOR_RED_LOCKED
-            3 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            4 -> theme?.ledActive ?: LED_COLOR_BLUE_ACTIVE
-            else -> theme?.ledInactive ?: LED_COLOR_GRAY_OFF
+    /**
+     * SYM: active while held, locked while it's sticky or a symbols page is open. The emoji key's
+     * LED, when shown, works the same way for the emoji layer and picker; without it, those
+     * pages show on the SYM LED as active.
+     */
+    private fun updateSymLeds(snapshot: StatusBarController.StatusSnapshot) {
+        val symPage = snapshot.symPage
+        val emojiPage = symPage == 1 || symPage == 4
+        val emojiLed = ledsByState.containsKey(ModifierLedState.EMOJI)
+        val symLevel = when {
+            snapshot.symSticky || symPage == 2 || symPage == 5 -> 2
+            snapshot.symHeld -> 1
+            emojiPage && !emojiLed -> 1
+            else -> 0
         }
+        statePriority[ModifierLedState.SYM] = symLevel
+        val targetColor = ledColor(ModifierLedState.SYM, symLevel)
         ledsByState[ModifierLedState.SYM].orEmpty().forEach { led -> animateLedColor(led, targetColor) }
+        if (emojiLed) {
+            val emojiLevel = when {
+                snapshot.emojiSticky || emojiPage -> 2
+                snapshot.emojiHeld -> 1
+                else -> 0
+            }
+            statePriority[ModifierLedState.EMOJI] = emojiLevel
+            val emojiColor = ledColor(ModifierLedState.EMOJI, emojiLevel)
+            ledsByState[ModifierLedState.EMOJI].orEmpty().forEach { led -> animateLedColor(led, emojiColor) }
+        }
         // The visible idle contour depends on both the upper and lower states.
         ledsByState[ModifierLedState.SHIFT].orEmpty().forEach { it.invalidate() }
     }

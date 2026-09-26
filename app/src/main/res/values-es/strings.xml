@@ -557,7 +557,7 @@
     <string name="speech_recognition_error_network">Error de red.</string>
     <string name="speech_recognition_error_generic">Error de reconocimiento de voz.</string>
     <string name="speech_recognition_error_not_available">Reconocimiento de voz no disponible.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="emoji_category_emoticons">Emoticonos</string>
     <string name="emoji_picker_search_label">Search</string>
     <string name="emoji_picker_search_placeholder">Search emoji...</string>

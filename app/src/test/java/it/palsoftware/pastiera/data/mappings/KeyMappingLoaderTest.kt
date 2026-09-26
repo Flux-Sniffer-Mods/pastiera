@@ -117,7 +117,8 @@ class KeyMappingLoaderTest {
 
         val mappings = AltModifierMappingResolver.resolve(context.assets, context)
 
-        assertEquals(";", mappings[KeyEvent.KEYCODE_S])
+        // The symbols page moved along one key off the search key (A)
+        assertEquals("=", mappings[KeyEvent.KEYCODE_S])
         assertEquals("°", mappings[KeyEvent.KEYCODE_O])
     }
 
@@ -127,15 +128,18 @@ class KeyMappingLoaderTest {
 
         val mappings = KeyMappingLoader.loadSymKeyMappingsPage2(context.assets)
 
-        assertEquals(";", mappings[KeyEvent.KEYCODE_S])
-        assertEquals("–", mappings[KeyEvent.KEYCODE_F])
-        assertEquals("„", mappings[KeyEvent.KEYCODE_J])
-        assertEquals("“", mappings[KeyEvent.KEYCODE_K])
-        assertEquals("&", mappings[KeyEvent.KEYCODE_C])
+        // Off the search key (A): the second and third rows moved along one key
+        assertEquals(null, mappings[KeyEvent.KEYCODE_A])
+        assertEquals("=", mappings[KeyEvent.KEYCODE_S])
+        assertEquals(";", mappings[KeyEvent.KEYCODE_D])
+        assertEquals("–", mappings[KeyEvent.KEYCODE_G])
+        assertEquals("„", mappings[KeyEvent.KEYCODE_K])
+        assertEquals("“", mappings[KeyEvent.KEYCODE_L])
+        assertEquals("&", mappings[KeyEvent.KEYCODE_V])
         assertEquals("°", mappings[KeyEvent.KEYCODE_O])
-        assertEquals("^", mappings[KeyEvent.KEYCODE_V])
-        assertEquals("»", mappings[KeyEvent.KEYCODE_Z])
-        assertEquals("«", mappings[KeyEvent.KEYCODE_X])
+        assertEquals("^", mappings[KeyEvent.KEYCODE_B])
+        assertEquals("»", mappings[KeyEvent.KEYCODE_X])
+        assertEquals("«", mappings[KeyEvent.KEYCODE_C])
     }
 
     @Test

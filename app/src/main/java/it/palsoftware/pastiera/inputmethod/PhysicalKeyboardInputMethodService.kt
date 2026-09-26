@@ -1,5 +1,15 @@
 package it.palsoftware.pastiera.inputmethod
 
+import it.palsoftware.pastiera.clipboard.PasteSuggestion
+import it.palsoftware.pastiera.shortcuts.AppShortcutRemapper
+import it.palsoftware.pastiera.shortcuts.AppShortcutSettings
+import it.palsoftware.pastiera.shortcuts.KeyCombo
+import it.palsoftware.pastiera.shortcuts.ShortcutAction
+import it.palsoftware.pastiera.shortcuts.toIntent
+import it.palsoftware.pastiera.inputmethod.suggestions.EmojiSuggestion
+import it.palsoftware.pastiera.data.emoji.EmojiSearchRepository
+import it.palsoftware.pastiera.shortcuts.AppActionDiscovery
+import it.palsoftware.pastiera.shortcuts.DiscoveredAppActions
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,6 +19,8 @@ import android.content.res.Configuration
 import it.palsoftware.pastiera.AppBroadcastActions
 import it.palsoftware.pastiera.ClicksPowerKeyboardController
 import it.palsoftware.pastiera.SettingsManager
+import it.palsoftware.pastiera.data.desktop.DesktopKeyboardLayout
+import it.palsoftware.pastiera.data.gif.GifCollections
 import it.palsoftware.pastiera.SoftwareKeyboardModeActions
 import android.inputmethodservice.InputMethodService
 import android.hardware.input.InputManager
@@ -27,6 +39,14 @@ import android.view.inputmethod.CursorAnchorInfo
 import it.palsoftware.pastiera.clipboard.ClipboardDao
 import it.palsoftware.pastiera.inputmethod.KeyboardEventTracker
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import android.content.ClipDescription
+import androidx.core.content.FileProvider
+import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.inputmethod.InputConnectionCompat
+import androidx.core.view.inputmethod.InputContentInfoCompat
+import it.palsoftware.pastiera.data.gif.GifResult
+import it.palsoftware.pastiera.data.gif.KlipyGifs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -48,6 +68,7 @@ import it.palsoftware.pastiera.core.suggestions.SuggestionController
 import it.palsoftware.pastiera.core.suggestions.SuggestionKind
 import it.palsoftware.pastiera.core.suggestions.SuggestionResult
 import it.palsoftware.pastiera.core.suggestions.SuggestionSettings
+import it.palsoftware.pastiera.data.emoji.EmojiCompatSupport
 import it.palsoftware.pastiera.data.layout.LayoutMappingRepository
 import it.palsoftware.pastiera.data.layout.LayoutFileStore
 import it.palsoftware.pastiera.data.layout.LayoutMapping
@@ -162,6 +183,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var suppressNextLayoutReload: Boolean = false
     private var activeKeyboardLayoutName: String = "qwerty"
     private var consumeAltEnterUntilKeyUp: Boolean = false
+    // The focused app is on the "hide keyboard in these apps" list: no UI, keys go to the app
+    private var keyboardHiddenForApp: Boolean = false
+    // ...but with "Show status LEDs only": the LED strip stays, following observed modifiers
+    private var hiddenAppShowsLeds: Boolean = false
+    // ...and this hidden app lets the emoji key and Sym open Pastiera (per-app option)
+    private var hiddenAppAllowsPanels: Boolean = false
+    private val observedModifierLeds = ObservedModifierLeds()
+    // Hidden app with the panels option: Pastiera's surface is up for an emoji/symbols panel
+    private var hiddenAppPanelShown: Boolean = false
+    // Keys whose press went to the hidden app / to Pastiera (their release goes the same way)
+    private val hiddenAppPassedThroughKeys = mutableSetOf<Int>()
+    private val hiddenAppPastieraKeys = mutableSetOf<Int>()
+    // Keys the accessibility service handed to Pastiera (their release follows)
+    private val hiddenAppInterceptedKeys = mutableSetOf<Int>()
+    // Key-up of the dedicated emoji picker key still to be swallowed (KEYCODE_UNKNOWN = none)
+    private var emojiPickerKeyUpPending: Int = KeyEvent.KEYCODE_UNKNOWN
     private var dispatchingSoftwareKeyboardKey: Boolean = false
     
     // Aggiungi per Power Shortcuts
@@ -287,6 +324,8 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
     // Trackpad gesture detection
     private val trackpadScope = CoroutineScope(Dispatchers.IO)
+    // Sends GIFs picked in the emoji picker (download, then rich content or a link)
+    private val gifScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var trackpadGestureDetector: TrackpadGestureDetector
     private var modifierStateBeforeHold: it.palsoftware.pastiera.core.ModifierStateController.LogicalState? = null
     private var variationInteractedDuringHold: Boolean = false
@@ -297,6 +336,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private var lastShiftTapUpTime: Long = 0L
     private var lastAltTapUpTime: Long = 0L
     private var symTogglePendingOnKeyUp: Boolean = false
+    // Flux Keyboard: SYM or the emoji key tapped, so the next key types its symbol or emoji
+    private var symSticky: Boolean = false
+    private var emojiSticky: Boolean = false
     private var symChordUsedSinceKeyDown: Boolean = false
     private var nativeTrackpadGestureStart: NativeTrackpadGestureStart? = null
     private var nativeTrackpadLastX: Float = 0f
@@ -1267,7 +1309,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         }
         val locale = getLocaleFromSubtype()
 
-        return latestSuggestionResults.map { suggestion ->
+        val words = latestSuggestionResults.map { suggestion ->
             when (suggestion.kind) {
                 SuggestionKind.NEXT_WORD,
                 SuggestionKind.STARTER_WORD -> recaseWordStartSuggestion(
@@ -1277,6 +1319,37 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 )
                 SuggestionKind.CURRENT_WORD -> suggestion.candidate
             }
+        }
+        return withEmojiSuggestion(words)
+    }
+
+    /**
+     * The emoji for the word being typed, in the third slot (the bar's left one): after the word
+     * suggestions, or instead of the third.
+     */
+    private fun withEmojiSuggestion(words: List<String>): List<String> {
+        if (!SettingsManager.getEmojiSuggestionsEnabled(this)) return words
+        if (latestSuggestionResults.none { it.kind == SuggestionKind.CURRENT_WORD }) return words
+        val word = suggestionController.currentWord()
+        if (word.isBlank()) return words
+        val index = EmojiSearchRepository.cachedSearchIndex(this) ?: run {
+            requestEmojiSuggestionIndex()
+            return words
+        }
+        val emoji = EmojiSearchRepository.suggestionFor(index, word) ?: return words
+        // Keycaps (1️⃣) have a digit, so they would be taken for a word
+        if (!EmojiSuggestion.isEmoji(emoji) || emoji in words) return words
+        return words.take(2) + emoji
+    }
+
+    private var emojiSuggestionIndexRequested = false
+
+    private fun requestEmojiSuggestionIndex() {
+        if (emojiSuggestionIndexRequested) return
+        emojiSuggestionIndexRequested = true
+        expansionAssetScope.launch {
+            runCatching { EmojiSearchRepository.getSearchIndex(this@PhysicalKeyboardInputMethodService) }
+            emojiSuggestionIndexRequested = false
         }
     }
 
@@ -1660,6 +1733,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     override fun onCreate() {
         super.onCreate()
         ClicksAccessibilityKeyBridge.register(this)
+        EmojiCompatSupport.ensureLoaded(this)
         lastSystemLocalesSignature = resources.configuration.locales.toLanguageTags()
         prefs = getSharedPreferences("pastiera_prefs", Context.MODE_PRIVATE)
         clearAltOnSpaceEnabled = SettingsManager.getClearAltOnSpace(this)
@@ -1918,6 +1992,30 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
                 updateStatusBarText()
             }
         }
+        candidatesBarController.onEmojiLayerSearchRequested = {
+            // Emoji layer's search button: the picker, with its search ready for typing
+            candidatesBarController.requestEmojiPickerSearch()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
+        candidatesBarController.onEmojiLayerGifRequested = {
+            // Emoji layer's GIF key: the picker, in GIF search
+            candidatesBarController.requestEmojiPickerGifs()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
+        candidatesBarController.onGifChosen = { gif -> sendGif(gif) }
+        candidatesBarController.onSymbolSearchRequested = {
+            // A symbols page's search: the picker, in symbol search
+            candidatesBarController.requestSymbolSearch()
+            symLayoutController.openEmojiPickerPage()
+            updateStatusBarText()
+        }
+        candidatesBarController.onEmojiLayerRecentsToggled = {
+            if (symLayoutController.toggleEmojiLayerRecents()) {
+                updateStatusBarText()
+            }
+        }
         candidatesBarController.onEmojiPickerSearchPanelToggled = {
             // The picker's search panel state is not part of the rendered snapshot; force a
             // re-render so the picker moves to its popup surface while searching.
@@ -2052,6 +2150,39 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             }
         }
         symLayoutController = SymLayoutController(this, prefs, alternateCharacterManager)
+        // Emoji layer's GIF key (physical): the same as its on-screen GIF key
+        symLayoutController.onEmojiLayerGifKey = {
+            uiHandler.post { candidatesBarController.onEmojiLayerGifRequested?.invoke() }
+        }
+        // Type to search: the emoji layer's or a symbols page's search, already holding the letter
+        symLayoutController.onSearchKey = { target ->
+            uiHandler.post {
+                when (target) {
+                    SymLayoutController.SearchTarget.EMOJI_LAYER -> {
+                        candidatesBarController.requestEmojiPickerSearch()
+                        symLayoutController.openEmojiPickerPage()
+                    }
+                    SymLayoutController.SearchTarget.SYMBOLS -> {
+                        candidatesBarController.requestSymbolSearch()
+                        symLayoutController.openEmojiPickerPage()
+                    }
+                    SymLayoutController.SearchTarget.PICKER ->
+                        candidatesBarController.focusEmojiPickerSearch()
+                }
+                updateStatusBarText()
+            }
+        }
+        symLayoutController.onTypeToSearch = { emoji, text ->
+            uiHandler.post {
+                if (emoji) {
+                    candidatesBarController.requestEmojiPickerSearch(text)
+                } else {
+                    candidatesBarController.requestSymbolSearch(text)
+                }
+                symLayoutController.openEmojiPickerPage()
+                updateStatusBarText()
+            }
+        }
         keyboardVisibilityController = KeyboardVisibilityController(
             context = this,
             candidatesBarController = candidatesBarController,
@@ -2128,7 +2259,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         // Register listener for SharedPreferences changes
         prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             Log.d(TRACKPAD_DEBUG_TAG, "SharedPrefs changed: key=$key")
-            if (key == "sym_mappings_custom") {
+            if (key == it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.PREF_SWITCH_BY_APP) {
+                alternateCharacterManager.setEmojiLayerOverride(
+                    if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
+                        it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(currentInputEditorInfo?.packageName)?.let { profile -> it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.layerMappings(this, profile) }
+                    } else null
+                )
+                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
+            } else if (key != null && key.startsWith("led_")) {
+                // LED colours: repaint the LEDs even though no modifier changed
+                Handler(Looper.getMainLooper()).post {
+                    invalidateRenderedStatusSnapshot()
+                    updateStatusBarText()
+                }
+            } else if (key == it.palsoftware.pastiera.data.mappings.CustomDeviceSymProfiles.PREF_KEY) {
+                alternateCharacterManager.reloadModifierAndDeviceSymMappings()
+                Handler(Looper.getMainLooper()).post { updateStatusBarText() }
+            } else if (key == "sym_mappings_custom") {
                 Log.d(TAG, "SYM mappings page 1 changed, reloading...")
                 // Reload SYM mappings for page 1
                 alternateCharacterManager.reloadSymMappings()
@@ -2745,6 +2892,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
     
     override fun onDestroy() {
+        gifScope.cancel()
+        HiddenAppKeyObserver.sink = null
+        HiddenAppKeyObserver.interceptor = null
+        HiddenAppKeyObserver.hiddenAppInFront = false
         ClicksAccessibilityKeyBridge.unregister(this)
         clicksPowerShiftTapFilter.reset()
         accidentalKeyPressFilter.reset()
@@ -2910,6 +3061,128 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     private fun requestKeyboardInputView() = requestShowSelf(0)
 
     /**
+     * A GIF picked in the emoji picker. Fields that take GIF content get the file itself
+     * (through the FileProvider); anywhere else, or if the download fails, its link is typed.
+     */
+    private fun sendGif(gif: GifResult) {
+        val editorInfo = currentInputEditorInfo ?: return
+        // Recent GIFs (GIF search's Recent section, and recently used first)
+        GifCollections.addRecent(this, gif)
+        val acceptsGif = KlipyGifs.editorAcceptsGif(EditorInfoCompat.getContentMimeTypes(editorInfo))
+        // A GIF is a one-off: close the picker straight away
+        if (symLayoutController.closeSymPage()) updateStatusBarText()
+        if (!acceptsGif) {
+            currentInputConnection?.commitText(gif.gifUrl, 1)
+            Toast.makeText(this, R.string.gif_sent_as_link, Toast.LENGTH_SHORT).show()
+            return
+        }
+        gifScope.launch {
+            val file = try {
+                KlipyGifs.downloadToCache(this@PhysicalKeyboardInputMethodService, gif)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            // The field may have changed during the download: use the current one
+            val connection = currentInputConnection ?: return@launch
+            val info = currentInputEditorInfo ?: return@launch
+            if (file == null) {
+                connection.commitText(gif.gifUrl, 1)
+                return@launch
+            }
+            val uri = FileProvider.getUriForFile(
+                this@PhysicalKeyboardInputMethodService, "$packageName.fileprovider", file
+            )
+            val content = InputContentInfoCompat(
+                uri,
+                ClipDescription(gif.description.ifBlank { "GIF" }, arrayOf("image/gif")),
+                null
+            )
+            val sent = InputConnectionCompat.commitContent(
+                connection, info, content, InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION, null
+            )
+            if (!sent) connection.commitText(gif.gifUrl, 1)
+        }
+    }
+
+    /** Hidden app with the panels option and an emoji or symbols panel open. */
+    private fun hiddenAppPanelOpen(): Boolean =
+        keyboardHiddenForApp && symPage > 0 && hiddenAppAllowsPanels
+
+    /** Hidden apps keep Pastiera's surface closed, except for the status LEDs or an open panel. */
+    private fun hiddenAppSurfaceBlocked(): Boolean =
+        keyboardHiddenForApp && !hiddenAppShowsLeds && !hiddenAppPanelOpen()
+
+    /** In a hidden app with the panels option: its panel keys, and every key while a panel is open. */
+    private fun hiddenAppKeyGoesToPastiera(keyCode: Int): Boolean {
+        if (!hiddenAppAllowsPanels) return false
+        if (symPage > 0) return true
+        val emojiKey = SettingsManager.getEmojiPickerKey(this)
+        return keyCode == KEYCODE_SYM || (emojiKey != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiKey)
+    }
+
+    /** Show Pastiera while a panel is open in a hidden app; hide it (or back to LEDs) afterwards. */
+    private fun syncHiddenAppPanel() {
+        if (!keyboardHiddenForApp) return
+        val panelOpen = hiddenAppPanelOpen()
+        if (::candidatesBarController.isInitialized) {
+            candidatesBarController.setLedsOnlyMode(hiddenAppShowsLeds && !panelOpen)
+        }
+        if (panelOpen == hiddenAppPanelShown) return
+        hiddenAppPanelShown = panelOpen
+        invalidateRenderedStatusSnapshot()
+        if (panelOpen) {
+            ensureImeSurfaceVisible()
+        } else {
+            hideSurfaceIfHiddenForApp()
+        }
+        // Re-render in the new mode once the current pass is over
+        uiHandler.post { updateStatusBarText() }
+    }
+
+    /**
+     * Accessibility path for hidden apps that read keys before any input method (Termux:X11):
+     * hands the panel keys, and every key while a panel is open, to Pastiera.
+     */
+    private fun interceptHiddenAppKey(event: KeyEvent): Boolean {
+        if (!keyboardHiddenForApp || currentInputConnection == null) return false
+        val keyCode = event.keyCode
+        if (keyCode in HIDDEN_APP_SYSTEM_KEYS) return false
+        val take = when (event.action) {
+            KeyEvent.ACTION_DOWN -> hiddenAppKeyGoesToPastiera(keyCode).also { taken ->
+                if (taken && event.repeatCount == 0) hiddenAppInterceptedKeys += keyCode
+            }
+            // Only releases of presses Pastiera took; others belong to the app
+            KeyEvent.ACTION_UP -> hiddenAppInterceptedKeys.remove(keyCode)
+            else -> false
+        }
+        if (!take) return false
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> onKeyDown(keyCode, event)
+            KeyEvent.ACTION_UP -> onKeyUp(keyCode, event)
+        }
+        return true
+    }
+
+    /** Hidden app with status LEDs: mirror modifier keys the app receives, never consume them. */
+    private fun observeHiddenAppKey(event: KeyEvent?) {
+        if (!hiddenAppShowsLeds || event == null) return
+        val changed = observedModifierLeds.onKey(
+            event.keyCode, event.action, event.repeatCount, event.downTime, event.eventTime
+        )
+        if (changed) updateStatusBarText()
+    }
+
+    /** Close any Pastiera surface once the framework's start/show pass is over. */
+    private fun hideSurfaceIfHiddenForApp() {
+        if (!hiddenAppSurfaceBlocked() || !::keyboardVisibilityController.isInitialized) return
+        uiHandler.post {
+            if (hiddenAppSurfaceBlocked()) keyboardVisibilityController.hideForApp()
+        }
+    }
+
+    /**
      * Evaluates whether the IME should run in fullscreen mode.
      */
     override fun onEvaluateFullscreenMode(): Boolean {
@@ -2939,6 +3212,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             ignoreNextEmojiSearchCursorAnchorUpdate = false
             return
         }
+        // Only a moved selection means the user went back to the app's text. The cursor also
+        // moves on screen whenever the keyboard changes height (opening emoji, GIF or symbol
+        // search), and that must not take typing away from the search that just opened.
+        val start = cursorAnchorInfo?.selectionStart ?: -1
+        val end = cursorAnchorInfo?.selectionEnd ?: -1
+        if (start < 0 || end < 0) return // the app doesn't report its selection here
+        val knownStart = emojiSearchExternalSelectionStart
+        val knownEnd = emojiSearchExternalSelectionEnd
+        if (knownStart == null || knownEnd == null) {
+            emojiSearchExternalSelectionStart = start
+            emojiSearchExternalSelectionEnd = end
+            return
+        }
+        if (start == knownStart && end == knownEnd) return
         disableEmojiSearchInputCapture()
     }
 
@@ -3059,6 +3346,10 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             altPhysicallyPressed = modifierSnapshot.altPhysicallyPressed,
             altOneShot = modifierSnapshot.altOneShot,
             symPage = symPage,
+            symHeld = symTogglePendingOnKeyUp,
+            symSticky = symSticky,
+            emojiHeld = emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN,
+            emojiSticky = emojiSticky,
             clipboardCount = clipboardCount,
             variations = variationSnapshot.variations,
             suggestions = baseSuggestions,
@@ -3074,6 +3365,7 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             shiftLayerLatched = shiftLayerLatched,
             altModifierLayerLatched = altModifierLayerLatched,
             activeKeyboardLayoutName = activeKeyboardLayoutName,
+            emojiScreenFromEmojiKey = symLayoutController.openedByEmojiKey,
             softwareSymPreviewLabels = softwareSymPreviewProjection.contentByKeyCode,
             softwareSymPreviewTextLabels = softwareSymPreviewProjection.contentByBaseText,
             softwareCtrlPreviewLabels = buildSoftwareCtrlPreviewLabels(modifierSnapshot),
@@ -3347,9 +3639,37 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
+        // Emoji layer profiles: the layer follows the app when switching by app
+        if (::alternateCharacterManager.isInitialized) alternateCharacterManager.setEmojiLayerOverride(
+            if (it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.switchByApp(this)) {
+                it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.forApp(info?.packageName)?.let { profile -> it.palsoftware.pastiera.data.mappings.EmojiLayerProfiles.layerMappings(this, profile) }
+            } else null
+        )
+        terminalModeActive = SettingsManager.isTerminalModeApp(this, info?.packageName) && TerminalMode.apply(info)
+        terminalCtrlKeysDown.clear()
+        terminalCtrlSent.clear()
+        terminalRawKeysDown.clear()
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onStartInput(info, restarting)
+        EmojiCompatSupport.onStartInput(info)
+        keyboardHiddenForApp = SettingsManager.isKeyboardHiddenForApp(this, info?.packageName)
+        HiddenAppKeyObserver.hiddenAppInFront = keyboardHiddenForApp
+        val showLeds = keyboardHiddenForApp && SettingsManager.hiddenAppShowsLeds(this, info?.packageName)
+        hiddenAppAllowsPanels = keyboardHiddenForApp && SettingsManager.hiddenAppAllowsPanels(this, info?.packageName)
+        if (showLeds != hiddenAppShowsLeds || !restarting) observedModifierLeds.reset()
+        hiddenAppShowsLeds = showLeds
+        if (::candidatesBarController.isInitialized) candidatesBarController.setLedsOnlyMode(showLeds)
+        HiddenAppKeyObserver.sink = if (showLeds) ::observeHiddenAppKey else null
+        hiddenAppPanelShown = false
+        hiddenAppPassedThroughKeys.clear()
+        hiddenAppPastieraKeys.clear()
+        hiddenAppInterceptedKeys.clear()
+        if (keyboardHiddenForApp && ::symLayoutController.isInitialized && symLayoutController.isSymActive()) {
+            symLayoutController.closeSymPage()
+        }
+        HiddenAppKeyObserver.interceptor = if (hiddenAppAllowsPanels) ::interceptHiddenAppKey else null
+        hideSurfaceIfHiddenForApp()
         if (::textExpansionController.isInitialized) textExpansionController.clear()
         if (
             !restarting ||
@@ -3516,6 +3836,9 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onFinishInput() {
+        clearInlineAutofill()
+        symSticky = false
+        emojiSticky = false
         pendingKeyboardSurfaceTransition?.let(uiHandler::removeCallbacks)
         pendingKeyboardSurfaceTransition = null
         super.onFinishInput()
@@ -4229,6 +4552,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         updateStatusBarText()
     }
 
+    /** The dedicated emoji key: the emoji picker, or the emoji layer (SYM settings). */
+    private fun toggleEmojiKeyScreen() {
+        ensureImeSurfaceVisible()
+        symLayoutController.toggleEmojiKeyPage(layer = SettingsManager.getEmojiKeyOpensLayer(this))
+        updateStatusBarText()
+    }
+
     private data class AccidentalKeyInput(
         val resolution: PhysicalKeyResolver.Resolution,
         val configuration: AccidentalKeyPressFilter.Configuration
@@ -4346,6 +4676,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyboardHiddenForApp) {
+            val firstPress = (event_?.repeatCount ?: 0) == 0
+            if (!hiddenAppKeyGoesToPastiera(keyCode_)) {
+                if (firstPress) hiddenAppPassedThroughKeys += keyCode_
+                HiddenAppKeyObserver.logKey(event_, "input method, to the app")
+                observeHiddenAppKey(event_)
+                return super.onKeyDown(keyCode_, event_)
+            }
+            HiddenAppKeyObserver.logKey(event_, "input method, to Pastiera")
+            if (firstPress) hiddenAppPastieraKeys += keyCode_
+        }
+        val handled = handleKeyDown(keyCode_, event_)
+        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        return handled
+    }
+
+    private fun handleKeyDown(keyCode_: Int, event_: KeyEvent?): Boolean {
         val perfStart = ImePerfLogger.mark()
         try {
         if (!replayingProtectedNumberKey) {
@@ -4500,6 +4847,40 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         if (hasEditableField && keyCode == KEYCODE_SYM && event?.repeatCount == 0) {
             symTogglePendingOnKeyUp = true
             symChordUsedSinceKeyDown = false
+            updateStatusBarText() // SYM's LED shows it held
+        }
+
+        // The emoji key held, or SYM or the emoji key tapped: the next key types its emoji or symbol
+        if (
+            hasEditableField &&
+            event?.repeatCount == 0 &&
+            keyCode != KEYCODE_SYM &&
+            keyCode != emojiPickerKeyUpPending &&
+            keyCode != SettingsManager.getEmojiPickerKey(this) &&
+            !isPureModifierKey(keyCode) &&
+            keyCode != KeyEvent.KEYCODE_BACK
+        ) {
+            val shift = event.isShiftPressed || shiftOneShot || capsLockEnabled
+            val ctrlOrAlt = event.isCtrlPressed || event.isAltPressed || ctrlPhysicallyPressed || altPhysicallyPressed
+            val emojiHeld = emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN &&
+                KeyEvent.isModifierKey(emojiPickerKeyUpPending) && !ctrlOrAlt
+            val text = when {
+                emojiHeld || emojiSticky -> symLayoutController.resolveEmojiLayerSymbol(keyCode, shift)
+                symSticky -> symLayoutController.resolveChordSymbol(keyCode, shift)
+                else -> null
+            }
+            val wasSticky = symSticky || emojiSticky
+            if (emojiHeld || wasSticky) {
+                symSticky = false
+                emojiSticky = false
+                if (!text.isNullOrEmpty()) {
+                    val inputConnection = currentInputConnection
+                    if (!handleBoundaryTextBeforeCommit(text, inputConnection)) inputConnection?.commitText(text, 1)
+                    updateStatusBarText()
+                    return true
+                }
+                if (wasSticky) updateStatusBarText()
+            }
         }
 
         // Minimal Phone dedicated keys (skip while Alt is active so its configured mapping can run)
@@ -4530,6 +4911,23 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
             !altActiveForDedicatedKeys
         ) {
             startSpeechRecognition()
+            return true
+        }
+
+        // User-selected dedicated emoji picker key (SYM settings > Emoji picker key).
+        // Consumed entirely so it never reaches the modifier state machine; outside text
+        // fields the key keeps its normal role.
+        val emojiPickerKey = SettingsManager.getEmojiPickerKey(this)
+        if (
+            hasEditableField &&
+            emojiPickerKey != KeyEvent.KEYCODE_UNKNOWN &&
+            keyCode == emojiPickerKey
+        ) {
+            if ((event?.repeatCount ?: 0) == 0) {
+                toggleEmojiKeyScreen()
+            }
+            emojiPickerKeyUpPending = keyCode
+            updateStatusBarText() // the emoji key's LED shows it held
             return true
         }
 
@@ -5042,6 +5440,25 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
     }
 
     override fun onKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
+        if (keyboardHiddenForApp) {
+            // A release follows its press, so neither side is left with a stuck key
+            val toPastiera = when {
+                hiddenAppPastieraKeys.remove(keyCode_) -> true
+                hiddenAppPassedThroughKeys.remove(keyCode_) -> false
+                else -> hiddenAppKeyGoesToPastiera(keyCode_)
+            }
+            HiddenAppKeyObserver.logKey(event_, if (toPastiera) "input method, to Pastiera" else "input method, to the app")
+            if (!toPastiera) {
+                observeHiddenAppKey(event_)
+                return super.onKeyUp(keyCode_, event_)
+            }
+        }
+        val handled = handleKeyUp(keyCode_, event_)
+        if (keyboardHiddenForApp) syncHiddenAppPanel()
+        return handled
+    }
+
+    private fun handleKeyUp(keyCode_: Int, event_: KeyEvent?): Boolean {
         if (!replayingProtectedNumberKey) {
             when (val result = accidentalKeyPressFilter.onKeyUp(keyCode_, event_)) {
                 is AccidentalKeyPressFilter.KeyUpResult.Suppressed -> {
@@ -5067,6 +5484,22 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         val event = remapped.event
         if (keyCode == KeyEvent.KEYCODE_ENTER && consumeAltEnterUntilKeyUp) {
             consumeAltEnterUntilKeyUp = false
+            return true
+        }
+        if (emojiPickerKeyUpPending != KeyEvent.KEYCODE_UNKNOWN && keyCode == emojiPickerKeyUpPending) {
+            emojiPickerKeyUpPending = KeyEvent.KEYCODE_UNKNOWN
+            if (KeyEvent.isModifierKey(keyCode) && !emojiPickerKeyChorded) {
+                if (!emojiSticky && symPage == 0 && SettingsManager.getEmojiStickyTap(this)) {
+                    // A tap: the next key types its emoji; a second tap opens the emoji screen
+                    emojiSticky = true
+                    symSticky = false
+                } else {
+                    emojiSticky = false
+                    toggleEmojiKeyScreen()
+                }
+            }
+            emojiPickerKeyChorded = false
+            updateStatusBarText()
             return true
         }
         clicksPowerShiftTapFilter.shouldConsumeKeyUp(keyCode, event)?.let { suppressed ->
@@ -5278,12 +5711,20 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
         
         // Toggle SYM layout on key release only when SYM was tapped alone.
         if (keyCode == KEYCODE_SYM) {
-            if (symTogglePendingOnKeyUp && !symChordUsedSinceKeyDown) {
-                symLayoutController.toggleSymPage()
-                updateStatusBarText()
-            }
+            val tapped = symTogglePendingOnKeyUp && !symChordUsedSinceKeyDown
             symTogglePendingOnKeyUp = false
             symChordUsedSinceKeyDown = false
+            if (tapped) {
+                if (!symSticky && symPage == 0 && SettingsManager.getSymStickyTap(this)) {
+                    // A tap: the next key types its symbol; a second tap opens the symbols
+                    symSticky = true
+                    emojiSticky = false
+                } else {
+                    symSticky = false
+                    symLayoutController.toggleSymPage()
+                }
+            }
+            updateStatusBarText()
             return true
         }
         
@@ -5782,6 +6223,13 @@ class PhysicalKeyboardInputMethodService : InputMethodService(), ClicksAccessibi
 
             // Provide visual feedback on the suggestions bar, matching variation press color
             candidatesBarController.flashSuggestionSlot(suggestionIndex)
+
+            if (EmojiSuggestion.isEmoji(suggestion)) {
+                EmojiSuggestion.commitAfterWord(ic, suggestion)
+                suggestionController.onContextReset()
+                NotificationHelper.triggerHapticFeedback(this)
+                return@post
+            }
 
             val forceLeadingCapital = AutoCapitalizeHelper.shouldAutoCapitalizeAtCursor(
                 context = this,

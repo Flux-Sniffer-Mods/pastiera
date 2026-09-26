@@ -68,6 +68,14 @@ object SettingLinkIds {
     const val AUTO_CORRECTION_EXPERIMENTAL_SUGGESTIONS = "auto_correction.experimental_suggestions"
     const val AUTO_CORRECTION_SUGGESTIONS = "auto_correction.suggestions"
     const val AUTO_CORRECTION_ACCENT_MATCHING = "auto_correction.accent_matching"
+    const val AUTO_CORRECTION_EMOJI_SUGGESTIONS = "auto_correction.emoji_suggestions"
+    const val AUTO_CORRECTION_SPELL_CHECKER = "auto_correction.spell_checker"
+    const val AUTO_CORRECTION_INLINE_AUTOFILL = "auto_correction.inline_autofill"
+    const val MAIN_LED_COLORS = "main.led_colors"
+    const val MAIN_EMOJI_PROFILES = "main.emoji_profiles"
+    const val EMOJI_PROFILES_SWITCH_BY_APP = "emoji_profiles.switch_by_app"
+    const val EMOJI_PROFILES_SAVE_CURRENT = "emoji_profiles.save_current"
+    const val LED_INDIVIDUAL_COLORS = "led_colors.individual"
     const val AUTO_CORRECTION_KEYBOARD_PROXIMITY = "auto_correction.keyboard_proximity"
     const val AUTO_CORRECTION_EDIT_TYPE_RANKING = "auto_correction.edit_type_ranking"
 
@@ -869,9 +877,8 @@ object SettingLinkRegistry {
             SettingLinkIds.KEYBOARD_THEME_LED_COLORS,
             R.string.keyboard_theme_wizard_leds,
             R.string.keyboard_theme_wizard_leds_description,
-            destination = SettingsDestination.Customization,
-            customizationDestination = SettingsActivity.CUSTOMIZATION_DESTINATION_KEYBOARD_THEME,
-            keyboardThemeTab = KeyboardThemeEditorTab.Colors
+            // LED colours moved to Look & sound > Status LED colours
+            destination = SettingsDestination.LedColors
         ),
 
         // Modifier indicator chips (rendered on the modifiers screen)
@@ -1008,7 +1015,25 @@ object SettingLinkRegistry {
         SettingsDestination.About to R.string.about_title,
         SettingsDestination.CustomInputStyles to R.string.custom_input_styles_title,
         SettingsDestination.AppLanguage to R.string.app_language_title,
-        SettingsDestination.Modifiers to R.string.modifiers_title
+        SettingsDestination.Modifiers to R.string.settings_modifiers_sym_title,
+        SettingsDestination.FluxEmojiGifs to R.string.flux_emoji_gifs_title,
+        SettingsDestination.FluxTitanScreen to R.string.flux_titan_screen_title,
+        SettingsDestination.FluxHiddenApps to R.string.flux_hidden_apps_title,
+        SettingsDestination.FluxLinuxDesktop to R.string.flux_linux_desktop_title,
+        SettingsDestination.FluxOffline to R.string.flux_offline_title,
+        SettingsDestination.KeyboardsLayouts to R.string.settings_keyboards_layouts_title,
+        SettingsDestination.Typing to R.string.settings_typing_title,
+        SettingsDestination.EditingKeys to R.string.settings_editing_keys_title,
+        SettingsDestination.TextExpansion to R.string.text_expansion_title,
+        SettingsDestination.LookSound to R.string.settings_look_sound_title,
+        SettingsDestination.TrackpadGestures to R.string.settings_trackpad_gestures_title,
+        SettingsDestination.Apps to R.string.settings_apps_title,
+        SettingsDestination.AppShortcuts to R.string.app_shortcuts_title,
+        SettingsDestination.Developer to R.string.developer_options_title,
+        SettingsDestination.DeviceSymLayerEditor to R.string.alt_key_editor_title,
+        SettingsDestination.LedColors to R.string.led_colors_title,
+        SettingsDestination.EmojiProfiles to R.string.emoji_profiles_title,
+        SettingsDestination.TerminalMode to R.string.terminal_mode_title
     )
 
     val keyboardsDevicesSubtitles: Map<KeyboardsDevicesDestination, Int> = mapOf(

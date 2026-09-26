@@ -921,7 +921,7 @@ QWERTZ σε φυσικό QWERTY
     <string name="nav_mode_key_mappings">Αντιστοιχίσεις πλήκτρων</string>
     <string name="nav_mode_revert_to_default">Επαναφορά προεπιλογής</string>
     <string name="nav_mode_note">Σημείωση: Η τροποποίηση πλήκτρων nav mode επηρεάζει επίσης τους συνδυασμούς Ctrl+πλήκτρο σε πεδία κειμένου.</string>
-    <string name="nav_mode_warning_icon">⚠</string>
+    <string name="nav_mode_warning_icon">⚠\uFE0E</string>
     <string name="nav_mode_configure_key">Ρύθμιση %1$s</string>
     <string name="nav_mode_type">Τύπος</string>
     <string name="nav_mode_keycode">Keycode</string>

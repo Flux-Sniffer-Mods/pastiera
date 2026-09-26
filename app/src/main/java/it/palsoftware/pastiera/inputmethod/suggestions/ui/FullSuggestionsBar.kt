@@ -61,6 +61,9 @@ class FullSuggestionsBar(
     private var frameContainer: FrameLayout? = null
     private var minimalLeftButtonsContainer: LinearLayout? = null
     private var minimalRightButtonsContainer: LinearLayout? = null
+    // Middle of the bar (between the left and right buttons) for a hosted view, e.g. emoji search
+    private var centerAccessoryHost: FrameLayout? = null
+    private var centerAccessoryActive = false
     private var modifierIndicatorsContainer: LinearLayout? = null
     private var hamburgerMenuView: HamburgerMenuView? = null
     private var modifierIndicatorView: ModifierIndicatorView? = null
@@ -190,7 +193,16 @@ class FullSuggestionsBar(
                 }
             }
             
+            centerAccessoryHost = FrameLayout(context).apply {
+                visibility = View.GONE
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    targetHeightPx
+                )
+            }
+
             frameContainer?.addView(container)
+            centerAccessoryHost?.let { frameContainer?.addView(it) }
             modifierIndicatorsContainer?.let { frameContainer?.addView(it) }
             minimalLeftButtonsContainer?.let { frameContainer?.addView(it) }
             minimalRightButtonsContainer?.let { frameContainer?.addView(it) }
@@ -299,6 +311,22 @@ class FullSuggestionsBar(
         buttonHost?.refreshLanguageText()
     }
 
+    /** Container between the left and right buttons for hosting another view. */
+    fun centerAccessoryHost(): FrameLayout? = centerAccessoryHost
+
+    /** Shows the hosted view in place of the suggestions (the host's content is the caller's). */
+    fun setCenterAccessoryActive(active: Boolean) {
+        if (centerAccessoryActive == active) return
+        centerAccessoryActive = active
+        centerAccessoryHost?.visibility = if (active) View.VISIBLE else View.GONE
+        if (active) {
+            container?.visibility = View.GONE
+            applyContainerInsetsForMinimalButtons()
+        } else {
+            lastSlots = emptyList() // re-render suggestions on the next update
+        }
+    }
+
     fun setMinimalUiActive(isActive: Boolean) {
         lastMinimalUiActive = isActive
         showMinimalUiButtons = isActive
@@ -389,6 +417,12 @@ class FullSuggestionsBar(
         bar.alpha = 1f
         renderMinimalUiButtons()
         applyContainerInsetsForMinimalButtons()
+
+        if (centerAccessoryActive) {
+            // A hosted view (emoji search) owns the middle of the bar
+            bar.visibility = View.GONE
+            return
+        }
 
         if (!canShowSuggestions) {
             cancelPendingSuggestionsAccessibilityEnable()
@@ -582,6 +616,18 @@ class FullSuggestionsBar(
             } ?: 0
         } else {
             0
+        }
+        centerAccessoryHost?.let { host ->
+            val hostParams = (host.layoutParams as? FrameLayout.LayoutParams)
+                ?: FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, targetHeightPx)
+            if (hostParams.marginStart != leftInset || hostParams.marginEnd != rightInset ||
+                hostParams.height != targetHeightPx || host.layoutParams !is FrameLayout.LayoutParams
+            ) {
+                hostParams.marginStart = leftInset
+                hostParams.marginEnd = rightInset
+                hostParams.height = targetHeightPx
+                host.layoutParams = hostParams
+            }
         }
         val params = (bar.layoutParams as? FrameLayout.LayoutParams)
             ?: FrameLayout.LayoutParams(

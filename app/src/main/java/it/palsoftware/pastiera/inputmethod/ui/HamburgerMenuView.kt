@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import it.palsoftware.pastiera.R
+import it.palsoftware.pastiera.SettingsManager
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonHost
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonId
 import it.palsoftware.pastiera.inputmethod.statusbar.StatusBarButtonRegistry
@@ -31,6 +32,7 @@ class HamburgerMenuView(
     private val menuButtonIds = listOf(
         StatusBarButtonId.Symbols,
         StatusBarButtonId.Emoji,
+        StatusBarButtonId.Gif,
         StatusBarButtonId.Microphone,
         StatusBarButtonId.Clipboard,
         StatusBarButtonId.Undo,
@@ -41,6 +43,7 @@ class HamburgerMenuView(
         StatusBarButtonId.Settings
     )
 
+    private var shownButtonIds: List<StatusBarButtonId> = menuButtonIds
     private var root: FrameLayout? = null
     private var row: LinearLayout? = null
     private val buttonHost = StatusBarButtonHost(context, buttonRegistry)
@@ -165,6 +168,10 @@ class HamburgerMenuView(
                 onClose()
                 callbacks.onEmojiPickerRequested?.invoke()
             },
+            onGifSearchRequested = {
+                onClose()
+                callbacks.onGifSearchRequested?.invoke()
+            },
             onLanguageSwitchRequested = {
                 onClose()
                 callbacks.onLanguageSwitchRequested?.invoke()
@@ -202,7 +209,11 @@ class HamburgerMenuView(
         rowView.addView(closeButtonView)
         val fallbackWidth = buttonHeight
         val hostedButtons = mutableListOf<StatusBarButtonHost.HostedButton>()
-        menuButtonIds.forEach { id ->
+        // GIF only when GIFs are on and the keyboard isn't offline
+        shownButtonIds = menuButtonIds.filter {
+            it != StatusBarButtonId.Gif || SettingsManager.gifsAvailable(context)
+        }
+        shownButtonIds.forEach { id ->
             val hosted = buttonHost.getOrCreateButton(
                 id,
                 buttonHeight,
@@ -226,7 +237,7 @@ class HamburgerMenuView(
     }
 
     private fun updateButtonSizes(rowView: LinearLayout) {
-        val expectedButtons = menuButtonIds.size + 1
+        val expectedButtons = shownButtonIds.size + 1
         val totalButtons = rowView.childCount
         if (totalButtons != expectedButtons) {
             return
